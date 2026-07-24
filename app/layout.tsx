@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata: Metadata = {metadataBase: new URL("https://sabkadelivery.in"),
   title: "SABKA DELIVERY — Food & Grocery in Lala Bazar",
   description: "Local restaurant food and daily grocery delivery across Lala Bazar, Hailakandi.",
   verification: {
@@ -34,12 +34,13 @@ export const metadata: Metadata = {
   other: {
     "codex-preview": "development",
   },
-  icons: {
-    icon: "/images/sabka-delivery-logo.png",
-    shortcut: "/images/sabka-delivery-logo.png",
-    apple: "/images/sabka-delivery-logo.png",
-  },
-};
+ icons: {
+  icon: [
+    { url: "/images/sabka-delivery-logo.png", sizes: "32x32", type: "image/png" },
+    { url: "/images/sabka-delivery-logo.png", sizes: "192x192", type: "image/png" }
+  ],
+  apple: "/images/sabka-delivery-logo.png",
+},
 
 export default function RootLayout({
   children,
