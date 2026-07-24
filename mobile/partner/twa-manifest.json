@@ -1,0 +1,49 @@
+{
+  "packageId": "com.sabkadelivery.partner",
+  "host": "sabka-delivery.barakvalley108.chatgpt.site",
+  "name": "Sabka Delivery Partner",
+  "launcherName": "Sabka Partner",
+  "display": "standalone",
+  "themeColor": "#111827",
+  "themeColorDark": "#030712",
+  "navigationColor": "#111827",
+  "navigationColorDark": "#030712",
+  "navigationDividerColor": "#374151",
+  "navigationDividerColorDark": "#111827",
+  "backgroundColor": "#111827",
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "startUrl": "/panel-login?source=partner-app",
+  "iconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png",
+  "maskableIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png",
+  "splashScreenFadeOutDuration": 200,
+  "signingKey": {
+    "path": "./upload-keystore.jks",
+    "alias": "sabka-partner-upload"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Panel login",
+      "shortName": "Login",
+      "url": "/panel-login?source=partner-shortcut",
+      "chosenIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": true }
+  },
+  "alphaDependencies": { "enabled": false },
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/",
+  "minSdkVersion": 23,
+  "orientation": "portrait-primary",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

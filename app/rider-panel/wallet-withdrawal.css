@@ -1,0 +1,65 @@
+.rider-upi-form,
+.withdrawal-form {
+  margin-top: 12px;
+}
+
+.withdrawal-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.withdrawal-history {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #dfe6e1;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.withdrawal-history h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.withdrawal-history article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #edf0ee;
+}
+
+.withdrawal-history article div {
+  display: grid;
+  gap: 4px;
+}
+
+.withdrawal-history article b {
+  font-size: 14px;
+}
+
+.withdrawal-history article small,
+.withdrawal-history > p {
+  color: #7a8780;
+  font-size: 9px;
+}
+
+.withdrawal-history article > span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #fff2d7;
+  color: #8a5600;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.withdrawal-history article > span.paid {
+  background: #e4f8e9;
+  color: #08703c;
+}
+
+.withdrawal-history article > span.approved {
+  background: #e5f0ff;
+  color: #175ea8;
+}

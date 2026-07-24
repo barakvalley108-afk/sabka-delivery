@@ -1,0 +1,129 @@
+.withdrawal-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.withdrawal-board > article {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid #e3e8e5;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 26px #17261e0a;
+}
+
+.withdrawal-board article header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.withdrawal-board article header span {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #fff1d8;
+  color: #945c00;
+  font-size: 8px;
+  font-weight: 950;
+}
+
+.withdrawal-board article header span.paid {
+  background: #e3f8e9;
+  color: #08703c;
+}
+
+.withdrawal-board article header span.approved {
+  background: #e5f0ff;
+  color: #175ea8;
+}
+
+.withdrawal-board h2,
+.withdrawal-board p {
+  margin: 0;
+}
+
+.withdrawal-board a,
+.withdrawal-board p,
+.withdrawal-board small {
+  color: #6f7e76;
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.withdrawal-board article > button,
+.payout-modal .done,
+.payout-modal > a {
+  border: 0;
+  border-radius: 10px;
+  background: #d92330;
+  color: #fff;
+  padding: 11px;
+  font-weight: 900;
+  text-align: center;
+  text-decoration: none;
+}
+
+.payout-overlay {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #07120db8;
+  backdrop-filter: blur(8px);
+}
+
+.payout-modal {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(410px, 100%);
+  padding: 28px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 30px 80px #0005;
+  text-align: center;
+}
+
+.payout-modal .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f3f2;
+  font-size: 20px;
+}
+
+.payout-modal h2,
+.payout-modal p {
+  margin: 0;
+}
+
+.payout-modal > strong {
+  color: #d92330;
+  font-size: 32px;
+}
+
+.payout-modal svg {
+  max-width: 100%;
+  height: auto;
+  padding: 8px;
+  border: 1px solid #e5e8e6;
+  border-radius: 14px;
+}
+
+.payout-modal .done,
+.payout-modal > a {
+  width: 100%;
+}
+
+.payout-modal > a {
+  background: #17261e;
+}

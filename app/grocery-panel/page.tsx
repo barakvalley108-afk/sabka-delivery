@@ -1,0 +1,8 @@
+import { redirect } from "next/navigation";
+import { getPanelSession, panelRoute } from "../panel-auth";
+import PartnerConsole from "../partner-panel/partner-console";
+import "../partner-panel/partner-panel.css";
+import "../panel-enhancements.css";
+
+export const dynamic="force-dynamic";
+export default async function GroceryPanel(){const session=await getPanelSession("RESTAURANT");if(!session)redirect("/panel-login");if(session.role!=="RESTAURANT"||session.panelType!=="GROCERY")redirect(panelRoute(session));return <PartnerConsole expected="GROCERY"/>}

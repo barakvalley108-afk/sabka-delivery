@@ -1,0 +1,902 @@
+/* Royal black-and-gold customer experience — scoped to Home and Food only. */
+.royal-food-app {
+  --royal-black: #050606;
+  --royal-panel: #0d0e0d;
+  --royal-panel-soft: #14130f;
+  --royal-gold: #d8a847;
+  --royal-gold-light: #f3ce78;
+  --royal-line: #654c22;
+  --royal-text: #fffaf0;
+  --royal-muted: #b8b1a5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 70% 12%, #37250f55, transparent 28%),
+    linear-gradient(180deg, #050606, #090907 70%, #050505);
+  color: var(--royal-text);
+}
+
+.royal-food-app .app-header {
+  position: sticky;
+  z-index: 80;
+  height: 84px;
+  padding: 0 clamp(24px, 4vw, 66px);
+  gap: 24px;
+  border-bottom: 1px solid #9a71375c;
+  background: #050606f5;
+  box-shadow: 0 10px 30px #0009;
+  backdrop-filter: blur(18px);
+}
+
+.royal-food-app .logo {
+  color: var(--royal-gold-light);
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0.04em;
+}
+
+.royal-food-app .logo > span.brand-mark {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid #c99a4c;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px #d8a84718, 0 8px 25px #0008;
+}
+
+.royal-food-app .logo img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.royal-food-app .logo > b {
+  max-width: 140px;
+  color: #fff7e5;
+  font-size: 18px;
+  line-height: 1.03;
+  letter-spacing: 0.06em;
+}
+
+.royal-food-app .location-pill {
+  padding: 8px 12px;
+  border-color: #85642f66;
+  background: #0b0c0b;
+  color: #f6e1b2;
+  box-shadow: none;
+}
+
+.royal-food-app .location-pill i,
+.royal-food-app .location-pill b {
+  color: var(--royal-gold);
+}
+
+.royal-food-app .location-pill span {
+  color: #f7f0e2;
+}
+
+.royal-food-app .location-pill small {
+  display: block;
+  color: #948b7e;
+}
+
+.royal-food-app .header-modes {
+  min-height: 0;
+  margin-left: auto;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.royal-food-app .header-modes button {
+  min-width: auto;
+  padding: 31px 12px 27px;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0;
+  background: transparent;
+  color: #c9c3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.royal-food-app .header-modes button.active {
+  border-bottom-color: var(--royal-gold) !important;
+  background: transparent;
+  color: var(--royal-gold-light);
+  box-shadow: none;
+}
+
+.royal-food-app .app-header nav {
+  gap: 17px;
+  margin-left: 0;
+}
+
+.royal-food-app .app-header nav > button {
+  padding: 31px 0 27px;
+  border-bottom: 2px solid transparent;
+  color: #d4cec2;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.royal-food-app .app-header nav > button.active {
+  border-bottom-color: var(--royal-gold);
+  color: var(--royal-gold-light);
+}
+
+.royal-food-app .app-header nav > .header-cart {
+  padding: 12px 15px !important;
+  border: 1px solid #a67d3a !important;
+  border-radius: 12px !important;
+  background: #12110e !important;
+  color: #f8d98f !important;
+  box-shadow: 0 7px 20px #0008;
+}
+
+.royal-food-app .app-header nav > .install-app-button {
+  padding: 12px 15px !important;
+  border: 1px solid var(--royal-gold) !important;
+  border-radius: 12px !important;
+  background: var(--royal-gold) !important;
+  color: #100d07 !important;
+}
+
+.royal-food-app .header-cart b {
+  background: var(--royal-gold);
+  color: #100d07;
+}
+
+.royal-food-app .app-header .veg-switch {
+  gap: 6px;
+  color: #d9d0c0;
+}
+
+.royal-food-app .hero.food {
+  position: relative;
+  min-height: 540px;
+  margin: 0;
+  grid-template-columns: minmax(440px, 47%) 1fr;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid #7f5c2d70;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 18% 22%, #4230174a, transparent 30%),
+    linear-gradient(110deg, #070808 0%, #0a0a09 53%, #151007 100%) !important;
+}
+
+.royal-food-app .hero.food::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(#d5a8510d 1px, transparent 1px),
+    linear-gradient(90deg, #d5a8510d 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(90deg, #000, transparent 62%);
+}
+
+.royal-food-app .hero.food > div:first-child {
+  z-index: 3;
+  padding: 58px 28px 44px clamp(40px, 5vw, 78px);
+}
+
+.royal-food-app .hero-tag {
+  color: var(--royal-gold);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.19em;
+}
+
+.royal-food-app .hero h1 {
+  max-width: 680px;
+  margin: 15px 0 14px;
+  color: #fffdf7;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(48px, 5.3vw, 78px);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+  text-shadow: 0 5px 22px #000;
+}
+
+.royal-food-app .hero h1 span {
+  color: #fffdf7;
+}
+
+.royal-food-app .hero h1 em {
+  color: var(--royal-gold-light) !important;
+  font-style: normal;
+}
+
+.royal-food-app .hero p {
+  max-width: 540px;
+  color: #c5bfb3;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.royal-food-app .hero-search-wrap {
+  width: min(560px, 100%);
+}
+
+.royal-food-app .hero-search {
+  width: 100%;
+  max-width: none;
+  min-height: 54px;
+  margin-top: 21px;
+  border: 1px solid #a77d3d;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 35px #0008;
+}
+
+.royal-food-app .hero-search > span,
+.royal-food-app .hero-search input {
+  color: #0b0b0b;
+}
+
+.royal-food-app .hero-search input {
+  font-size: 15px;
+  font-weight: 750;
+  caret-color: #0b0b0b;
+  opacity: 1;
+}
+
+.royal-food-app .hero-search input::placeholder {
+  color: #696969;
+  font-weight: 650;
+  opacity: 1;
+}
+
+.royal-food-app .hero-search button {
+  border-radius: 9px;
+  background: linear-gradient(135deg, #f0ca76, #c18a32);
+  color: #171108;
+  box-shadow: 0 8px 20px #0009;
+}
+
+.royal-food-app .search-suggestions {
+  border-color: #72552b;
+  background: #11120f;
+  box-shadow: 0 22px 55px #000c;
+}
+
+.royal-food-app .search-suggestions > small,
+.royal-food-app .search-suggestions span small {
+  color: #a89b85;
+}
+
+.royal-food-app .search-suggestions b {
+  color: #fff8e9;
+}
+
+.royal-food-app .search-suggestions > button:hover {
+  background: #262015;
+}
+
+.royal-food-app .hero-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.royal-food-app .hero-points > span {
+  min-width: 0;
+  min-height: 75px;
+  padding: 10px 8px !important;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-content: center;
+  border: 1px solid #72552d;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #15140f, #0b0c0b);
+  color: var(--royal-gold-light);
+}
+
+.royal-food-app .hero-points b {
+  color: #fff8e9;
+  font-size: 11px;
+}
+
+.royal-food-app .hero-points small {
+  color: #9f9789;
+  font-size: 8px;
+}
+
+.royal-food-app .hero-art {
+  z-index: 1;
+  min-height: 540px;
+  background-color: #0b0a07;
+  background-position: center;
+  background-size: cover;
+  filter: saturate(0.95) contrast(1.06);
+}
+
+.royal-food-app .hero-art::before {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, #080908 0%, #080908df 5%, transparent 35%),
+    linear-gradient(0deg, #050606a8 0%, transparent 30%);
+}
+
+.royal-food-app .lala-badge {
+  z-index: 3;
+  right: 6%;
+  top: 8%;
+  width: 84px;
+  height: 84px;
+  border-color: #e8bf68;
+  background: #100e09db;
+  color: #f2ca72;
+  box-shadow: 0 0 0 4px #d8a84725, 0 16px 35px #000a;
+}
+
+.royal-food-app .main-content {
+  padding: 30px clamp(34px, 5vw, 76px) 60px;
+  border-bottom: 1px solid #5c441f;
+  background:
+    radial-gradient(circle at 70% 12%, #3a2a1150, transparent 24%),
+    #080908;
+}
+
+.royal-food-app .section-title {
+  margin: 0 0 15px;
+}
+
+.royal-food-app .section-title small {
+  display: block;
+  color: var(--royal-gold);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.17em;
+}
+
+.royal-food-app .section-title h2,
+.royal-food-app .stores-title h2,
+.royal-food-app .products-title h2 {
+  margin-top: 5px;
+  color: #fff8eb;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.royal-food-app .section-title > button,
+.royal-food-app .section-title > span {
+  color: var(--royal-gold-light);
+  font-weight: 800;
+}
+
+.royal-food-app .food-filter-tabs button {
+  border-color: #654c29;
+  background: #10110f;
+  color: #c9c1b2;
+  box-shadow: 0 8px 18px #0006;
+}
+
+.royal-food-app .food-filter-tabs button.active,
+.royal-food-app .food-filter-tabs button.active.veg,
+.royal-food-app .food-filter-tabs button.active.nonveg {
+  border-color: #d2a251;
+  background: linear-gradient(135deg, #2a2113, #17130d);
+  color: #f4ce79;
+  box-shadow: inset 0 0 0 1px #d8a8472e, 0 8px 24px #0009;
+}
+
+.royal-food-app .category-row {
+  grid-template-columns: repeat(6, minmax(135px, 1fr));
+  gap: 12px;
+  padding-bottom: 29px;
+}
+
+.royal-food-app .category-row button {
+  height: 86px;
+  border: 1px solid #72552c;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #13130f, #0b0c0b);
+  color: #e8dfcf;
+  box-shadow: 0 11px 25px #0007;
+}
+
+.royal-food-app .category-row button:hover,
+.royal-food-app .category-row button.active {
+  border-color: #d5a74d;
+  background: linear-gradient(145deg, #2a2011, #11110e);
+  color: #f5ce74;
+  box-shadow: 0 13px 28px #000b, inset 0 0 0 1px #d5a74d22;
+}
+
+.royal-food-app .category-row button .category-image {
+  width: 64px;
+  height: 64px;
+  flex-basis: 64px;
+  border: 1px solid #9b7338;
+  background-color: #19140c;
+  box-shadow: 0 7px 17px #000a;
+}
+
+.royal-food-app .stores-title {
+  margin-top: 7px;
+}
+
+.royal-food-app .store-row {
+  gap: 15px;
+  padding-bottom: 30px;
+}
+
+.royal-food-app .store-card {
+  overflow: hidden;
+  border: 1px solid #5e4828;
+  border-radius: 13px;
+  background: #11120f;
+  color: #fff8eb;
+  box-shadow: 0 13px 28px #0008;
+}
+
+.royal-food-app .store-card.selected,
+.royal-food-app .store-card:hover {
+  border-color: #d3a24b;
+  box-shadow: 0 17px 38px #000c, 0 0 0 1px #d3a24b22;
+}
+
+.royal-food-app .store-card > div {
+  height: 132px;
+}
+
+.royal-food-app .store-card > div span {
+  background: #b5832f;
+  color: #120e07;
+}
+
+.royal-food-app .store-card section {
+  padding: 12px;
+}
+
+.royal-food-app .store-card h3 {
+  color: #fff9ed;
+  font-size: 14px;
+}
+
+.royal-food-app .store-card p,
+.royal-food-app .store-card small {
+  color: #aaa294;
+}
+
+.royal-food-app .product-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.royal-food-app .product-card {
+  overflow: hidden;
+  border: 1px solid #5e4828;
+  border-radius: 14px;
+  background: #10110f;
+  color: #fff8eb;
+  box-shadow: 0 14px 30px #0008;
+}
+
+.royal-food-app .product-card:hover {
+  border-color: #c79743;
+  transform: translateY(-3px);
+  box-shadow: 0 19px 40px #000c;
+}
+
+.royal-food-app .product-visual {
+  height: 150px;
+  background-color: #1a150d;
+}
+
+.royal-food-app .product-info {
+  padding: 13px;
+}
+
+.royal-food-app .product-info > small,
+.royal-food-app .product-info p,
+.royal-food-app .variant-label {
+  color: #a79f91;
+}
+
+.royal-food-app .product-info h3 {
+  color: #fff9ee;
+  font-size: 15px;
+}
+
+.royal-food-app .product-info select {
+  border-color: #6b522c;
+  background: #0a0b0a;
+  color: #e8dfd0;
+}
+
+.royal-food-app .price-row del {
+  color: #746e64;
+}
+
+.royal-food-app .price-row b {
+  color: var(--royal-gold-light);
+}
+
+.royal-food-app .price-row button {
+  border: 1px solid #d2a14f;
+  background: linear-gradient(135deg, #e7bd68, #b77e28);
+  color: #130e07;
+  box-shadow: 0 7px 18px #0008;
+}
+
+.royal-food-app .empty {
+  border-color: #604921;
+  background: #10110e;
+  color: #bdb4a5;
+}
+
+.royal-food-app .offers-section {
+  padding: 44px clamp(34px, 5vw, 76px);
+  border-bottom: 1px solid #5d4521;
+  background:
+    radial-gradient(circle at 15% 40%, #3b291555, transparent 28%),
+    linear-gradient(180deg, #0c0d0b, #070807);
+  color: #fff8eb;
+}
+
+.royal-food-app .offer-group-title small {
+  color: var(--royal-gold);
+}
+
+.royal-food-app .offer-group-title h3,
+.royal-food-app .reward-grid h3,
+.royal-food-app .offer-grid h3 {
+  color: #fff8e8;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.royal-food-app .offer-group-title > span,
+.royal-food-app .reward-grid p,
+.royal-food-app .offer-grid p {
+  color: #aaa294;
+}
+
+.royal-food-app .reward-grid article,
+.royal-food-app .offer-grid article {
+  border-color: #75572d;
+  background: linear-gradient(135deg, #171611, #0c0d0b);
+  color: #efe7d8;
+  box-shadow: 0 14px 33px #0009;
+}
+
+.royal-food-app .reward-grid article > i,
+.royal-food-app .reward-grid article > span {
+  color: #f0c66e;
+}
+
+.royal-food-app .coupon-offer-grid code {
+  border-color: #95713a;
+  background: #090a09;
+  color: #f2c96f;
+}
+
+.royal-food-app .coupon-offer-grid button {
+  border-color: #d0a04c;
+  background: #d7a64e;
+  color: #130e07;
+}
+
+.royal-food-app .electronics-section {
+  display: none;
+}
+
+.royal-food-app.electronics-view .electronics-section {
+  display: grid;
+}
+
+.royal-food-app .promise {
+  padding: 24px clamp(34px, 5vw, 76px);
+  border-bottom: 1px solid #5e4725;
+  background: #090a09;
+}
+
+.royal-food-app .promise > div {
+  border-color: #5d492a;
+  background: #11120f;
+  color: #fff8e9;
+}
+
+.royal-food-app .promise span {
+  color: var(--royal-gold-light);
+}
+
+.royal-food-app .promise small {
+  color: #9d9588;
+}
+
+.royal-food-app > footer {
+  border-top: 1px solid #76572b;
+  background: #050606;
+  color: #b6aea0;
+}
+
+.royal-food-app > footer b,
+.royal-food-app > footer a {
+  color: #f1ca70;
+}
+
+.royal-food-app > footer button {
+  border-color: #9a733a;
+  background: #15130e;
+  color: #f0ca73;
+}
+
+@media (max-width: 1180px) {
+  .royal-food-app .app-header {
+    gap: 14px;
+    padding-inline: 22px;
+  }
+
+  .royal-food-app .header-modes {
+    display: flex;
+  }
+
+  .royal-food-app .header-modes button {
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .royal-food-app .app-header nav {
+    gap: 10px;
+  }
+
+  .royal-food-app .app-header nav > button {
+    font-size: 9px;
+  }
+
+  .royal-food-app .hero.food {
+    grid-template-columns: 52% 48%;
+  }
+
+  .royal-food-app .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .royal-food-app {
+    padding-bottom: 80px;
+  }
+
+  .royal-food-app .app-header {
+    height: 66px;
+    padding: 6px 10px;
+    gap: 7px;
+  }
+
+  .royal-food-app .logo > span.brand-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+  }
+
+  .royal-food-app .logo > b {
+    max-width: 85px;
+    font-size: 10px;
+  }
+
+  .royal-food-app .location-pill {
+    margin-left: auto;
+    padding: 7px 8px;
+  }
+
+  .royal-food-app .location-pill small {
+    display: none;
+  }
+
+  .royal-food-app .header-modes,
+  .royal-food-app .app-header nav > button:not(.header-cart):not(.veg-switch) {
+    display: none;
+  }
+
+  .royal-food-app .app-header nav > .header-cart {
+    display: flex;
+    padding: 9px !important;
+  }
+
+  .royal-food-app .app-header nav > .veg-switch {
+    top: 74px;
+    border-color: #765a32 !important;
+    background: #11120f !important;
+    color: #f3ce78;
+    box-shadow: 0 9px 25px #000b;
+  }
+
+  .royal-food-app .hero.food {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .royal-food-app .hero.food > div:first-child {
+    padding: 38px 17px 25px;
+  }
+
+  .royal-food-app .hero-tag {
+    font-size: 8px;
+    letter-spacing: 0.14em;
+  }
+
+  .royal-food-app .hero h1 {
+    margin-top: 12px;
+    font-size: clamp(43px, 13vw, 58px);
+    line-height: 0.96;
+  }
+
+  .royal-food-app .hero p {
+    font-size: 12px;
+  }
+
+  .royal-food-app .hero-search {
+    min-height: 56px;
+    margin-top: 18px;
+  }
+
+  .royal-food-app .hero-points {
+    gap: 6px;
+  }
+
+  .royal-food-app .hero-points > span {
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 8px 3px !important;
+  }
+
+  .royal-food-app .hero-points b {
+    font-size: 9px;
+  }
+
+  .royal-food-app .hero-points small {
+    font-size: 7px;
+  }
+
+  .royal-food-app .hero-art {
+    min-height: 310px;
+    background-position: center;
+  }
+
+  .royal-food-app .hero-art::before {
+    background: linear-gradient(180deg, #080908 0%, transparent 25%, #0506067a 100%);
+  }
+
+  .royal-food-app .lala-badge {
+    width: 65px;
+    height: 65px;
+  }
+
+  .royal-food-app .main-content,
+  .royal-food-app .offers-section {
+    padding: 27px 14px 42px;
+  }
+
+  .royal-food-app .section-title h2,
+  .royal-food-app .stores-title h2,
+  .royal-food-app .products-title h2 {
+    font-size: 24px;
+  }
+
+  .royal-food-app .food-filter-tabs {
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+
+  .royal-food-app .food-filter-tabs button {
+    min-width: 118px;
+  }
+
+  .royal-food-app .category-row,
+  .royal-food-app .store-row {
+    margin-inline: -14px;
+    padding-inline: 14px;
+    overflow-x: auto;
+  }
+
+  .royal-food-app .category-row {
+    display: flex;
+  }
+
+  .royal-food-app .category-row button {
+    min-width: 132px;
+    height: 108px;
+    display: grid;
+    justify-items: center;
+  }
+
+  .royal-food-app .category-row button .category-image {
+    width: 65px;
+    height: 65px;
+  }
+
+  .royal-food-app .store-row {
+    display: flex;
+  }
+
+  .royal-food-app .store-card {
+    min-width: 205px;
+  }
+
+  .royal-food-app .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .royal-food-app .product-visual {
+    height: 135px;
+  }
+
+  .royal-food-app .product-info {
+    padding: 11px;
+  }
+
+  .royal-food-app .product-info h3 {
+    font-size: 14px;
+  }
+
+  .royal-food-app .reward-grid,
+  .royal-food-app .offer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .royal-food-app .promise {
+    padding: 18px 14px 28px;
+  }
+
+  .royal-food-app .mobile-nav {
+    border-top-color: #73552c;
+    background: #080908f7;
+    box-shadow: 0 -8px 27px #000c;
+  }
+
+  .royal-food-app .mobile-nav button {
+    color: #aca495;
+  }
+
+  .royal-food-app .mobile-nav button.active {
+    background: #2a2114;
+    color: #f1ca72;
+  }
+
+  .royal-food-app .mobile-nav button.active::before {
+    background: #d5a54e;
+  }
+
+  .royal-food-app .whatsapp-fab {
+    bottom: 88px;
+  }
+}
+
+@media (max-width: 390px) {
+  .royal-food-app .logo > b {
+    display: none;
+  }
+
+  .royal-food-app .hero h1 {
+    font-size: 41px;
+  }
+
+  .royal-food-app .product-grid {
+    gap: 8px;
+  }
+
+  .royal-food-app .product-visual {
+    height: 118px;
+  }
+}

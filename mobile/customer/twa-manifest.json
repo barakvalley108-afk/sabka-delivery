@@ -1,0 +1,61 @@
+{
+  "packageId": "com.sabkadelivery.app",
+  "host": "sabka-delivery.barakvalley108.chatgpt.site",
+  "name": "Sabka Delivery",
+  "launcherName": "Sabka",
+  "display": "standalone",
+  "themeColor": "#D71920",
+  "themeColorDark": "#A20F15",
+  "navigationColor": "#FFFAF0",
+  "navigationColorDark": "#201410",
+  "navigationDividerColor": "#E7D7C8",
+  "navigationDividerColorDark": "#3A2B25",
+  "backgroundColor": "#FFFAF0",
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "startUrl": "/?source=android-app",
+  "iconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png",
+  "maskableIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png",
+  "splashScreenFadeOutDuration": 250,
+  "signingKey": {
+    "path": "./upload-keystore.jks",
+    "alias": "sabka-upload"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Food",
+      "shortName": "Food",
+      "url": "/?section=food&source=android-shortcut",
+      "chosenIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png"
+    },
+    {
+      "name": "Grocery",
+      "shortName": "Grocery",
+      "url": "/?section=grocery&source=android-shortcut",
+      "chosenIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png"
+    },
+    {
+      "name": "Order history",
+      "shortName": "Orders",
+      "url": "/?section=history&source=android-shortcut",
+      "chosenIconUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/images/sabka-delivery-logo.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": true }
+  },
+  "alphaDependencies": { "enabled": false },
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://sabka-delivery.barakvalley108.chatgpt.site/",
+  "minSdkVersion": 23,
+  "orientation": "portrait-primary",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

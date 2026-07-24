@@ -1,0 +1,1 @@
+ALTER TABLE `market_panel_accounts` ADD `two_factor_hash` text;
