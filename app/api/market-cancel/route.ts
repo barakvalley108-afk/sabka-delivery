@@ -17,6 +17,9 @@ export async function POST(request:Request){
     if(!updated.meta.changes)return Response.json({error:"Order confirm ho chuka hai, ab cancel nahi ho sakta"},{status:409});
     await db.batch([
       ...items.results.map(item=>db.prepare("UPDATE market_variants SET stock_quantity=stock_quantity+? WHERE id=?").bind(item.quantity,item.variantId)),
+      db.prepare("UPDATE market_promotions SET uses=max(uses-1,0) WHERE upper(code) IN (SELECT upper(coupon_code) FROM market_coupon_claims WHERE order_code=?)").bind(orderCode),
+      db.prepare("UPDATE market_promotions SET is_active=1 WHERE upper(code) IN (SELECT upper(coupon_code) FROM market_single_coupon_claims WHERE order_code=?) AND EXISTS (SELECT 1 FROM market_promotion_rules rules WHERE upper(rules.code)=upper(market_promotions.code) AND rules.auto_pause_after_use=1)").bind(orderCode),
+      db.prepare("DELETE FROM market_single_coupon_claims WHERE order_code=?").bind(orderCode),
       db.prepare("DELETE FROM market_coupon_claims WHERE order_code=?").bind(orderCode),
       db.prepare("UPDATE market_reward_offers SET uses=max(uses-1,0) WHERE id IN (SELECT offer_id FROM market_reward_claims WHERE order_code=?)").bind(orderCode),
       db.prepare("DELETE FROM market_reward_claims WHERE order_code=?").bind(orderCode),

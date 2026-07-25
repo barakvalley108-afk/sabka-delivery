@@ -58,6 +58,7 @@ const controlSchema = [
   min_order INTEGER NOT NULL DEFAULT 0,
   is_active INTEGER NOT NULL DEFAULT 1,
   uses INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 )`,
   `CREATE TABLE IF NOT EXISTS market_campaigns (
@@ -205,7 +206,8 @@ const controlSchema = [
   first_order_only INTEGER NOT NULL DEFAULT 0,
   max_discount INTEGER NOT NULL DEFAULT 0,
   auto_pause_after_use INTEGER NOT NULL DEFAULT 0,
-  show_on_website INTEGER NOT NULL DEFAULT 1
+  show_on_website INTEGER NOT NULL DEFAULT 1,
+  usage_limit INTEGER NOT NULL DEFAULT 0
 )`,
   `CREATE TABLE IF NOT EXISTS market_single_coupon_claims (
   coupon_code TEXT PRIMARY KEY,
@@ -358,6 +360,20 @@ async function initializeControlTables() {
     await db
       .prepare(
         "ALTER TABLE market_promotion_rules ADD COLUMN show_on_website INTEGER NOT NULL DEFAULT 1",
+      )
+      .run();
+  } catch {}
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE market_promotions ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0",
+      )
+      .run();
+  } catch {}
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE market_promotion_rules ADD COLUMN usage_limit INTEGER NOT NULL DEFAULT 0",
       )
       .run();
   } catch {}
@@ -652,6 +668,28 @@ async function initializeControlTables() {
        VALUES (1,'5th order par free delivery','30 din mein 4 delivered orders complete karo; agle order ki delivery free.',4,30,'FREE_DELIVERY',0,100,1)`,
     ),
   ]);
+  const couponOrderUpgrade = await db
+    .prepare(
+      "SELECT value FROM market_settings WHERE key='coupon_sort_order_v1'",
+    )
+    .first<{ value: string }>();
+  if (!couponOrderUpgrade) {
+    await db.batch([
+      db.prepare(
+        `UPDATE market_promotions
+         SET sort_order=(
+           SELECT count(*)
+           FROM market_promotions previous
+           WHERE previous.created_at>market_promotions.created_at
+              OR (previous.created_at=market_promotions.created_at
+                  AND previous.code<market_promotions.code)
+         )`,
+      ),
+      db.prepare(
+        "INSERT OR IGNORE INTO market_settings (key,value) VALUES ('coupon_sort_order_v1','done')",
+      ),
+    ]);
+  }
   const brandUpgrade = await db
     .prepare(
       "SELECT value FROM market_settings WHERE key='brand_upgrade_sabka_v1'",
