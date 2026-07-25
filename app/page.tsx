@@ -2,7 +2,6 @@ import { getInitialMarketCatalog } from "../db/market-catalog";
 import MarketHome, { type MarketCatalog } from "./market-home";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 export default async function Page() {
   const initialMarket = await getInitialMarketCatalog();

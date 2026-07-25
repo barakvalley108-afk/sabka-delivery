@@ -327,16 +327,10 @@ const catalogRevisionTables = [
 
 const catalogRevisionSchema = [
   `CREATE TABLE IF NOT EXISTS market_catalog_revision (
-  id INTEGER PRIMARY KEY CHECK(id=1),
-  version INTEGER NOT NULL DEFAULT 1,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-)`,
-  `CREATE TABLE IF NOT EXISTS market_catalog_snapshots (
-  id INTEGER PRIMARY KEY CHECK(id=1),
-  catalog_json TEXT NOT NULL,
-  catalog_version INTEGER NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-)`,
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    version INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   "INSERT OR IGNORE INTO market_catalog_revision (id,version) VALUES (1,1)",
   ...catalogRevisionTables.flatMap((table) =>
     (["INSERT", "UPDATE", "DELETE"] as const).map(

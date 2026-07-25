@@ -95,25 +95,8 @@ const unavailableCatalog: MarketCatalog = {
 
 let lastValidCatalog: MarketCatalog | null = null;
 
-async function getPersistedCatalog(
-  db: Awaited<ReturnType<typeof ensureControlTables>>,
-): Promise<MarketCatalog | null> {
-  const snapshot = await db
-    .prepare(
-      "SELECT catalog_json catalogJson FROM market_catalog_snapshots WHERE id=1",
-    )
-    .first<{ catalogJson: string }>();
-  if (!snapshot?.catalogJson) return null;
-  try {
-    return JSON.parse(snapshot.catalogJson) as MarketCatalog;
-  } catch {
-    return null;
-  }
-}
-
 export async function getMarketCatalog(): Promise<MarketCatalog> {
   const db = await ensureControlTables();
-  try {
   const [
     storesResult,
     itemsResult,
@@ -220,27 +203,7 @@ export async function getMarketCatalog(): Promise<MarketCatalog> {
     catalogVersion: Number(revision.results[0]?.version || 1),
   };
   lastValidCatalog = catalog;
-  await db
-    .prepare(
-      `INSERT INTO market_catalog_snapshots
-       (id,catalog_json,catalog_version,updated_at) VALUES (1,?,?,CURRENT_TIMESTAMP)
-       ON CONFLICT(id) DO UPDATE SET
-         catalog_json=excluded.catalog_json,
-         catalog_version=excluded.catalog_version,
-         updated_at=CURRENT_TIMESTAMP`,
-    )
-    .bind(JSON.stringify(catalog), catalog.catalogVersion)
-    .run();
   return catalog;
-  } catch (error) {
-    const persisted = await getPersistedCatalog(db).catch(() => null);
-    if (persisted) {
-      lastValidCatalog = persisted;
-      return persisted;
-    }
-    if (lastValidCatalog) return lastValidCatalog;
-    throw error;
-  }
 }
 
 export async function getInitialMarketCatalog(): Promise<MarketCatalog> {

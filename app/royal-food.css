@@ -53,15 +53,12 @@
   box-shadow: none;
 }
 
-.royal-food-app .logo .brand-copy > b {
+.royal-food-app .logo > b {
+  max-width: 140px;
   color: #fff7e5;
   font-size: 18px;
   line-height: 1.03;
-  letter-spacing: 0.02em;
-}
-
-.royal-food-app .logo .brand-copy > small {
-  color: #cdbb96;
+  letter-spacing: 0.06em;
 }
 
 .royal-food-app .location-pill {
@@ -689,8 +686,9 @@
     height: 42px;
   }
 
-  .royal-food-app .logo .brand-copy > b {
-    font-size: 12px;
+  .royal-food-app .logo > b {
+    max-width: 85px;
+    font-size: 10px;
   }
 
   .royal-food-app .location-pill {
@@ -886,7 +884,7 @@
 }
 
 @media (max-width: 390px) {
-  .royal-food-app .logo .brand-copy {
+  .royal-food-app .logo > b {
     display: none;
   }
 

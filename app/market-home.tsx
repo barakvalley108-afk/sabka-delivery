@@ -1063,10 +1063,7 @@ export default function MarketHome({
           <span className="brand-mark">
             <img src={brandLogo} alt="Sabka Delivery logo" />
           </span>
-          <span className="brand-copy">
-            <b>Sabka Delivery</b>
-            <small>Food • Grocery • Electronics</small>
-          </span>
+          <b>{brandName}</b>
         </button>
         <button className="location-pill">
           <i>●</i>
