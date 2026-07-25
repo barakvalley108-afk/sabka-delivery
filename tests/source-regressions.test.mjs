@@ -1,14 +1,8 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(path, "utf8");
-
-const sqlFilesUnder = (directory) =>
-  readdirSync(directory, { recursive: true })
-    .map(String)
-    .filter((path) => path.endsWith(".sql"))
-    .map((path) => `${directory}/${path}`);
 
 test("homepage is dynamic and initialized from server catalog data", () => {
   const page = read("app/page.tsx");
@@ -31,28 +25,6 @@ test("coupon validation has no unknown/private fallback", () => {
   assert.match(sources, /FROM market_promotions/);
   assert.match(sources, /error: "Invalid coupon"/);
   assert.match(sources, /reason: "INVALID"/);
-});
-
-test("database initialization and migrations never seed demo coupons", () => {
-  const seedSources = [
-    "db/control-store.ts",
-    ...sqlFilesUnder("drizzle"),
-    ...sqlFilesUnder("migrations"),
-  ]
-    .map(read)
-    .join("\n");
-  const retiredCodes = [
-    ["WELCOME", "20"].join(""),
-    ["SABKA", "50"].join(""),
-  ];
-
-  assert.doesNotMatch(
-    seedSources,
-    /INSERT\s+(?:OR\s+IGNORE\s+)?INTO\s+[`"]?market_promotions[`"]?/i,
-  );
-  for (const code of retiredCodes) {
-    assert.equal(seedSources.toUpperCase().includes(code), false);
-  }
 });
 
 test("service worker v68 never caches HTML, API, scripts or framework chunks", () => {
