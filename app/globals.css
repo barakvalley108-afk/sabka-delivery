@@ -3785,3 +3785,55 @@ footer > button {
     display: none;
   }
 }
+
+
+/* Order History visibility and mobile overflow fix */
+.history-modal {
+  overflow-x: hidden !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+.history-modal, .history-modal * { box-sizing: border-box; }
+.history-modal header,
+.history-modal h2,
+.history-modal label,
+.history-list h3 {
+  color: #111827 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  text-shadow: none !important;
+}
+.history-modal > p,
+.history-list p,
+.history-list .tracking-timeline small,
+.history-list .track-note {
+  color: #4b5563 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.history-modal input {
+  width: 100% !important;
+  min-width: 0 !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  caret-color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  opacity: 1 !important;
+}
+.history-modal input::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+  opacity: 1 !important;
+}
+.history-list, .history-list article, .history-list .tracking-timeline {
+  width: 100%;
+  max-width: 100%;
+}
+.history-list { overflow-x: hidden !important; }
+.history-list article { background: #fffaf1 !important; color: #111827 !important; }
+@media (max-width: 680px) {
+  .history-modal { overflow-y: auto !important; overflow-x: hidden !important; }
+  .history-list .tracking-timeline { margin-inline: 0 !important; overflow: hidden !important; }
+  .tracking-timeline .step { min-width: 0 !important; }
+  .tracking-timeline .step > small { max-width: 54px !important; overflow-wrap: anywhere; }
+}
