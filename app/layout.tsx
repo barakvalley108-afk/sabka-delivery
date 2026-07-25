@@ -21,8 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://sabkadelivery.in"),
 
   title: {
-    default:
-      "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
+    default: "Sabka Delivery | Food, Grocery & Electronics",
     template: "%s | Sabka Delivery",
   },
 
@@ -93,8 +92,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title:
-      "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
+    title: "Sabka Delivery",
 
     description:
       "Order food, grocery and electronics online in Lala Bazar, Hailakandi. Fast, safe and reliable local delivery.",

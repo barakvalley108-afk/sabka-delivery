@@ -327,10 +327,16 @@ const catalogRevisionTables = [
 
 const catalogRevisionSchema = [
   `CREATE TABLE IF NOT EXISTS market_catalog_revision (
-    id INTEGER PRIMARY KEY CHECK(id=1),
-    version INTEGER NOT NULL DEFAULT 1,
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`,
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  version INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+)`,
+  `CREATE TABLE IF NOT EXISTS market_catalog_snapshots (
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  catalog_json TEXT NOT NULL,
+  catalog_version INTEGER NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+)`,
   "INSERT OR IGNORE INTO market_catalog_revision (id,version) VALUES (1,1)",
   ...catalogRevisionTables.flatMap((table) =>
     (["INSERT", "UPDATE", "DELETE"] as const).map(
@@ -655,19 +661,13 @@ async function initializeControlTables() {
       "INSERT OR IGNORE INTO market_content (key,title,body) VALUES ('contact','Contact SABKA DELIVERY','WhatsApp and support: 80117 67897')",
     ),
   ]);
-  await db.batch([
-    db.prepare(
-      "INSERT OR IGNORE INTO market_promotions (code,title,discount_type,discount_value,min_order,is_active) VALUES ('SABKA50','Flat ₹50 OFF','FLAT',50,350,1)",
-    ),
-    db.prepare(
-      "INSERT OR IGNORE INTO market_promotions (code,title,discount_type,discount_value,min_order,is_active) VALUES ('WELCOME20','20% OFF up to ₹60','PERCENT',20,350,1)",
-    ),
-    db.prepare(
+  await db
+    .prepare(
       `INSERT OR IGNORE INTO market_reward_offers
        (id,title,description,qualifying_orders,window_days,reward_type,reward_value,min_order,is_active)
        VALUES (1,'5th order par free delivery','30 din mein 4 delivered orders complete karo; agle order ki delivery free.',4,30,'FREE_DELIVERY',0,100,1)`,
-    ),
-  ]);
+    )
+    .run();
   const couponOrderUpgrade = await db
     .prepare(
       "SELECT value FROM market_settings WHERE key='coupon_sort_order_v1'",
@@ -714,12 +714,6 @@ async function initializeControlTables() {
       ),
       db.prepare(
         "UPDATE market_riders SET email=replace(email,'@apnadelivery.local','@sabkadelivery.local') WHERE email LIKE '%@apnadelivery.local'",
-      ),
-      db.prepare(
-        "UPDATE market_promotions SET is_active=0 WHERE code='APNA50'",
-      ),
-      db.prepare(
-        "INSERT OR IGNORE INTO market_promotions (code,title,discount_type,discount_value,min_order,is_active) VALUES ('SABKA50','Flat ₹50 OFF','FLAT',50,350,1)",
       ),
       db.prepare(
         "INSERT OR IGNORE INTO market_settings (key,value) VALUES ('brand_upgrade_sabka_v1','done')",

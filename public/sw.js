@@ -1,4 +1,4 @@
-const CACHE_NAME = "sabka-delivery-app-v4";
+const CACHE_NAME = "sabka-delivery-app-v68";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -57,6 +57,18 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request).catch(() => caches.match("/offline.html"))
     );
+    return;
+  }
+
+  // Never cache API responses, framework chunks, HTML, or the service worker.
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_next/") ||
+    url.pathname === "/sw.js" ||
+    request.destination === "document" ||
+    request.destination === "script" ||
+    request.destination === "style"
+  ) {
     return;
   }
 

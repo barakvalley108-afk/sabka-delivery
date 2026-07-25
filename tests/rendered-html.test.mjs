@@ -29,12 +29,12 @@ test("renders a branded, hydration-safe initial document", async () => {
   const html = await response.text();
   assert.match(
     html,
-    /<title>Sabka Delivery \| Food, Grocery &amp; Electronics Delivery in Lala Bazar<\/title>/i,
+    /<title>Sabka Delivery \| Food, Grocery &amp; Electronics<\/title>/i,
   );
   assert.match(html, /rel="(?:shortcut )?icon"[^>]+favicon\.ico/i);
   assert.match(html, /rel="apple-touch-icon"[^>]+apple-icon\.png/i);
   assert.match(html, /rel="manifest"[^>]+manifest\.webmanifest/i);
   assert.match(html, /SABKA DELIVERY/i);
-  assert.doesNotMatch(html, /Private coupon activated/i);
+  assert.doesNotMatch(html, /private coupon/i);
   assert.doesNotMatch(html, /Loading (?:catalog|screen)/i);
 });
