@@ -21,45 +21,9 @@ export type MarketCatalog = {
   categories: Record<string, unknown>[];
   sections: Record<string, unknown>[];
   catalogVersion: number;
-  catalogPage: {
-    section: string;
-    offset: number;
-    limit: number;
-    hasMore: boolean;
-  };
 };
 
 const CATALOG_READ_TIMEOUT_MS = 3_000;
-const DEFAULT_CATALOG_SECTION = "FOOD";
-const DEFAULT_CATALOG_PAGE_SIZE = 120;
-const MAX_CATALOG_PAGE_SIZE = 120;
-
-export type CatalogReadOptions = {
-  section?: string;
-  offset?: number;
-  limit?: number;
-};
-
-function normalizeCatalogOptions(options: CatalogReadOptions = {}) {
-  const section = String(options.section || DEFAULT_CATALOG_SECTION)
-    .trim()
-    .toUpperCase();
-  const offset = Math.max(0, Math.floor(Number(options.offset) || 0));
-  const limit = Math.max(
-    1,
-    Math.min(
-      MAX_CATALOG_PAGE_SIZE,
-      Math.floor(Number(options.limit) || DEFAULT_CATALOG_PAGE_SIZE),
-    ),
-  );
-  return {
-    section: /^[A-Z0-9_-]{1,32}$/.test(section)
-      ? section
-      : DEFAULT_CATALOG_SECTION,
-    offset,
-    limit,
-  };
-}
 
 // This state is shown only when neither D1 nor a persisted admin snapshot is
 // available. It deliberately contains no old/demo catalog, banner or products.
@@ -84,15 +48,9 @@ const unavailableCatalog: MarketCatalog = {
   categories: [],
   sections: [],
   catalogVersion: 0,
-  catalogPage: {
-    section: DEFAULT_CATALOG_SECTION,
-    offset: 0,
-    limit: DEFAULT_CATALOG_PAGE_SIZE,
-    hasMore: false,
-  },
 };
 
-const lastValidCatalogs = new Map<string, MarketCatalog>();
+let lastValidCatalog: MarketCatalog | null = null;
 
 function withTimeout<T>(
   operation: Promise<T>,
@@ -112,7 +70,6 @@ function withTimeout<T>(
 
 async function getPersistedCatalog(
   db: D1Database,
-  section: string,
 ): Promise<MarketCatalog | null> {
   const snapshot = await withTimeout(
     db
@@ -123,18 +80,13 @@ async function getPersistedCatalog(
   );
   if (!snapshot?.catalogJson) return null;
   try {
-    const catalog = JSON.parse(snapshot.catalogJson) as MarketCatalog;
-    return catalog.catalogPage?.section === section ? catalog : null;
+    return JSON.parse(snapshot.catalogJson) as MarketCatalog;
   } catch {
     return null;
   }
 }
 
-async function queryMarketCatalog(
-  db: D1Database,
-  options: CatalogReadOptions = {},
-): Promise<MarketCatalog> {
-  const { section, offset, limit } = normalizeCatalogOptions(options);
+async function queryMarketCatalog(db: D1Database): Promise<MarketCatalog> {
   const [
     storesResult,
     itemsResult,
@@ -149,83 +101,35 @@ async function queryMarketCatalog(
     revision,
   ] = await withTimeout(
     db.batch([
-      db
-        .prepare(
-        `SELECT s.id,s.name,s.type,s.description,s.address,s.eta,s.rating,s.image,
-                coalesce(ss.section_key,sp.vertical,s.type) vertical
+      db.prepare(
+        `SELECT s.*,coalesce(ss.section_key,sp.vertical,s.type) vertical
          FROM market_stores s
          JOIN market_store_controls c ON c.store_id=s.id
          LEFT JOIN market_store_operations op ON op.store_id=s.id
          LEFT JOIN market_store_sections ss ON ss.store_id=s.id
          LEFT JOIN market_store_profiles sp ON sp.store_id=s.id
          JOIN market_sections section ON section.key=coalesce(ss.section_key,sp.vertical,s.type)
-         WHERE s.is_open=1 AND c.approved=1 AND c.blocked=0
-           AND section.is_active=1 AND section.key=?
+         WHERE s.is_open=1 AND c.approved=1 AND c.blocked=0 AND section.is_active=1
            AND (op.store_id IS NULL OR
              (op.opening_time<=op.closing_time AND time('now','+5 hours','+30 minutes') BETWEEN op.opening_time AND op.closing_time) OR
              (op.opening_time>op.closing_time AND (time('now','+5 hours','+30 minutes')>=op.opening_time OR time('now','+5 hours','+30 minutes')<=op.closing_time)))
-         ORDER BY section.sort_order,s.name,s.id
-         LIMIT 100`,
-        )
-        .bind(section),
-      db
-        .prepare(
-        `SELECT i.id,i.store_id,i.name,i.description,i.category,i.subcategory,
-                i.image,i.emoji,i.food_type,section.key vertical
-         FROM market_items i
+         ORDER BY section.sort_order,s.name`,
+      ),
+      db.prepare(
+        `SELECT i.* FROM market_items i
          JOIN market_stores s ON s.id=i.store_id
-         JOIN market_store_controls c ON c.store_id=s.id
-         LEFT JOIN market_store_operations op ON op.store_id=s.id
          LEFT JOIN market_store_sections ss ON ss.store_id=s.id
          LEFT JOIN market_store_profiles sp ON sp.store_id=s.id
          JOIN market_sections section ON section.key=coalesce(ss.section_key,sp.vertical,s.type)
-         WHERE i.is_active=1 AND s.is_open=1
-           AND c.approved=1 AND c.blocked=0
-           AND section.is_active=1 AND section.key=?
-           AND (op.store_id IS NULL OR
-             (op.opening_time<=op.closing_time AND time('now','+5 hours','+30 minutes') BETWEEN op.opening_time AND op.closing_time) OR
-             (op.opening_time>op.closing_time AND (time('now','+5 hours','+30 minutes')>=op.opening_time OR time('now','+5 hours','+30 minutes')<=op.closing_time)))
-         ORDER BY section.sort_order,i.store_id,i.id
-         LIMIT ? OFFSET ?`,
-        )
-        .bind(section, limit + 1, offset),
-      db
-        .prepare(
-        `WITH eligible_items AS (
-           SELECT i.id,section.key vertical
-           FROM market_items i
-           JOIN market_stores s ON s.id=i.store_id
-           JOIN market_store_controls c ON c.store_id=s.id
-           LEFT JOIN market_store_operations op ON op.store_id=s.id
-           LEFT JOIN market_store_sections ss ON ss.store_id=s.id
-           LEFT JOIN market_store_profiles sp ON sp.store_id=s.id
-           JOIN market_sections section ON section.key=coalesce(ss.section_key,sp.vertical,s.type)
-           WHERE i.is_active=1 AND s.is_open=1
-             AND c.approved=1 AND c.blocked=0
-             AND section.is_active=1 AND section.key=?
-             AND (op.store_id IS NULL OR
-               (op.opening_time<=op.closing_time AND time('now','+5 hours','+30 minutes') BETWEEN op.opening_time AND op.closing_time) OR
-               (op.opening_time>op.closing_time AND (time('now','+5 hours','+30 minutes')>=op.opening_time OR time('now','+5 hours','+30 minutes')<=op.closing_time)))
-           ORDER BY section.sort_order,i.store_id,i.id
-           LIMIT ? OFFSET ?
-         )
-         SELECT v.id,v.item_id,v.label,v.unit,v.unit_value,v.price,
-                v.discount_price,v.discount_percent,v.stock_quantity,i.vertical
-         FROM market_variants v
-         JOIN eligible_items i ON i.id=v.item_id
-         WHERE v.is_active=1
-         ORDER BY v.item_id,v.id
-         LIMIT 360`,
-        )
-        .bind(section, limit, offset),
-      db.prepare("SELECT key,value FROM market_settings ORDER BY key LIMIT 100"),
+         WHERE i.is_active=1 AND section.is_active=1
+         ORDER BY section.sort_order,i.store_id,i.id`,
+      ),
       db.prepare(
-        `SELECT id,name,pin_code pinCode,radius_km radiusKm,
-                delivery_charge deliveryCharge,min_order minOrder,
-                free_delivery_above freeDeliveryAbove,night_charge nightCharge,
-                rain_charge rainCharge
-         FROM market_service_areas
-         WHERE is_active=1 ORDER BY name,id LIMIT 100`,
+        "SELECT * FROM market_variants WHERE is_active=1 ORDER BY item_id,id",
+      ),
+      db.prepare("SELECT key,value FROM market_settings"),
+      db.prepare(
+        "SELECT * FROM market_service_areas WHERE is_active=1 ORDER BY name",
       ),
       db.prepare(
         `SELECT p.code,p.title,p.discount_type discountType,
@@ -239,49 +143,38 @@ async function queryMarketCatalog(
            AND (r.expires_at IS NULL OR date(r.expires_at)>=date('now','+5 hours','+30 minutes'))
            AND r.user_mobile IS NULL
            AND coalesce(r.show_on_website,1)=1
-         ORDER BY p.sort_order,p.created_at DESC,p.code
-         LIMIT 200`,
+         ORDER BY p.sort_order,p.created_at DESC,p.code`,
       ),
       db.prepare(
         `SELECT id,title,description,qualifying_orders qualifyingOrders,
                 window_days windowDays,reward_type rewardType,min_order minOrder
-         FROM market_reward_offers
-         WHERE is_active=1 ORDER BY created_at DESC LIMIT 100`,
+         FROM market_reward_offers WHERE is_active=1 ORDER BY created_at DESC`,
       ),
+      db.prepare("SELECT * FROM market_content"),
       db.prepare(
-        `SELECT key,title,body,image,updated_at updatedAt
-         FROM market_content ORDER BY key LIMIT 100`,
-      ),
-      db
-        .prepare(
         `SELECT id,CASE WHEN name LIKE '__ALL__:%' THEN 'All' ELSE name END name,
                 image,is_active isActive,sort_order sortOrder,vertical
-         FROM market_categories
-         WHERE vertical=?
-         ORDER BY vertical,sort_order,name,id LIMIT 200`,
-        )
-        .bind(section),
+         FROM market_categories ORDER BY vertical,sort_order,name`,
+      ),
       db.prepare(
         `SELECT key,name,description,image,icon,is_active isActive,sort_order sortOrder,
                 coalesce((SELECT cast(value as integer) FROM market_settings WHERE key='minimum_order_'||market_sections.key),0) minOrder,
                 coalesce((SELECT cast(value as integer) FROM market_settings WHERE key='delivery_charge_'||market_sections.key),
                          (SELECT cast(value as integer) FROM market_settings WHERE key='delivery_charge'),20) deliveryCharge
-         FROM market_sections
-         WHERE is_active=1 ORDER BY sort_order,name,key LIMIT 50`,
+         FROM market_sections WHERE is_active=1 ORDER BY sort_order,name`,
       ),
       db.prepare(
         "SELECT version,updated_at updatedAt FROM market_catalog_revision WHERE id=1",
       ),
     ]),
   );
-  const pageItems = itemsResult.results.slice(0, limit);
 
   const config = Object.fromEntries(
     settings.results.map((entry) => [String(entry.key), String(entry.value)]),
   );
-  const catalog = {
+  return {
     stores: storesResult.results,
-    items: pageItems,
+    items: itemsResult.results,
     variants: variantsResult.results,
     deliveryFee: Number(config.delivery_charge || 20),
     maintenanceMode: config.maintenance_mode === "true",
@@ -300,41 +193,24 @@ async function queryMarketCatalog(
     categories: categories.results,
     sections: sections.results,
     catalogVersion: Number(revision.results[0]?.version || 1),
-    catalogPage: {
-      section,
-      offset,
-      limit,
-      hasMore: itemsResult.results.length > limit,
-    },
   };
-  return catalog;
 }
 
-export async function getMarketCatalog(
-  options: CatalogReadOptions = {},
-): Promise<MarketCatalog> {
-  const normalized = normalizeCatalogOptions(options);
-  const cacheKey = `${normalized.section}:${normalized.offset}`;
+export async function getMarketCatalog(): Promise<MarketCatalog> {
   const db = await ensureControlTables();
   try {
-    const catalog = await queryMarketCatalog(db, normalized);
-    lastValidCatalogs.set(cacheKey, catalog);
-    return catalog;
-  } catch (error) {
-    console.error("Catalog read failed", error);
-    const persisted =
-      normalized.offset === 0
-        ? await getPersistedCatalog(db, normalized.section).catch(() => null)
-        : null;
+    // Customer reads intentionally use one lightweight snapshot SELECT.
+    // The full multi-table catalog query is reserved for admin/partner
+    // mutations, where refreshMarketCatalogSnapshot() rebuilds the snapshot.
+    const persisted = await getPersistedCatalog(db);
     if (persisted) {
-      lastValidCatalogs.set(cacheKey, persisted);
+      lastValidCatalog = persisted;
       return persisted;
     }
-    const lastValidCatalog = lastValidCatalogs.get(cacheKey);
-    if (lastValidCatalog) {
-      return lastValidCatalog;
-    }
-    throw error;
+    return lastValidCatalog || unavailableCatalog;
+  } catch (error) {
+    console.error("Catalog snapshot read failed", error);
+    return lastValidCatalog || unavailableCatalog;
   }
 }
 
@@ -346,10 +222,7 @@ export async function refreshMarketCatalogSnapshot(
   database?: D1Database,
 ): Promise<MarketCatalog> {
   const db = database || (await ensureControlTables());
-  const catalog = await queryMarketCatalog(db, {
-    section: DEFAULT_CATALOG_SECTION,
-    offset: 0,
-  });
+  const catalog = await queryMarketCatalog(db);
   await withTimeout(
     db
       .prepare(
@@ -363,21 +236,14 @@ export async function refreshMarketCatalogSnapshot(
       .bind(JSON.stringify(catalog), catalog.catalogVersion)
       .run(),
   );
-  lastValidCatalogs.set(`${DEFAULT_CATALOG_SECTION}:0`, catalog);
+  lastValidCatalog = catalog;
   return catalog;
 }
 
 export async function getInitialMarketCatalog(): Promise<MarketCatalog> {
   try {
-    const catalog = await getMarketCatalog({
-      section: DEFAULT_CATALOG_SECTION,
-      offset: 0,
-    });
-    return catalog;
+    return await getMarketCatalog();
   } catch {
-    return (
-      lastValidCatalogs.get(`${DEFAULT_CATALOG_SECTION}:0`) ||
-      unavailableCatalog
-    );
+    return lastValidCatalog || unavailableCatalog;
   }
 }

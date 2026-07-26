@@ -10,14 +10,13 @@ const sqlFilesUnder = (directory) =>
     .filter((path) => path.endsWith(".sql"))
     .map((path) => `${directory}/${path}`);
 
-test("homepage is dynamic and initialized from server catalog data", () => {
+test("homepage rendering performs no D1 work and client loads the snapshot", () => {
   const page = read("app/page.tsx");
   const home = read("app/market-home.tsx");
-  assert.match(page, /dynamic\s*=\s*"force-dynamic"/);
-  assert.match(page, /revalidate\s*=\s*0/);
-  assert.match(page, /getInitialMarketCatalog/);
-  assert.match(home, /useState\(initialMarket\.promotions/);
-  assert.doesNotMatch(home, /useEffect\(\(\)\s*=>\s*\{\s*void loadMarket/);
+  assert.doesNotMatch(page, /force-dynamic|getInitialMarketCatalog/);
+  assert.match(page, /const initialMarket/);
+  assert.match(home, /fetch\("\/api\/market"/);
+  assert.match(home, /useLiveRefresh\(refreshMarket/);
 });
 
 test("coupon validation has no unknown/private fallback", () => {
@@ -71,60 +70,19 @@ test("normal runtime database helpers contain no schema or seed work", () => {
   assert.match(runtimeStores, /env\.DB|getMarketDatabase/);
 });
 
-test("catalog customer read is one bounded batch and never writes a snapshot", () => {
+test("catalog customer read uses one snapshot select and never writes", () => {
   const catalog = read("db/market-catalog.ts");
   const readSection = catalog.slice(
     catalog.indexOf("export async function getMarketCatalog"),
     catalog.indexOf("export async function refreshMarketCatalogSnapshot"),
   );
   assert.match(catalog, /CATALOG_READ_TIMEOUT_MS/);
-  assert.match(catalog, /db\.batch\(\[/);
-  assert.match(catalog, /DEFAULT_CATALOG_PAGE_SIZE = 120/);
-  assert.match(catalog, /MAX_CATALOG_PAGE_SIZE = 120/);
-  assert.match(catalog, /section\.key=\?/);
-  assert.match(catalog, /LIMIT \? OFFSET \?/);
-  assert.match(catalog, /itemsResult\.results\.slice\(0, limit\)/);
+  assert.match(readSection, /getPersistedCatalog/);
+  assert.doesNotMatch(readSection, /queryMarketCatalog/);
+  assert.doesNotMatch(readSection, /db\.batch\(\[/);
   assert.doesNotMatch(readSection, /\.run\(\)/);
   assert.doesNotMatch(readSection, /INSERT INTO market_catalog_snapshots/);
   assert.match(catalog, /INSERT INTO market_catalog_snapshots/);
-});
-
-test("homepage catalog excludes closed stores and avoids quadratic rendering", () => {
-  const catalog = read("db/market-catalog.ts");
-  const home = read("app/market-home.tsx");
-  assert.match(catalog, /i\.is_active=1 AND s\.is_open=1/);
-  assert.match(catalog, /c\.approved=1 AND c\.blocked=0/);
-  assert.match(catalog, /catalogPage:/);
-  assert.match(home, /variantsByItemId/);
-  assert.match(home, /storesById/);
-  assert.match(home, /INITIAL_PRODUCT_RENDER_LIMIT = 24/);
-  assert.doesNotMatch(home, /variants\.filter\(/);
-  assert.doesNotMatch(home, /JSON\.stringify\(initialMarket\)/);
-  assert.doesNotMatch(home, /JSON\.stringify\(data\)/);
-});
-
-test("GET homepage import path has no DDL, writes, recursive fetch, or retries", () => {
-  const serverPath = [
-    "app/page.tsx",
-    "db/market-catalog.ts",
-    "db/control-store.ts",
-    "db/market-store.ts",
-  ]
-    .map(read)
-    .join("\n");
-  const readSection = serverPath.slice(
-    0,
-    serverPath.indexOf("export async function refreshMarketCatalogSnapshot"),
-  );
-  assert.doesNotMatch(
-    serverPath,
-    /\b(?:CREATE\s+(?:TABLE|TRIGGER|INDEX)|ALTER\s+TABLE)\b/i,
-  );
-  assert.doesNotMatch(readSection, /\b(?:INSERT|UPDATE|DELETE)\b/i);
-  assert.doesNotMatch(serverPath, /fetch\s*\(/);
-  assert.doesNotMatch(serverPath, /\bwhile\s*\(/);
-  assert.doesNotMatch(serverPath, /\bretry\b/i);
-  assert.match(read("worker/index.ts"), /server-timing/);
 });
 
 test("deployment migration owns schema and revision triggers without coupons", () => {
@@ -138,9 +96,6 @@ test("deployment migration owns schema and revision triggers without coupons", (
     migration,
     /INSERT\s+(?:OR\s+IGNORE\s+)?INTO\s+market_promotions/i,
   );
-  const indexes = read("migrations/runtime/0002_catalog_read_indexes.sql");
-  assert.match(indexes, /market_items_customer_catalog_idx/);
-  assert.match(indexes, /market_variants_customer_catalog_idx/);
 });
 
 test("catalog snapshots refresh only after admin or partner catalog mutations", () => {

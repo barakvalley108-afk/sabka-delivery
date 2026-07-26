@@ -1,18 +1,10 @@
 import { getMarketCatalog } from "../../../db/market-catalog";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const url = new URL(request.url);
-    const response = Response.json(
-      await getMarketCatalog({
-        section: url.searchParams.get("section") || "FOOD",
-        offset: Number(url.searchParams.get("offset") || 0),
-      }),
-      {
-        headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
-      },
-    );
-    return response;
+    return Response.json(await getMarketCatalog(), {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   } catch (error) {
     console.error(error);
     return Response.json(

@@ -502,23 +502,6 @@ button {
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-
-.load-more-products {
-  display: block;
-  min-width: 180px;
-  margin: 18px auto 8px;
-  border: 1px solid color-mix(in srgb, var(--ref-red) 28%, transparent);
-  border-radius: 999px;
-  background: #fff;
-  color: var(--ref-red);
-  padding: 11px 20px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.load-more-products:hover {
-  background: color-mix(in srgb, var(--ref-red) 6%, #fff);
-}
 .product-card {
   overflow: hidden;
   border: 1px solid var(--line);

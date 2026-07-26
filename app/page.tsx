@@ -1,12 +1,26 @@
-import { getInitialMarketCatalog } from "../db/market-catalog";
 import MarketHome, { type MarketCatalog } from "./market-home";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Keep GET / free of D1 work. The client loads the persisted catalog snapshot
+// from /api/market after hydration, so Cloudflare never performs the full
+// catalog query while rendering the homepage.
+const initialMarket: MarketCatalog = {
+  stores: [],
+  items: [],
+  variants: [],
+  deliveryFee: 20,
+  maintenanceMode: false,
+  supportNumber: "8011767897",
+  upiId: "",
+  theme: { primary: "#c7181b", accent: "#ffc21c", background: "#fffdf7" },
+  websiteName: "SABKA DELIVERY",
+  promotions: [],
+  rewardOffers: [],
+  content: [],
+  categories: [],
+  sections: [],
+  catalogVersion: 0,
+};
 
-export default async function Page() {
-  const initialMarket = await getInitialMarketCatalog();
-  return (
-    <MarketHome initialMarket={initialMarket as unknown as MarketCatalog} />
-  );
+export default function Page() {
+  return <MarketHome initialMarket={initialMarket} />;
 }
