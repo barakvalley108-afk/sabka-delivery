@@ -1,0 +1,175 @@
+Sabka Delivery Cloudflare 1102 correction — command log
+Date: 2026-07-26
+Deployment: skipped by owner request
+
+COMMAND
+NPM_CONFIG_USERCONFIG=/dev/null NPM_CONFIG_CACHE=<temporary writable directory> NPM_CONFIG_LOGS_DIR=/tmp/sabka-npm-logs npm ci --no-audit --no-fund
+
+RESULT
+exit 0
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+added 532 packages in 14s
+
+NOTE
+A preceding plain npm ci retry failed because this managed container denied
+creation of /root/.npm. The clean retry above used the same package-lock.json
+with a writable temporary npm cache.
+
+COMMAND
+npm run lint
+
+RESULT
+exit 0
+25 warnings, 0 errors
+Warnings: 24 @next/next/no-img-element and 1 existing unused Shops symbol.
+
+COMMAND
+npx tsc --noEmit
+
+RESULT
+exit 0
+0 TypeScript errors
+
+COMMAND
+npm run build
+
+RESULT
+exit 0
+vinext build (Vite 8.0.13)
+[1/5] client references: 189 modules transformed, built in 350ms
+[2/5] server references: 77 modules transformed, built in 95ms
+[3/5] RSC environment: 195 modules transformed, built in 429ms
+[4/5] client environment: 84 modules transformed, built in 187ms
+[5/5] SSR environment: 83 modules transformed, built in 227ms
+Build complete.
+Validated Sites artifact: ESM Worker default.fetch and hosting manifest are present.
+
+ROUTES
+ƒ /
+λ /api/admin/control
+λ /api/market
+λ /api/market-cancel
+λ /api/market-coupons/validate
+λ /api/market-history
+λ /api/market-orders
+λ /api/market-payment-status
+λ /api/market-rewards
+λ /api/market-track
+λ /api/market-version
+λ /api/me
+λ /api/otp/request
+λ /api/otp/verify
+λ /api/panel-auth/login
+λ /api/panel-auth/logout
+λ /api/partner/control
+λ /api/rider/control
+ƒ /electronics-panel
+ƒ /grocery-panel
+ƒ /panel-login
+? /privacy
+ƒ /restaurant-panel
+ƒ /rider-panel
+ƒ /super-admin
+? /terms
+
+COMMAND
+npm test
+
+RESULT
+exit 0
+Rendered/source regression tests: 15 passed, 0 failed
+Coupon/payment functional tests: 11 passed, 0 failed
+
+SOURCE/RENDER TESTS
+PASS renders a branded, hydration-safe initial document
+PASS homepage is dynamic and initialized from server catalog data
+PASS coupon validation has no unknown/private fallback
+PASS database initialization and migrations never seed demo coupons
+PASS normal runtime database helpers contain no schema or seed work
+PASS catalog customer read is one bounded batch and never writes a snapshot
+PASS homepage catalog excludes closed stores and avoids quadratic rendering
+PASS GET homepage import path has no DDL, writes, recursive fetch, or retries
+PASS deployment migration owns schema and revision triggers without coupons
+PASS catalog snapshots refresh only after admin or partner catalog mutations
+PASS online payment cannot enter success until backend confirmation
+PASS success lottie is exact, lazy, one-shot and reduced-motion safe
+PASS expired online payments are cancelled by a bounded scheduled sweep
+PASS service worker v68 never caches HTML, API, scripts or framework chunks
+PASS brand metadata, manifest and favicon assets are complete
+
+FUNCTIONAL TESTS
+PASS coupon codes are trimmed and compared case-insensitively
+PASS SABKE90 is rejected when it does not exist
+PASS random coupon is rejected
+PASS active public coupon applies with backend-calculated discount
+PASS active hidden coupon also applies when it exists in the database
+PASS inactive coupon is rejected
+PASS expired coupon is rejected
+PASS minimum-order failure is enforced by the backend
+PASS incomplete online payment stays pending and cannot show success
+PASS verified online payment becomes PAID and PLACED
+PASS expired payment is cancelled and reserved stock is restored
+
+COMMAND
+npx wrangler dev --config wrangler.runtime.jsonc --local --ip 127.0.0.1 --port 8788
+
+RESULT
+exit 0 after the request probe stopped the development server
+Wrangler 4.114.0
+D1 binding: env.DB (local)
+Assets binding: env.ASSETS (local)
+
+GET / (10 runs)
+1  200  25.630ms  140280 bytes
+2  200  23.984ms  140280 bytes
+3  200  22.846ms  140280 bytes
+4  200  20.990ms  140280 bytes
+5  200  20.844ms  140280 bytes
+6  200  20.336ms  140280 bytes
+7  200  22.327ms  140280 bytes
+8  200  21.668ms  140280 bytes
+9  200  23.376ms  140280 bytes
+10 200  21.130ms  140280 bytes
+min 20.336ms, average 22.313ms, max 25.630ms
+
+GET /api/market (10 runs)
+1  200  9.335ms   88909 bytes
+2  200  7.540ms   88909 bytes
+3  200  7.743ms   88909 bytes
+4  200  7.689ms   88909 bytes
+5  200  7.923ms   88909 bytes
+6  200  10.660ms  88909 bytes
+7  200  10.953ms  88909 bytes
+8  200  10.264ms  88909 bytes
+9  200  8.669ms   88909 bytes
+10 200  8.457ms   88909 bytes
+min 7.540ms, average 8.923ms, max 10.953ms
+
+GET /api/market-version (10 runs)
+1  200  4.028ms  51 bytes
+2  200  3.693ms  51 bytes
+3  200  3.493ms  51 bytes
+4  200  3.921ms  51 bytes
+5  200  3.707ms  51 bytes
+6  200  3.599ms  51 bytes
+7  200  4.555ms  51 bytes
+8  200  3.598ms  51 bytes
+9  200  3.453ms  51 bytes
+10 200  4.155ms  51 bytes
+min 3.453ms, average 3.820ms, max 4.555ms
+
+Cold measurement header
+server-timing: worker-handler;dur=66.00
+
+Pagination verification
+firstPageItems=120
+secondPageItems=120
+firstPageVariants=360
+pagesOverlap=false
+grocerySectionOnly=true
+
+HTTP result
+30/30 repeated required route requests returned 200.
+No local Error 1102 response was observed.
+This is local Worker wall time, not production Cloudflare CPU verification.

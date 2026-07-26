@@ -46,6 +46,7 @@ type Item = {
   image: string;
   emoji: string;
   food_type: string;
+  vertical?: string;
 };
 type Variant = {
   id: number;
@@ -57,6 +58,7 @@ type Variant = {
   discount_price: number | null;
   discount_percent: number;
   stock_quantity: number;
+  vertical?: string;
 };
 type User = { id: number; mobile: string; name: string | null };
 type TrackOrder = {
@@ -143,6 +145,12 @@ export type MarketCatalog = {
   categories: MarketCategory[];
   sections: MarketSection[];
   catalogVersion: number;
+  catalogPage?: {
+    section: string;
+    offset: number;
+    limit: number;
+    hasMore: boolean;
+  };
 };
 type ValidatedCoupon = {
   code: string;
@@ -180,6 +188,8 @@ const categoryImages: Record<string, string> = {
   Drinks: "/images/grocery-daily-needs.png",
   Snacks: "/images/grocery-daily-needs.png",
 };
+const INITIAL_PRODUCT_RENDER_LIMIT = 24;
+const PRODUCT_RENDER_INCREMENT = 24;
 const matchesFoodFilter = (item: Item, filter: FoodFilter) =>
   filter === "ALL" ||
   (filter === "VEG" ? item.food_type === "VEG" : item.food_type !== "VEG");
@@ -267,6 +277,20 @@ const marketContentMap = (blocks: SiteContentBlock[]) =>
     SiteContentBlock
   >;
 
+function mergeCatalogRows<T extends { id: number; vertical?: string }>(
+  current: T[],
+  incoming: T[],
+  section: string,
+  append: boolean,
+) {
+  const merged = new Map<number, T>();
+  for (const row of current) {
+    if (append || row.vertical !== section) merged.set(row.id, row);
+  }
+  for (const row of incoming) merged.set(row.id, row);
+  return [...merged.values()];
+}
+
 export default function MarketHome({
   initialMarket,
 }: {
@@ -330,6 +354,16 @@ export default function MarketHome({
   const [variants, setVariants] = useState<Variant[]>(
     initialMarket.variants || [],
   );
+  const initialCatalogPage = initialMarket.catalogPage || {
+    section: "FOOD",
+    offset: 0,
+    limit: 120,
+    hasMore: false,
+  };
+  const [catalogPages, setCatalogPages] = useState<
+    Record<string, NonNullable<MarketCatalog["catalogPage"]>>
+  >({ [initialCatalogPage.section]: initialCatalogPage });
+  const [catalogPageLoading, setCatalogPageLoading] = useState(false);
   const activePricingSection = marketSections.find(
     (section) => section.key === mode,
   );
@@ -341,6 +375,10 @@ export default function MarketHome({
   const [category, setCategory] = useState("All");
   const [selectedStore, setSelectedStore] = useState<number | null>(null);
   const [foodFilter, setFoodFilter] = useState<FoodFilter>("ALL");
+  const [visibleProductWindow, setVisibleProductWindow] = useState({
+    key: "",
+    limit: INITIAL_PRODUCT_RENDER_LIMIT,
+  });
   const [selectedVariants, setSelectedVariants] = useState<
     Record<number, number>
   >({});
@@ -387,7 +425,6 @@ export default function MarketHome({
   const [historyUpdatedAt, setHistoryUpdatedAt] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const marketLoaded = useRef(initialMarket.catalogVersion > 0);
-  const marketSignature = useRef(JSON.stringify(initialMarket));
   const marketVersion = useRef(Number(initialMarket.catalogVersion || 0));
 
   useEffect(() => {
@@ -429,18 +466,38 @@ export default function MarketHome({
     setMessage("Chrome menu (⋮) kholkar ‘Install app’ ya ‘Add to Home screen’ dabao");
   }
 
-  const loadMarket = useCallback(async () => {
+  const loadMarket = useCallback(async (section: string, offset = 0) => {
+    const normalizedSection = section.trim().toUpperCase();
+    setCatalogPageLoading(true);
     try {
-      const response = await fetch("/api/market", { cache: "no-store" });
+      const response = await fetch(
+        `/api/market?section=${encodeURIComponent(normalizedSection)}&offset=${offset}`,
+        { cache: "no-store" },
+      );
       if (!response.ok) throw new Error("Market refresh failed");
-      const data = await response.json();
+      const data = (await response.json()) as MarketCatalog;
+      const page = data.catalogPage || {
+        section: normalizedSection,
+        offset,
+        limit: 120,
+        hasMore: false,
+      };
+      const append = page.offset > 0;
       marketVersion.current = Number(data.catalogVersion || 1);
-      const signature = JSON.stringify(data);
-      if (signature === marketSignature.current) return;
-      marketSignature.current = signature;
-      setStores(data.stores || []);
-      setItems(data.items || []);
-      setVariants(data.variants || []);
+      setStores((current) =>
+        mergeCatalogRows(
+          current,
+          data.stores || [],
+          page.section,
+          append,
+        ),
+      );
+      setItems((current) =>
+        mergeCatalogRows(current, data.items || [], page.section, append),
+      );
+      setVariants((current) =>
+        mergeCatalogRows(current, data.variants || [], page.section, append),
+      );
       setMaintenance(!!data.maintenanceMode);
       setSupportNumber(data.supportNumber || "8011767897");
       setUpiId(data.upiId || "bigbull577@ybl");
@@ -450,7 +507,18 @@ export default function MarketHome({
       setRewardOffers(
         (data.rewardOffers || []).map((offer: RewardOffer) => offer),
       );
-      setMarketCategories(data.categories || []);
+      setMarketCategories((current) =>
+        mergeCatalogRows(
+          current,
+          data.categories || [],
+          page.section,
+          append,
+        ),
+      );
+      setCatalogPages((current) => ({
+        ...current,
+        [page.section]: page,
+      }));
       if (data.sections?.length) setMarketSections(data.sections);
       const content = marketContentMap(data.content || []);
       setSiteContent(content);
@@ -472,14 +540,18 @@ export default function MarketHome({
         content.homepage_banner?.image || "/images/hero-food-collage.png",
       );
       marketLoaded.current = true;
+      return true;
     } catch {
       if (!marketLoaded.current) setMessage("Catalog load nahi hua");
+      return false;
+    } finally {
+      setCatalogPageLoading(false);
     }
   }, []);
 
   const refreshMarket = useCallback(async () => {
     if (!marketLoaded.current) {
-      await loadMarket();
+      await loadMarket(mode, 0);
       return;
     }
     try {
@@ -489,12 +561,12 @@ export default function MarketHome({
       if (!response.ok) return;
       const data = await response.json();
       if (Number(data.version || 1) !== marketVersion.current) {
-        await loadMarket();
+        await loadMarket(mode, 0);
       }
     } catch {
       // Keep the current catalog visible while the live revision check reconnects.
     }
-  }, [loadMarket]);
+  }, [loadMarket, mode]);
 
   // Catalog revisions are lightweight and do not need order-speed polling.
   useLiveRefresh(refreshMarket, 5000);
@@ -609,6 +681,27 @@ export default function MarketHome({
   const activeSection =
     marketSections.find((section) => section.key === mode) || marketSections[0];
 
+  const storesById = useMemo(
+    () => new Map(stores.map((store) => [store.id, store])),
+    [stores],
+  );
+  const itemsById = useMemo(
+    () => new Map(items.map((item) => [item.id, item])),
+    [items],
+  );
+  const variantsById = useMemo(
+    () => new Map(variants.map((variant) => [variant.id, variant])),
+    [variants],
+  );
+  const variantsByItemId = useMemo(() => {
+    const grouped = new Map<number, Variant[]>();
+    for (const variant of variants) {
+      const entries = grouped.get(variant.item_id);
+      if (entries) entries.push(variant);
+      else grouped.set(variant.item_id, [variant]);
+    }
+    return grouped;
+  }, [variants]);
   const modeStores = useMemo(
     () => stores.filter((s) => (s.vertical || s.type) === mode),
     [stores, mode],
@@ -616,7 +709,7 @@ export default function MarketHome({
   const visibleItems = useMemo(
     () =>
       items.filter((item) => {
-        const store = stores.find((s) => s.id === item.store_id);
+        const store = storesById.get(item.store_id);
         const hasSearch = normalizeSearch(search).length > 0;
         return (
           (store?.vertical || store?.type) === mode &&
@@ -629,7 +722,7 @@ export default function MarketHome({
           )
         );
       }),
-    [items, stores, mode, selectedStore, category, foodFilter, search],
+    [items, storesById, mode, selectedStore, category, foodFilter, search],
   );
   const categories = useMemo(() => {
     const configured = new Map(
@@ -642,7 +735,8 @@ export default function MarketHome({
         items
           .filter(
             (item) =>
-              (stores.find((store) => store.id === item.store_id)?.vertical || stores.find((store) => store.id === item.store_id)?.type) === mode &&
+              (storesById.get(item.store_id)?.vertical ||
+                storesById.get(item.store_id)?.type) === mode &&
               (mode !== "FOOD" || matchesFoodFilter(item, foodFilter)),
           )
           .map((item) => item.category),
@@ -658,7 +752,7 @@ export default function MarketHome({
         );
       });
     return ["All", ...names];
-  }, [items, stores, mode, foodFilter, marketCategories]);
+  }, [items, storesById, mode, foodFilter, marketCategories]);
   const categoryImageFor = useCallback(
     (name: string) =>
       marketCategories.find(
@@ -675,7 +769,7 @@ export default function MarketHome({
     if (normalizeSearch(search).length < 2) return [];
     return items
       .filter((item) => {
-        const store = stores.find((entry) => entry.id === item.store_id);
+        const store = storesById.get(item.store_id);
         return (
           (store?.vertical || store?.type) === mode &&
           (mode !== "FOOD" || matchesFoodFilter(item, foodFilter)) &&
@@ -686,12 +780,25 @@ export default function MarketHome({
         );
       })
       .slice(0, 5);
-  }, [items, stores, mode, foodFilter, search]);
+  }, [items, storesById, mode, foodFilter, search]);
+  const productFilterKey = [
+    mode,
+    selectedStore ?? "",
+    category,
+    foodFilter,
+    normalizeSearch(search),
+  ].join("|");
+  const visibleProductLimit =
+    visibleProductWindow.key === productFilterKey
+      ? visibleProductWindow.limit
+      : INITIAL_PRODUCT_RENDER_LIMIT;
+  const renderedItems = visibleItems.slice(0, visibleProductLimit);
+  const activeCatalogPage = catalogPages[mode];
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const cartRows = Object.entries(cart)
     .map(([id, quantity]) => {
-      const variant = variants.find((v) => v.id === Number(id));
-      const item = items.find((i) => i.id === variant?.item_id);
+      const variant = variantsById.get(Number(id));
+      const item = variant ? itemsById.get(variant.item_id) : undefined;
       return variant && item ? { variant, item, quantity } : null;
     })
     .filter(Boolean) as { variant: Variant; item: Item; quantity: number }[];
@@ -742,6 +849,7 @@ export default function MarketHome({
 
   function switchMode(next: string) {
     setMode(next);
+    if (!catalogPages[next]) void loadMarket(next, 0);
     setSelectedStore(null);
     setCategory("All");
     setFoodFilter("ALL");
@@ -759,12 +867,33 @@ export default function MarketHome({
   }
   function goHome() {
     setMode("FOOD");
+    if (!catalogPages.FOOD) void loadMarket("FOOD", 0);
     setSelectedStore(null);
     setCategory("All");
     setFoodFilter("ALL");
     setSearch("");
     setActiveNav("home");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function showMoreProducts() {
+    if (renderedItems.length < visibleItems.length) {
+      setVisibleProductWindow({
+        key: productFilterKey,
+        limit: visibleProductLimit + PRODUCT_RENDER_INCREMENT,
+      });
+      return;
+    }
+    if (!activeCatalogPage?.hasMore || catalogPageLoading) return;
+    const loaded = await loadMarket(
+      mode,
+      activeCatalogPage.offset + activeCatalogPage.limit,
+    );
+    if (loaded) {
+      setVisibleProductWindow({
+        key: productFilterKey,
+        limit: visibleProductLimit + PRODUCT_RENDER_INCREMENT,
+      });
+    }
   }
   function goSection(key: NavKey, selector: string) {
     setActiveNav(key);
@@ -879,8 +1008,8 @@ export default function MarketHome({
     }
   }
   function pickVariant(item: Item) {
-    const options = variants.filter(
-      (v) => v.item_id === item.id && v.stock_quantity > 0,
+    const options = (variantsByItemId.get(item.id) || []).filter(
+      (variant) => variant.stock_quantity > 0,
     );
     return (
       options.find((v) => v.id === selectedVariants[item.id]) || options[0]
@@ -1573,8 +1702,8 @@ export default function MarketHome({
           <span>{visibleItems.length} items</span>
         </div>
         <div className="product-grid">
-          {visibleItems.map((item) => {
-            const options = variants.filter((v) => v.item_id === item.id);
+          {renderedItems.map((item) => {
+            const options = variantsByItemId.get(item.id) || [];
             const variant = pickVariant(item);
             return (
               <article className="product-card" key={item.id}>
@@ -1599,7 +1728,7 @@ export default function MarketHome({
                 </div>
                 <div className="product-info">
                   <small>
-                    {stores.find((s) => s.id === item.store_id)?.name}
+                    {storesById.get(item.store_id)?.name}
                   </small>
                   <h3>{item.name}</h3>
                   <p>{item.description}</p>
@@ -1645,6 +1774,16 @@ export default function MarketHome({
             );
           })}
         </div>
+        {(renderedItems.length < visibleItems.length ||
+          activeCatalogPage?.hasMore) && (
+          <button
+            className="load-more-products"
+            onClick={() => void showMoreProducts()}
+            disabled={catalogPageLoading}
+          >
+            {catalogPageLoading ? "Loading items…" : "Show more items"}
+          </button>
+        )}
         {!visibleItems.length && (
           <div className="empty">
             <span>⌕</span>

@@ -23,9 +23,10 @@ export async function GET() {
       if (timeoutId) clearTimeout(timeoutId);
     });
 
-    return Response.json(revision || { version: 1, updatedAt: "" }, {
+    const response = Response.json(revision || { version: 1, updatedAt: "" }, {
       headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
     });
+    return response;
   } catch (error) {
     console.error("Catalog version read failed", error);
     return Response.json(

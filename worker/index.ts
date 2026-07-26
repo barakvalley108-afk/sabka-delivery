@@ -36,6 +36,11 @@ interface ScheduledController {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const requestStartedAt = performance.now();
+    const recordRuntimeTiming =
+      url.pathname === "/" ||
+      url.pathname === "/api/market" ||
+      url.pathname === "/api/market-version";
 
     if (url.pathname === "/.well-known/assetlinks.json") {
       const body = env.ANDROID_ASSETLINKS_JSON || "[]";
@@ -60,8 +65,15 @@ const worker = {
     }
 
     const response = await handler.fetch(request, env, ctx);
+    const handlerMilliseconds = performance.now() - requestStartedAt;
     const headers = new Headers(response.headers);
     headers.set("x-sabka-build-version", BUILD_VERSION);
+    if (recordRuntimeTiming) {
+      headers.set(
+        "server-timing",
+        `worker-handler;dur=${handlerMilliseconds.toFixed(2)}`,
+      );
+    }
     if (
       url.pathname === "/" ||
       url.pathname === "/sw.js" ||
