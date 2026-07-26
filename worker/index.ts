@@ -1,6 +1,8 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { BUILD_VERSION } from "../app/build-version";
+import { expirePendingPayments } from "../db/payment-orders";
 
 interface Env {
   ASSETS: Fetcher;
@@ -18,6 +20,11 @@ interface Env {
 interface ExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
   passThroughOnException(): void;
+}
+
+interface ScheduledController {
+  cron: string;
+  scheduledTime: number;
 }
 
 // Image security config. SVG sources with .svg extension auto-skip the
@@ -52,7 +59,39 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+    const headers = new Headers(response.headers);
+    headers.set("x-sabka-build-version", BUILD_VERSION);
+    if (
+      url.pathname === "/" ||
+      url.pathname === "/sw.js" ||
+      url.pathname === "/api/market" ||
+      url.pathname === "/api/market-version"
+    ) {
+      headers.set(
+        "cache-control",
+        "no-store, no-cache, must-revalidate, max-age=0",
+      );
+      headers.set("cdn-cache-control", "no-store");
+      headers.set("cloudflare-cdn-cache-control", "no-store");
+    }
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  },
+  scheduled(
+    _controller: ScheduledController,
+    env: Env,
+    ctx: ExecutionContext,
+  ) {
+    ctx.waitUntil(
+      expirePendingPayments(env.DB).then((cancelled) => {
+        if (cancelled)
+          console.info(`Cancelled ${cancelled} expired online-payment orders`);
+      }),
+    );
   },
 };
 

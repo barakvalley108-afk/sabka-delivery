@@ -84,6 +84,7 @@ export const promotions = sqliteTable("market_promotions", {
   code: text("code").primaryKey(), title: text("title").notNull(), discountType: text("discount_type").notNull().default("FLAT"),
   discountValue: integer("discount_value").notNull(), minOrder: integer("min_order").notNull().default(0),
   isActive: integer("is_active").notNull().default(1), uses: integer("uses").notNull().default(0),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -120,7 +121,8 @@ export const serviceAreas = sqliteTable("market_service_areas", {id:integer("id"
 export const categories = sqliteTable("market_categories", {id:integer("id").primaryKey({autoIncrement:true}),name:text("name").notNull().unique(),image:text("image").notNull().default(""),isActive:integer("is_active").notNull().default(1),sortOrder:integer("sort_order").notNull().default(0)});
 export const itemAddons = sqliteTable("market_item_addons", {id:integer("id").primaryKey({autoIncrement:true}),itemId:integer("item_id").notNull(),name:text("name").notNull(),price:integer("price").notNull().default(0),isActive:integer("is_active").notNull().default(1)});
 export const itemFlags = sqliteTable("market_item_flags", {itemId:integer("item_id").primaryKey(),isFeatured:integer("is_featured").notNull().default(0),isPopular:integer("is_popular").notNull().default(0)});
-export const promotionRules = sqliteTable("market_promotion_rules", {code:text("code").primaryKey(),expiresAt:text("expires_at"),userMobile:text("user_mobile"),storeId:integer("store_id"),firstOrderOnly:integer("first_order_only").notNull().default(0),maxDiscount:integer("max_discount").notNull().default(0),autoPauseAfterUse:integer("auto_pause_after_use").notNull().default(0),showOnWebsite:integer("show_on_website").notNull().default(1)});
+export const promotionRules = sqliteTable("market_promotion_rules", {code:text("code").primaryKey(),expiresAt:text("expires_at"),userMobile:text("user_mobile"),storeId:integer("store_id"),firstOrderOnly:integer("first_order_only").notNull().default(0),maxDiscount:integer("max_discount").notNull().default(0),autoPauseAfterUse:integer("auto_pause_after_use").notNull().default(0),showOnWebsite:integer("show_on_website").notNull().default(1),usageLimit:integer("usage_limit").notNull().default(0)});
+export const catalogSnapshots = sqliteTable("market_catalog_snapshots", {id:integer("id").primaryKey(),catalogJson:text("catalog_json").notNull(),catalogVersion:integer("catalog_version").notNull(),updatedAt:text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`)});
 export const singleCouponClaims = sqliteTable("market_single_coupon_claims", {couponCode:text("coupon_code").primaryKey(),mobile:text("mobile").notNull(),orderCode:text("order_code").notNull().unique(),createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`)});
 export const reviewModeration = sqliteTable("market_review_moderation", {reviewId:integer("review_id").primaryKey(),isHidden:integer("is_hidden").notNull().default(0),isFlagged:integer("is_flagged").notNull().default(0),note:text("note").notNull().default("")});
 export const riderReviews = sqliteTable("market_rider_reviews", {id:integer("id").primaryKey({autoIncrement:true}),riderId:integer("rider_id").notNull(),orderCode:text("order_code").notNull(),rating:integer("rating").notNull(),comment:text("comment").notNull().default(""),createdAt:text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`)});

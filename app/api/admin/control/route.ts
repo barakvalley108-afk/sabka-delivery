@@ -1,4 +1,9 @@
 import { ensureControlTables } from "../../../../db/control-store";
+import { refreshMarketCatalogSnapshot } from "../../../../db/market-catalog";
+import {
+  cancelPendingPaymentOrder,
+  confirmOnlinePayment,
+} from "../../../../db/payment-orders";
 import { getPanelSession, passwordHash } from "../../../panel-auth";
 
 const sectionKey = (value: unknown) =>
@@ -36,6 +41,16 @@ async function activity(
     )
     .bind(username, action, target, JSON.stringify({ source: "admin-v2" }))
     .run();
+}
+
+async function refreshCatalogFallback(db: D1Database) {
+  try {
+    await refreshMarketCatalogSnapshot(db);
+  } catch (error) {
+    // The mutation is already committed. Never retry it and risk a duplicate;
+    // the next successful catalog mutation will refresh the fallback snapshot.
+    console.error("Catalog snapshot refresh failed", error);
+  }
 }
 
 export async function GET() {
@@ -130,12 +145,13 @@ export async function GET() {
     ),
     db.prepare(
       `SELECT p.code,p.title,p.discount_type discountType,p.discount_value discountValue,
-              p.min_order minOrder,p.is_active isActive,p.uses,
+              p.min_order minOrder,p.is_active isActive,p.uses,p.sort_order sortOrder,
               r.max_discount maxDiscount,r.expires_at expiresAt,
               coalesce(r.auto_pause_after_use,0) autoPauseAfterUse,
-              coalesce(r.show_on_website,1) showOnWebsite
+              coalesce(r.show_on_website,1) showOnWebsite,
+              coalesce(r.usage_limit,0) usageLimit
        FROM market_promotions p LEFT JOIN market_promotion_rules r ON r.code=p.code
-       ORDER BY p.created_at DESC`,
+       ORDER BY p.sort_order,p.created_at DESC,p.code`,
     ),
     db.prepare(
       `SELECT id,title,description,qualifying_orders qualifyingOrders,
@@ -255,6 +271,7 @@ export async function POST(request: Request) {
           ),
       ]);
       await activity(db, session.username, "SHOP_CREATE", String(storeId));
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, storeId });
     }
     if (action === "rider") {
@@ -384,6 +401,7 @@ export async function POST(request: Request) {
         )
         .run();
       await activity(db, session.username, "ITEM_CREATE", String(itemId));
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, itemId });
     }
     if (action === "section") {
@@ -415,6 +433,7 @@ export async function POST(request: Request) {
         .bind(key, name, description, image, icon, sortOrder)
         .run();
       await activity(db, session.username, "SECTION_CREATE", key);
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, key });
     }
     if (action === "category") {
@@ -460,6 +479,7 @@ export async function POST(request: Request) {
         "CATEGORY_SAVE",
         String(saved?.id || result.meta.last_row_id || storedName),
       );
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, id: saved?.id });
     }
     if (action === "rewardOffer") {
@@ -494,6 +514,7 @@ export async function POST(request: Request) {
         .run();
       const id = Number(result.meta.last_row_id);
       await activity(db, session.username, "REWARD_OFFER_CREATE", String(id));
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, id });
     }
     if (action === "coupon") {
@@ -503,6 +524,7 @@ export async function POST(request: Request) {
       const discountValue = Number(body.discountValue);
       const minOrder = Number(body.minOrder || 0);
       const maxDiscount = Number(body.maxDiscount || 0);
+      const usageLimit = Number(body.usageLimit || 0);
       const showOnWebsite = body.showOnWebsite === undefined || body.showOnWebsite ? 1 : 0;
       if (
         !/^[A-Z0-9]{4,20}$/.test(code) ||
@@ -513,31 +535,37 @@ export async function POST(request: Request) {
         !Number.isFinite(minOrder) ||
         minOrder < 0 ||
         !Number.isFinite(maxDiscount) ||
-        maxDiscount < 0
+        maxDiscount < 0 ||
+        !Number.isInteger(usageLimit) ||
+        usageLimit < 0
       )
         return Response.json({ error: "Valid coupon details required" }, { status: 400 });
       await db.batch([
         db.prepare(
-          `INSERT INTO market_promotions (code,title,discount_type,discount_value,min_order,is_active)
-           VALUES (?,?,?,?,?,1)`,
+          `INSERT INTO market_promotions
+           (code,title,discount_type,discount_value,min_order,is_active,sort_order)
+           SELECT ?,?,?,?,?,1,coalesce(max(sort_order),-1)+1 FROM market_promotions`,
         ).bind(code,title,discountType,discountValue,minOrder),
         db.prepare(
           `INSERT INTO market_promotion_rules
-           (code,expires_at,max_discount,auto_pause_after_use,show_on_website)
-           VALUES (?,?,?,?,?)
+           (code,expires_at,max_discount,auto_pause_after_use,show_on_website,usage_limit)
+           VALUES (?,?,?,?,?,?)
            ON CONFLICT(code) DO UPDATE SET expires_at=excluded.expires_at,
              max_discount=excluded.max_discount,
              auto_pause_after_use=excluded.auto_pause_after_use,
-             show_on_website=excluded.show_on_website`,
+             show_on_website=excluded.show_on_website,
+             usage_limit=excluded.usage_limit`,
         ).bind(
           code,
           String(body.expiresAt || "") || null,
           maxDiscount,
           body.autoPauseAfterUse ? 1 : 0,
           showOnWebsite,
+          usageLimit,
         ),
       ]);
       await activity(db, session.username, "COUPON_CREATE", code);
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true, code });
     }
     return Response.json({ error: "Unknown action" }, { status: 400 });
@@ -560,9 +588,24 @@ export async function PATCH(request: Request) {
     const orderCode = String(body.orderCode);
     const status = String(body.status);
     const updated = await db
-      .prepare("UPDATE market_orders SET status=? WHERE order_code=?")
+      .prepare(
+        "UPDATE market_orders SET status=? WHERE order_code=? AND status!='PAYMENT_PENDING'",
+      )
       .bind(status, orderCode)
       .run();
+    if (!updated.meta.changes) {
+      const pending = await db
+        .prepare(
+          "SELECT 1 pending FROM market_orders WHERE order_code=? AND status='PAYMENT_PENDING'",
+        )
+        .bind(orderCode)
+        .first();
+      if (pending)
+        return Response.json(
+          { error: "Payment verify hone se pehle order status change nahi hoga" },
+          { status: 409 },
+        );
+    }
     if (updated.meta.changes)
       await db
         .prepare(
@@ -573,6 +616,17 @@ export async function PATCH(request: Request) {
   } else if (action === "assignRider") {
     const otp = String(Math.floor(1000 + Math.random() * 9000));
     const orderCode = String(body.orderCode);
+    const orderReady = await db
+      .prepare(
+        "SELECT 1 ready FROM market_orders WHERE order_code=? AND status!='PAYMENT_PENDING'",
+      )
+      .bind(orderCode)
+      .first();
+    if (!orderReady)
+      return Response.json(
+        { error: "Payment verify hone ke baad rider assign karo" },
+        { status: 409 },
+      );
     await db
       .prepare(
         `INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp)
@@ -639,6 +693,7 @@ export async function PATCH(request: Request) {
         .prepare("UPDATE market_stores SET is_open=? WHERE id=?")
         .bind(isOpen, storeId)
         .run();
+      await refreshCatalogFallback(db);
       return Response.json({ ok: true });
     }
     const name = present("name") ? String(body.name || "").trim() : current.name;
@@ -815,16 +870,45 @@ export async function PATCH(request: Request) {
     const deliveryCharge=Math.max(0,Math.floor(Number(body.deliveryCharge||0)));
     await db.prepare("INSERT INTO market_settings (key,value,updated_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP").bind(`delivery_charge_${key}`,String(deliveryCharge)).run();
   } else if (action === "payment") {
-    await db
-      .prepare(
-        "UPDATE market_transactions SET status=?,reference=? WHERE order_code=? AND type='PAYMENT'",
-      )
-      .bind(
-        String(body.status || "VERIFIED"),
+    const orderCode = String(body.orderCode || "");
+    const paymentStatus = String(body.status || "PAID").toUpperCase();
+    if (paymentStatus === "PAID" || paymentStatus === "VERIFIED") {
+      const result = await confirmOnlinePayment(
+        db,
+        orderCode,
         String(body.reference || "ADMIN VERIFIED"),
-        String(body.orderCode),
-      )
-      .run();
+      );
+      if (!result)
+        return Response.json({ error: "Order nahi mila" }, { status: 404 });
+      if (!result.confirmed)
+        return Response.json(
+          { error: "Pending UPI payment verify nahi hua" },
+          { status: 409 },
+        );
+    } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {
+      const cancelled = await cancelPendingPaymentOrder(
+        db,
+        orderCode,
+        String(body.reference || "Online payment failed or was cancelled"),
+      );
+      if (!cancelled)
+        return Response.json(
+          { error: "Pending UPI order cancel nahi hua" },
+          { status: 409 },
+        );
+      if (paymentStatus === "FAILED")
+        await db
+          .prepare(
+            "UPDATE market_transactions SET status='FAILED' WHERE order_code=? AND type='PAYMENT' AND status='CANCELLED'",
+          )
+          .bind(orderCode)
+          .run();
+    } else {
+      return Response.json(
+        { error: "Valid payment status required" },
+        { status: 400 },
+      );
+    }
   } else if (action === "payout") {
     const payoutId = Number(body.payoutId);
     const payoutAction = String(body.payoutAction || "APPROVE").toUpperCase();
@@ -1020,6 +1104,40 @@ export async function PATCH(request: Request) {
       .prepare("UPDATE market_admin_notifications SET is_read=1 WHERE id=?")
       .bind(Number(body.id))
       .run();
+  } else if (action === "couponOrder") {
+    const codes = Array.isArray(body.codes)
+      ? body.codes.map((value) => String(value).trim().toUpperCase())
+      : [];
+    const uniqueCodes = [...new Set(codes)];
+    if (
+      !codes.length ||
+      codes.length > 500 ||
+      uniqueCodes.length !== codes.length ||
+      codes.some((code) => !/^[A-Z0-9]{4,20}$/.test(code))
+    )
+      return Response.json({ error: "Valid coupon order required" }, { status: 400 });
+    const placeholders = codes.map(() => "?").join(",");
+    const existing = await db
+      .prepare(
+        `SELECT count(*) count FROM market_promotions WHERE upper(code) IN (${placeholders})`,
+      )
+      .bind(...codes)
+      .first<{ count: number }>();
+    const total = await db
+      .prepare("SELECT count(*) count FROM market_promotions")
+      .first<{ count: number }>();
+    if (
+      Number(existing?.count || 0) !== codes.length ||
+      Number(total?.count || 0) !== codes.length
+    )
+      return Response.json({ error: "Coupon list changed—refresh and retry" }, { status: 409 });
+    await db.batch(
+      codes.map((code, sortOrder) =>
+        db
+          .prepare("UPDATE market_promotions SET sort_order=? WHERE upper(code)=?")
+          .bind(sortOrder, code),
+      ),
+    );
   } else if (action === "coupon") {
     const code = String(body.code || "").trim().toUpperCase();
     if (!/^[A-Z0-9]{4,20}$/.test(code))
@@ -1030,6 +1148,7 @@ export async function PATCH(request: Request) {
       const discountValue = Number(body.discountValue);
       const minOrder = Number(body.minOrder || 0);
       const maxDiscount = Number(body.maxDiscount || 0);
+      const usageLimit = Number(body.usageLimit || 0);
       const expiresAt = String(body.expiresAt || "");
       const showOnWebsite = body.showOnWebsite === undefined || body.showOnWebsite ? 1 : 0;
       if (
@@ -1041,6 +1160,8 @@ export async function PATCH(request: Request) {
         minOrder < 0 ||
         !Number.isFinite(maxDiscount) ||
         maxDiscount < 0 ||
+        !Number.isInteger(usageLimit) ||
+        usageLimit < 0 ||
         (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))
       )
         return Response.json({ error: "Valid coupon details required" }, { status: 400 });
@@ -1058,18 +1179,20 @@ export async function PATCH(request: Request) {
         ).bind(title, discountType, discountValue, minOrder, code),
         db.prepare(
           `INSERT INTO market_promotion_rules
-           (code,expires_at,max_discount,auto_pause_after_use,show_on_website)
-           VALUES (?,?,?,?,?)
+           (code,expires_at,max_discount,auto_pause_after_use,show_on_website,usage_limit)
+           VALUES (?,?,?,?,?,?)
            ON CONFLICT(code) DO UPDATE SET expires_at=excluded.expires_at,
              max_discount=excluded.max_discount,
              auto_pause_after_use=excluded.auto_pause_after_use,
-             show_on_website=excluded.show_on_website`,
+             show_on_website=excluded.show_on_website,
+             usage_limit=excluded.usage_limit`,
         ).bind(
           code,
           expiresAt || null,
           maxDiscount,
           body.autoPauseAfterUse ? 1 : 0,
           showOnWebsite,
+          usageLimit,
         ),
       ]);
     } else {
@@ -1172,9 +1295,25 @@ export async function PATCH(request: Request) {
         body.id ||
         body.code ||
         body.key ||
-        "",
+      "",
     ),
   );
+  if (
+    new Set([
+      "shop",
+      "item",
+      "section",
+      "category",
+      "couponOrder",
+      "coupon",
+      "rewardOffer",
+      "content",
+      "website",
+      "settings",
+    ]).has(action)
+  ) {
+    await refreshCatalogFallback(db);
+  }
   return Response.json({ ok: true });
 }
 
@@ -1301,6 +1440,18 @@ export async function DELETE(request: Request) {
     await activity(db, session.username, "SHOP_CASCADE_DELETE", `${storeId}:${store.name}`);
   } else {
     return Response.json({ error: "Unknown action" }, { status: 400 });
+  }
+  if (
+    new Set([
+      "item",
+      "category",
+      "section",
+      "coupon",
+      "rewardOffer",
+      "shop",
+    ]).has(String(body.action))
+  ) {
+    await refreshCatalogFallback(db);
   }
   return Response.json({ ok: true });
 }

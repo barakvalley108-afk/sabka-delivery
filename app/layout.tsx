@@ -21,8 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://sabkadelivery.in"),
 
   title: {
-    default:
-      "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
+    default: "Sabka Delivery | Food, Grocery & Electronics",
     template: "%s | Sabka Delivery",
   },
 
@@ -65,27 +64,27 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/favicon.png",
-        sizes: "48x48",
-        type: "image/png",
+        url: "/favicon.ico",
+        sizes: "any",
+        type: "image/x-icon",
       },
       {
-        url: "/images/sabka-delivery-logo.png",
+        url: "/icon-192.png",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        url: "/images/sabka-delivery-logo.png",
+        url: "/icon.png",
         sizes: "512x512",
         type: "image/png",
       },
     ],
 
-    shortcut: "/favicon.png",
+    shortcut: "/favicon.ico",
 
     apple: [
       {
-        url: "/images/sabka-delivery-logo.png",
+        url: "/apple-icon.png",
         sizes: "180x180",
         type: "image/png",
       },
@@ -93,8 +92,7 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title:
-      "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
+    title: "Sabka Delivery",
 
     description:
       "Order food, grocery and electronics online in Lala Bazar, Hailakandi. Fast, safe and reliable local delivery.",
