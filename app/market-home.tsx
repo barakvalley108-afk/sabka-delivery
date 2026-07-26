@@ -9,21 +9,8 @@ import {
   type CSSProperties,
   type FormEvent,
 } from "react";
-import dynamic from "next/dynamic";
 import { QRCodeSVG } from "qrcode.react";
 import { useLiveRefresh } from "./components/use-live-refresh";
-
-const OrderSuccess = dynamic(() => import("./order-success"), {
-  ssr: false,
-  loading: () => (
-    <section className="success order-success" aria-live="polite">
-      <div className="success-animation" aria-hidden="true">
-        <span className="success-static-icon">✓</span>
-      </div>
-      <h3>Order Placed Successfully</h3>
-    </section>
-  ),
-});
 
 type Store = {
   id: number;
@@ -152,13 +139,6 @@ type ValidatedCoupon = {
   mobile: string;
   storeId: number;
 };
-type PendingPayment = {
-  orderCode: string;
-  mobile: string;
-  amount: number;
-  expiresAt: string;
-  estimatedDelivery: string;
-};
 type FoodFilter = "ALL" | "VEG" | "NON_VEG";
 type NavKey = string;
 type InstallPromptEvent = Event & {
@@ -200,7 +180,6 @@ const groceryTrackingSteps = [
   "DELIVERED",
 ] as const;
 const statusLabels: Record<string, string> = {
-  PAYMENT_PENDING: "Payment pending",
   PLACED: "Accepted",
   ACCEPTED: "Accepted",
   CONFIRMED: "Confirmed",
@@ -347,9 +326,9 @@ export default function MarketHome({
   const [cart, setCart] = useState<Record<number, number>>({});
   const [cartStore, setCartStore] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkout, setCheckout] = useState<
-    "cart" | "details" | "payment-pending" | "success"
-  >("cart");
+  const [checkout, setCheckout] = useState<"cart" | "details" | "success">(
+    "cart",
+  );
   const [couponCode, setCouponCode] = useState("");
   const [validatedCoupon, setValidatedCoupon] =
     useState<ValidatedCoupon | null>(null);
@@ -359,11 +338,6 @@ export default function MarketHome({
   const [checkoutMobile, setCheckoutMobile] = useState("");
   const [rewardApplied, setRewardApplied] = useState("");
   const [orderCode, setOrderCode] = useState("");
-  const [estimatedDelivery, setEstimatedDelivery] = useState("25-35 min");
-  const [pendingPayment, setPendingPayment] =
-    useState<PendingPayment | null>(null);
-  const [paymentChecking, setPaymentChecking] = useState(false);
-  const paymentCheckInFlight = useRef(false);
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "UPI">("COD");
   const [message, setMessage] = useState("");
@@ -389,10 +363,6 @@ export default function MarketHome({
   const marketLoaded = useRef(initialMarket.catalogVersion > 0);
   const marketSignature = useRef(JSON.stringify(initialMarket));
   const marketVersion = useRef(Number(initialMarket.catalogVersion || 0));
-  // A short client-only cover prevents the empty/default catalog from flashing.
-  // It does not perform SSR/D1 work and therefore does not add Worker CPU load.
-  const [catalogReady, setCatalogReady] = useState(initialMarket.catalogVersion > 0);
-  const catalogLoadStartedAt = useRef(Date.now());
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get("source");
@@ -478,19 +448,7 @@ export default function MarketHome({
       marketLoaded.current = true;
     } catch {
       if (!marketLoaded.current) setMessage("Catalog load nahi hua");
-    } finally {
-      // Keep the cover visible only long enough to avoid a visual flash.
-      const minimumVisibleMs = 450;
-      const elapsed = Date.now() - catalogLoadStartedAt.current;
-      const remaining = Math.max(0, minimumVisibleMs - elapsed);
-      window.setTimeout(() => setCatalogReady(true), remaining);
     }
-  }, []);
-
-  useEffect(() => {
-    // Never trap the customer on the cover if the network is unavailable.
-    const fallback = window.setTimeout(() => setCatalogReady(true), 1800);
-    return () => window.clearTimeout(fallback);
   }, []);
 
   const refreshMarket = useCallback(async () => {
@@ -550,71 +508,6 @@ export default function MarketHome({
       window.clearInterval(timer);
     };
   }, [checkout, checkoutMobile]);
-
-  const checkPendingPayment = useCallback(async () => {
-    if (!pendingPayment || paymentCheckInFlight.current) return;
-    paymentCheckInFlight.current = true;
-    setPaymentChecking(true);
-    try {
-      const response = await fetch("/api/market-payment-status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderCode: pendingPayment.orderCode,
-          mobile: pendingPayment.mobile,
-        }),
-        cache: "no-store",
-      });
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error || "Payment status verify nahi hua");
-
-      if (data.order?.confirmed) {
-        setOrderCode(data.order.orderCode);
-        setEstimatedDelivery(
-          data.order.estimatedDelivery || pendingPayment.estimatedDelivery,
-        );
-        setCart({});
-        setCartStore(null);
-        setCouponCode("");
-        setValidatedCoupon(null);
-        setCouponMessage("");
-        setPendingPayment(null);
-        setCheckout("success");
-        return;
-      }
-
-      const orderStatus = String(data.order?.orderStatus || "");
-      const paymentStatus = String(data.order?.paymentStatus || "");
-      if (
-        orderStatus === "CANCELLED" ||
-        ["FAILED", "CANCELLED"].includes(paymentStatus)
-      ) {
-        setPendingPayment(null);
-        setCheckout("details");
-        setMessage("Online payment complete nahi hua. Order cancel ho gaya.");
-      }
-    } catch {
-      // A transient status error must not turn a pending payment into success.
-    } finally {
-      paymentCheckInFlight.current = false;
-      setPaymentChecking(false);
-    }
-  }, [pendingPayment]);
-
-  useEffect(() => {
-    if (checkout !== "payment-pending" || !pendingPayment) return;
-    const first = window.setTimeout(() => {
-      void checkPendingPayment();
-    }, 0);
-    const timer = window.setInterval(() => {
-      void checkPendingPayment();
-    }, 3_000);
-    return () => {
-      window.clearTimeout(first);
-      window.clearInterval(timer);
-    };
-  }, [checkout, pendingPayment, checkPendingPayment]);
 
   const contentValue = (
     key: string,
@@ -740,20 +633,15 @@ export default function MarketHome({
     minimumOrder - minimumPayableBeforeDiscount,
   );
   const minimumOrderMet = minimumOrderShortfall === 0;
-  const buildUpiPaymentUrl = (amount: number, note: string) =>
-    `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(brandName)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
-  const upiPaymentUrl = buildUpiPaymentUrl(
-    total,
-    "SABKA DELIVERY order payment",
-  );
+  const upiPaymentUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(brandName)}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent("SABKA DELIVERY order payment")}`;
 
-  function openInstalledUpiApps(paymentUrl = upiPaymentUrl) {
+  function openInstalledUpiApps() {
     const nativeShell =
       /Android/i.test(navigator.userAgent) &&
       window.localStorage.getItem("sabka_native_shell") === "1";
     window.location.href = nativeShell
-      ? paymentUrl.replace("upi://", "sabka-upi://")
-      : paymentUrl;
+      ? upiPaymentUrl.replace("upi://", "sabka-upi://")
+      : upiPaymentUrl;
   }
 
   function switchMode(next: string) {
@@ -955,43 +843,15 @@ export default function MarketHome({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Order place nahi hua");
-      const orderMobile = String(form.get("mobile") || "");
       setOrderCode(data.order.orderCode);
-      setEstimatedDelivery(data.order.estimatedDelivery || "25-35 min");
       setRewardApplied(data.order.rewardOffer?.title || "");
-      setHistoryMobile(orderMobile);
-
-      if (data.order.confirmed) {
-        setCart({});
-        setCartStore(null);
-        setCouponCode("");
-        setValidatedCoupon(null);
-        setCouponMessage("");
-        setPendingPayment(null);
-        setCheckout("success");
-      } else if (
-        data.order.status === "PAYMENT_PENDING" &&
-        data.order.paymentStatus === "PENDING"
-      ) {
-        const payment = {
-          orderCode: data.order.orderCode,
-          mobile: orderMobile,
-          amount: Number(data.order.total),
-          expiresAt: String(data.order.expiresAt || ""),
-          estimatedDelivery:
-            data.order.estimatedDelivery || "25-35 min",
-        };
-        setPendingPayment(payment);
-        setCheckout("payment-pending");
-        openInstalledUpiApps(
-          buildUpiPaymentUrl(
-            payment.amount,
-            `SABKA DELIVERY ${payment.orderCode}`,
-          ),
-        );
-      } else {
-        throw new Error("Order payment verification pending hai");
-      }
+      setHistoryMobile(String(form.get("mobile") || ""));
+      setCart({});
+      setCartStore(null);
+      setCouponCode("");
+      setValidatedCoupon(null);
+      setCouponMessage("");
+      setCheckout("success");
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Order place nahi hua",
@@ -1188,13 +1048,6 @@ export default function MarketHome({
         } as CSSProperties
       }
     >
-      {!catalogReady && (
-        <div className="catalog-loading-screen" role="status" aria-live="polite">
-          <img src="/images/sabka-delivery-logo.png" alt="Sabka Delivery" />
-          <span className="catalog-loading-spinner" aria-hidden="true" />
-          <p>Loading...</p>
-        </div>
-      )}
       {maintenance && (
         <div className="maintenance-screen">
           <img src="/images/sabka-delivery-logo.png" alt="Sabka Delivery" />
@@ -1210,10 +1063,7 @@ export default function MarketHome({
           <span className="brand-mark">
             <img src={brandLogo} alt="Sabka Delivery logo" />
           </span>
-          <span className="brand-copy">
-            <b>Sabka Delivery</b>
-            <small>Food • Grocery • Electronics</small>
-          </span>
+          <b>{brandName}</b>
         </button>
         <button className="location-pill">
           <i>●</i>
@@ -1884,9 +1734,7 @@ export default function MarketHome({
                     ? "YOUR CART"
                     : checkout === "details"
                       ? "CHECKOUT"
-                      : checkout === "payment-pending"
-                        ? "PAYMENT VERIFICATION"
-                        : "ORDER CONFIRMED"}
+                      : "ORDER CONFIRMED"}
                 </small>
                 <h2>
                   {checkout === "cart"
@@ -1894,73 +1742,32 @@ export default function MarketHome({
                       "Sabka Cart"
                     : checkout === "details"
                       ? "Delivery details"
-                      : checkout === "payment-pending"
-                        ? "Payment pending"
-                        : "Thank you!"}
+                      : "Thank you!"}
                 </h2>
               </div>
               <button onClick={() => setCartOpen(false)}>×</button>
             </header>
             {checkout === "success" ? (
-              <OrderSuccess
-                orderCode={orderCode}
-                estimatedDelivery={estimatedDelivery}
-                rewardApplied={rewardApplied}
-                onTrackOrder={() => {
-                  setCartOpen(false);
-                  openHistory();
-                  if (historyMobile.length === 10)
-                    void fetchHistory(historyMobile);
-                }}
-                onContinueShopping={() => {
-                  setCheckout("cart");
-                  setCartOpen(false);
-                  goHome();
-                }}
-              />
-            ) : checkout === "payment-pending" && pendingPayment ? (
-              <section className="payment-verification-pending" aria-live="polite">
-                <span aria-hidden="true">⌛</span>
-                <h3>Payment Verification Pending</h3>
+              <div className="success">
+                <span>✓</span>
+                <h3>Order place ho gaya!</h3>
                 <p>
-                  Order ID: <b>{pendingPayment.orderCode}</b>
+                  Order ID: <b>{orderCode}</b>
                 </p>
-                <p>
-                  Backend payment confirm hone ke baad hi order place hoga.
-                </p>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openInstalledUpiApps(
-                        buildUpiPaymentUrl(
-                          pendingPayment.amount,
-                          `SABKA DELIVERY ${pendingPayment.orderCode}`,
-                        ),
-                      )
-                    }
-                  >
-                    Open UPI App
-                  </button>
-                  <button
-                    type="button"
-                    disabled={paymentChecking}
-                    onClick={() => void checkPendingPayment()}
-                  >
-                    {paymentChecking ? "Checking…" : "Check Payment Status"}
-                  </button>
-                </div>
-                {pendingPayment.expiresAt ? (
-                  <small>
-                    Pending payment automatically cancel hoga after{" "}
-                    {new Date(pendingPayment.expiresAt).toLocaleTimeString(
-                      "en-IN",
-                      { hour: "2-digit", minute: "2-digit" },
-                    )}
-                    .
-                  </small>
-                ) : null}
-              </section>
+                {rewardApplied && (
+                  <p className="reward-success">★ {rewardApplied} applied</p>
+                )}
+                <button
+                  onClick={() => {
+                    setCartOpen(false);
+                    openHistory();
+                    if (historyMobile.length === 10)
+                      void fetchHistory(historyMobile);
+                  }}
+                >
+                  View order & tracking
+                </button>
+              </div>
             ) : checkout === "details" ? (
               <form className="checkout-form" onSubmit={placeOrder}>
                 <button type="button" onClick={() => setCheckout("cart")}>
@@ -2099,7 +1906,7 @@ export default function MarketHome({
                       <button
                         type="button"
                         className="open-upi-app"
-                        onClick={() => openInstalledUpiApps()}
+                        onClick={openInstalledUpiApps}
                       >
                         Open installed UPI apps
                       </button>
@@ -2324,11 +2131,9 @@ export default function MarketHome({
                       ? "PACKING"
                       : order.status;
                   const currentIndex = trackingIndex(order.status, orderSteps);
-                  const cancellable = [
-                    "PAYMENT_PENDING",
-                    "PLACED",
-                    "ACCEPTED",
-                  ].includes(order.status);
+                  const cancellable = ["PLACED", "ACCEPTED"].includes(
+                    order.status,
+                  );
                   return (
                     <article key={order.orderCode}>
                       <div className="history-order-head">

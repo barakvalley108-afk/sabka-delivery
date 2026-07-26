@@ -1,5 +1,4 @@
 import { ensureControlTables } from "../../../../db/control-store";
-import { refreshMarketCatalogSnapshot } from "../../../../db/market-catalog";
 import { getPanelSession } from "../../../panel-auth";
 
 const clampOfferPrice = (price: number, value: unknown) => {
@@ -14,14 +13,6 @@ async function partner() {
   const session = await getPanelSession("RESTAURANT");
   if (!session || session.role !== "RESTAURANT") return null;
   return session;
-}
-
-async function refreshCatalogFallback(db: D1Database) {
-  try {
-    await refreshMarketCatalogSnapshot(db);
-  } catch (error) {
-    console.error("Catalog snapshot refresh failed", error);
-  }
 }
 
 export async function GET() {
@@ -53,8 +44,7 @@ export async function GET() {
          FROM market_orders o
          LEFT JOIN market_delivery_assignments a ON a.order_code=o.order_code
          LEFT JOIN market_riders r ON r.id=a.rider_id
-         WHERE o.store_id=? AND o.status!='PAYMENT_PENDING'
-         ORDER BY o.created_at DESC LIMIT 150`,
+         WHERE o.store_id=? ORDER BY o.created_at DESC LIMIT 150`,
       )
       .bind(session.storeId),
     db
@@ -62,7 +52,7 @@ export async function GET() {
         `SELECT oi.order_code orderCode,oi.item_name itemName,oi.variant_label variantLabel,
                 oi.quantity,oi.unit_price unitPrice
          FROM market_order_items oi JOIN market_orders o ON o.order_code=oi.order_code
-         WHERE o.store_id=? AND o.status!='PAYMENT_PENDING'`,
+         WHERE o.store_id=?`,
       )
       .bind(session.storeId),
     db
@@ -116,14 +106,12 @@ export async function PATCH(request: Request) {
     const retail = order.storeType !== "FOOD";
     const allowed: Record<string, string[]> = retail
       ? {
-          PLACED: ["CONFIRMED", "CANCELLED"],
           ACCEPTED: ["CONFIRMED", "CANCELLED"],
           CONFIRMED: ["PACKING", "CANCELLED"],
           PACKING: ["READY_FOR_PICKUP"],
           READY_FOR_PICKUP: [],
         }
       : {
-          PLACED: ["CONFIRMED", "CANCELLED"],
           ACCEPTED: ["CONFIRMED", "CANCELLED"],
           CONFIRMED: ["PREPARING", "CANCELLED"],
           PREPARING: ["READY_FOR_PICKUP"],
@@ -209,8 +197,6 @@ export async function PATCH(request: Request) {
   } else if (body.action === "store") {
     await db.prepare("UPDATE market_stores SET is_open=? WHERE id=?").bind(body.isOpen?1:0,session.storeId).run();
   } else return Response.json({ error: "Unknown action" }, { status: 400 });
-  if (body.action === "item" || body.action === "store")
-    await refreshCatalogFallback(db);
   await db.prepare("INSERT INTO market_admin_activity (username,action,target,details) VALUES (?,?,?,?)").bind(session.username,`PARTNER_${String(body.action).toUpperCase()}`,String(body.orderCode||body.variantId||session.storeId),JSON.stringify({storeId:session.storeId})).run();
   return Response.json({ ok: true });
 }
@@ -233,6 +219,5 @@ export async function POST(request: Request) {
   const discountPrice=hasOfferPrice?clampOfferPrice(price,body.discountPrice):Math.round(price*(100-Math.floor(Number(body.discountPercent||0)))/100);
   const discountPercent=hasOfferPrice?discountPercentFromOffer(price,discountPrice):Math.floor(Number(body.discountPercent||0));
   await db.prepare(`INSERT INTO market_variants (item_id,label,unit,unit_value,price,discount_price,discount_percent,stock_quantity,is_active) VALUES (?,?,?,?,?,?,?,?,1)`).bind(itemId,String(body.label||"1 pack"),String(body.unit||"PIECE"),Number(body.unitValue||1),price,discountPrice,discountPercent,Number(body.stockQuantity||0)).run();
-  await refreshCatalogFallback(db);
   return Response.json({ok:true,itemId});
 }

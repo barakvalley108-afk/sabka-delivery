@@ -22,26 +22,13 @@
   transform:scale(1.58);
   transform-origin:50% 29%;
 }
-.logo .brand-copy{
-  display:flex;
-  min-width:0;
-  flex-direction:column;
-  gap:4px;
-}
-.logo .brand-copy>b{
+.logo>b{
+  max-width:92px;
   color:#ef1821;
   font-size:18px;
-  font-weight:900;
-  line-height:1;
-  letter-spacing:-.025em;
-  white-space:nowrap;
-}
-.logo .brand-copy>small{
-  color:#675d5d;
-  font-size:9px;
-  font-weight:700;
-  letter-spacing:.02em;
-  white-space:nowrap;
+  font-weight:1000;
+  line-height:.82;
+  letter-spacing:-.045em;
 }
 .login-brand i,
 .admin-brand i,
@@ -63,7 +50,6 @@
 }
 @media(max-width:680px){
   .logo>span.brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:10px}
-  .logo .brand-copy>b{font-size:13px}
-  .logo .brand-copy>small{display:none}
+  .logo>b{max-width:65px;font-size:11px}
   .location-pill{margin-left:auto}
 }

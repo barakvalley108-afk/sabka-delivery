@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Sabka Delivery",
-  "short_name": "Sabka Delivery",
+  "name": "Sabka Delivery — Food & Grocery",
+  "short_name": "Sabka",
   "description": "Food and grocery delivery across Lala Bazar, Hailakandi.",
   "start_url": "/?source=android-app",
   "scope": "/",

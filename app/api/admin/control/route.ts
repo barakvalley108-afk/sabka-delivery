@@ -1,9 +1,4 @@
 import { ensureControlTables } from "../../../../db/control-store";
-import { refreshMarketCatalogSnapshot } from "../../../../db/market-catalog";
-import {
-  cancelPendingPaymentOrder,
-  confirmOnlinePayment,
-} from "../../../../db/payment-orders";
 import { getPanelSession, passwordHash } from "../../../panel-auth";
 
 const sectionKey = (value: unknown) =>
@@ -41,16 +36,6 @@ async function activity(
     )
     .bind(username, action, target, JSON.stringify({ source: "admin-v2" }))
     .run();
-}
-
-async function refreshCatalogFallback(db: D1Database) {
-  try {
-    await refreshMarketCatalogSnapshot(db);
-  } catch (error) {
-    // The mutation is already committed. Never retry it and risk a duplicate;
-    // the next successful catalog mutation will refresh the fallback snapshot.
-    console.error("Catalog snapshot refresh failed", error);
-  }
 }
 
 export async function GET() {
@@ -271,7 +256,6 @@ export async function POST(request: Request) {
           ),
       ]);
       await activity(db, session.username, "SHOP_CREATE", String(storeId));
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, storeId });
     }
     if (action === "rider") {
@@ -401,7 +385,6 @@ export async function POST(request: Request) {
         )
         .run();
       await activity(db, session.username, "ITEM_CREATE", String(itemId));
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, itemId });
     }
     if (action === "section") {
@@ -433,7 +416,6 @@ export async function POST(request: Request) {
         .bind(key, name, description, image, icon, sortOrder)
         .run();
       await activity(db, session.username, "SECTION_CREATE", key);
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, key });
     }
     if (action === "category") {
@@ -479,7 +461,6 @@ export async function POST(request: Request) {
         "CATEGORY_SAVE",
         String(saved?.id || result.meta.last_row_id || storedName),
       );
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, id: saved?.id });
     }
     if (action === "rewardOffer") {
@@ -514,7 +495,6 @@ export async function POST(request: Request) {
         .run();
       const id = Number(result.meta.last_row_id);
       await activity(db, session.username, "REWARD_OFFER_CREATE", String(id));
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, id });
     }
     if (action === "coupon") {
@@ -565,7 +545,6 @@ export async function POST(request: Request) {
         ),
       ]);
       await activity(db, session.username, "COUPON_CREATE", code);
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true, code });
     }
     return Response.json({ error: "Unknown action" }, { status: 400 });
@@ -588,24 +567,9 @@ export async function PATCH(request: Request) {
     const orderCode = String(body.orderCode);
     const status = String(body.status);
     const updated = await db
-      .prepare(
-        "UPDATE market_orders SET status=? WHERE order_code=? AND status!='PAYMENT_PENDING'",
-      )
+      .prepare("UPDATE market_orders SET status=? WHERE order_code=?")
       .bind(status, orderCode)
       .run();
-    if (!updated.meta.changes) {
-      const pending = await db
-        .prepare(
-          "SELECT 1 pending FROM market_orders WHERE order_code=? AND status='PAYMENT_PENDING'",
-        )
-        .bind(orderCode)
-        .first();
-      if (pending)
-        return Response.json(
-          { error: "Payment verify hone se pehle order status change nahi hoga" },
-          { status: 409 },
-        );
-    }
     if (updated.meta.changes)
       await db
         .prepare(
@@ -616,17 +580,6 @@ export async function PATCH(request: Request) {
   } else if (action === "assignRider") {
     const otp = String(Math.floor(1000 + Math.random() * 9000));
     const orderCode = String(body.orderCode);
-    const orderReady = await db
-      .prepare(
-        "SELECT 1 ready FROM market_orders WHERE order_code=? AND status!='PAYMENT_PENDING'",
-      )
-      .bind(orderCode)
-      .first();
-    if (!orderReady)
-      return Response.json(
-        { error: "Payment verify hone ke baad rider assign karo" },
-        { status: 409 },
-      );
     await db
       .prepare(
         `INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp)
@@ -693,7 +646,6 @@ export async function PATCH(request: Request) {
         .prepare("UPDATE market_stores SET is_open=? WHERE id=?")
         .bind(isOpen, storeId)
         .run();
-      await refreshCatalogFallback(db);
       return Response.json({ ok: true });
     }
     const name = present("name") ? String(body.name || "").trim() : current.name;
@@ -870,45 +822,16 @@ export async function PATCH(request: Request) {
     const deliveryCharge=Math.max(0,Math.floor(Number(body.deliveryCharge||0)));
     await db.prepare("INSERT INTO market_settings (key,value,updated_at) VALUES (?,?,CURRENT_TIMESTAMP) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=CURRENT_TIMESTAMP").bind(`delivery_charge_${key}`,String(deliveryCharge)).run();
   } else if (action === "payment") {
-    const orderCode = String(body.orderCode || "");
-    const paymentStatus = String(body.status || "PAID").toUpperCase();
-    if (paymentStatus === "PAID" || paymentStatus === "VERIFIED") {
-      const result = await confirmOnlinePayment(
-        db,
-        orderCode,
+    await db
+      .prepare(
+        "UPDATE market_transactions SET status=?,reference=? WHERE order_code=? AND type='PAYMENT'",
+      )
+      .bind(
+        String(body.status || "VERIFIED"),
         String(body.reference || "ADMIN VERIFIED"),
-      );
-      if (!result)
-        return Response.json({ error: "Order nahi mila" }, { status: 404 });
-      if (!result.confirmed)
-        return Response.json(
-          { error: "Pending UPI payment verify nahi hua" },
-          { status: 409 },
-        );
-    } else if (paymentStatus === "FAILED" || paymentStatus === "CANCELLED") {
-      const cancelled = await cancelPendingPaymentOrder(
-        db,
-        orderCode,
-        String(body.reference || "Online payment failed or was cancelled"),
-      );
-      if (!cancelled)
-        return Response.json(
-          { error: "Pending UPI order cancel nahi hua" },
-          { status: 409 },
-        );
-      if (paymentStatus === "FAILED")
-        await db
-          .prepare(
-            "UPDATE market_transactions SET status='FAILED' WHERE order_code=? AND type='PAYMENT' AND status='CANCELLED'",
-          )
-          .bind(orderCode)
-          .run();
-    } else {
-      return Response.json(
-        { error: "Valid payment status required" },
-        { status: 400 },
-      );
-    }
+        String(body.orderCode),
+      )
+      .run();
   } else if (action === "payout") {
     const payoutId = Number(body.payoutId);
     const payoutAction = String(body.payoutAction || "APPROVE").toUpperCase();
@@ -1295,25 +1218,9 @@ export async function PATCH(request: Request) {
         body.id ||
         body.code ||
         body.key ||
-      "",
+        "",
     ),
   );
-  if (
-    new Set([
-      "shop",
-      "item",
-      "section",
-      "category",
-      "couponOrder",
-      "coupon",
-      "rewardOffer",
-      "content",
-      "website",
-      "settings",
-    ]).has(action)
-  ) {
-    await refreshCatalogFallback(db);
-  }
   return Response.json({ ok: true });
 }
 
@@ -1440,18 +1347,6 @@ export async function DELETE(request: Request) {
     await activity(db, session.username, "SHOP_CASCADE_DELETE", `${storeId}:${store.name}`);
   } else {
     return Response.json({ error: "Unknown action" }, { status: 400 });
-  }
-  if (
-    new Set([
-      "item",
-      "category",
-      "section",
-      "coupon",
-      "rewardOffer",
-      "shop",
-    ]).has(String(body.action))
-  ) {
-    await refreshCatalogFallback(db);
   }
   return Response.json({ ok: true });
 }

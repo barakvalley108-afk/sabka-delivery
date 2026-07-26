@@ -72,20 +72,10 @@ export async function POST(request: Request) {
       );
     const store = await db
       .prepare(
-        `SELECT s.id,s.eta estimatedDelivery,
-                coalesce(ss.section_key,sp.vertical,s.type) vertical
-         FROM market_stores s
-         JOIN market_store_controls c ON c.store_id=s.id
-         LEFT JOIN market_store_operations op ON op.store_id=s.id
-         LEFT JOIN market_store_sections ss ON ss.store_id=s.id
-         LEFT JOIN market_store_profiles sp ON sp.store_id=s.id
-         WHERE s.id=? AND s.is_open=1 AND c.approved=1 AND c.blocked=0
-           AND (op.store_id IS NULL OR
-             (op.opening_time<=op.closing_time AND time('now','+5 hours','+30 minutes') BETWEEN op.opening_time AND op.closing_time) OR
-             (op.opening_time>op.closing_time AND (time('now','+5 hours','+30 minutes')>=op.opening_time OR time('now','+5 hours','+30 minutes')<=op.closing_time)))`,
+        `SELECT s.id,coalesce(ss.section_key,sp.vertical,s.type) vertical FROM market_stores s JOIN market_store_controls c ON c.store_id=s.id LEFT JOIN market_store_operations op ON op.store_id=s.id LEFT JOIN market_store_sections ss ON ss.store_id=s.id LEFT JOIN market_store_profiles sp ON sp.store_id=s.id WHERE s.id=? AND s.is_open=1 AND c.approved=1 AND c.blocked=0 AND (op.store_id IS NULL OR (op.opening_time<=op.closing_time AND time('now','+5 hours','+30 minutes') BETWEEN op.opening_time AND op.closing_time) OR (op.opening_time>op.closing_time AND (time('now','+5 hours','+30 minutes')>=op.opening_time OR time('now','+5 hours','+30 minutes')<=op.closing_time)))`,
       )
       .bind(storeId)
-      .first<{ id: number; vertical: string; estimatedDelivery: string }>();
+      .first<{id:number;vertical:string}>();
     if (!store)
       return Response.json(
         { error: "Restaurant abhi order accept nahi kar raha" },
@@ -206,21 +196,11 @@ export async function POST(request: Request) {
       discount = coupon.discount;
       autoPauseCoupon = !!coupon.coupon.autoPauseAfterUse;
     }
-    const configuredPaymentTimeout = Number(
-        config.payment_timeout_minutes || 15,
-      ),
-      paymentTimeoutMinutes = Number.isFinite(configuredPaymentTimeout)
-        ? Math.max(1, Math.min(120, Math.floor(configuredPaymentTimeout)))
-        : 15,
-      total = Math.max(0, subtotal + deliveryFee - discount),
+    const total = Math.max(0, subtotal + deliveryFee - discount),
       orderCode = `SD-${Date.now().toString().slice(-7)}-${Math.floor(10 + Math.random() * 90)}`,
       payment = body.paymentMethod === "UPI" ? "UPI" : "COD",
       initialStatus =
-        payment === "UPI"
-          ? "PAYMENT_PENDING"
-          : config.order_accept_mode === "AUTO"
-            ? "CONFIRMED"
-            : "ACCEPTED";
+        config.order_accept_mode === "AUTO" ? "CONFIRMED" : "ACCEPTED";
     const statements = [
       ...result.results.map((x) =>
         db
@@ -250,15 +230,7 @@ export async function POST(request: Request) {
         .prepare(
           "INSERT INTO market_order_status_history (order_code,status,actor_type,actor_id,note) VALUES (?,?,?,?,?)",
         )
-        .bind(
-          orderCode,
-          initialStatus,
-          "CUSTOMER",
-          mobile,
-          payment === "UPI"
-            ? "Awaiting online payment verification"
-            : "Order placed",
-        ),
+        .bind(orderCode, initialStatus, "CUSTOMER", mobile, "Order placed"),
       ...result.results.map((x) =>
         db
           .prepare(
@@ -283,18 +255,14 @@ export async function POST(request: Request) {
           "INSERT INTO market_transactions (order_code,type,method,amount,status,reference) VALUES (?,'PAYMENT',?,?,?,?)",
         )
         .bind(orderCode, payment, total, "PENDING", ""),
-      ...(payment === "COD"
-        ? [
-            db
-              .prepare(
-                "INSERT INTO market_admin_notifications (type,title,message,order_code) VALUES ('ORDER','New order received',?,?)",
-              )
-              .bind(
-                `${customerName} ne ₹${total} ka COD order place kiya`,
-                orderCode,
-              ),
-          ]
-        : []),
+      db
+        .prepare(
+          "INSERT INTO market_admin_notifications (type,title,message,order_code) VALUES ('ORDER','New order received',?,?)",
+        )
+        .bind(
+          `${customerName} ne ₹${total} ka ${payment} order place kiya`,
+          orderCode,
+        ),
       ...(payment === "UPI"
         ? [
             db
@@ -323,15 +291,11 @@ export async function POST(request: Request) {
             db
               .prepare("UPDATE market_promotions SET uses=uses+1 WHERE code=?")
               .bind(couponCode),
-            ...(payment === "COD"
-              ? [
-                  db
-                    .prepare(
-                      "UPDATE market_promotions SET is_active=0 WHERE code=? AND EXISTS (SELECT 1 FROM market_promotion_rules r WHERE r.code=? AND r.auto_pause_after_use=1)",
-                    )
-                    .bind(couponCode, couponCode),
-                ]
-              : []),
+            db
+              .prepare(
+                "UPDATE market_promotions SET is_active=0 WHERE code=? AND EXISTS (SELECT 1 FROM market_promotion_rules r WHERE r.code=? AND r.auto_pause_after_use=1)",
+              )
+              .bind(couponCode, couponCode),
           ]
         : []),
       ...(appliedReward
@@ -366,13 +330,6 @@ export async function POST(request: Request) {
             : null,
           deliveryFee,
           status: initialStatus,
-          paymentStatus: "PENDING",
-          confirmed: payment === "COD",
-          expiresAt:
-            payment === "UPI"
-              ? new Date(Date.now() + paymentTimeoutMinutes * 60_000).toISOString()
-              : null,
-          estimatedDelivery: store.estimatedDelivery || "25-35 min",
         },
       },
       { status: 201 },
