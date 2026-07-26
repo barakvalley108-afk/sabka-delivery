@@ -681,45 +681,6 @@
   border-radius: 17px;
   background: #fff;
   padding: 16px;
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.coupon-list article.dragging {
-  opacity: 0.72;
-  transform: scale(0.985);
-  box-shadow: 0 14px 30px #17261e24;
-}
-
-.coupon-order-help {
-  margin: 0 0 12px;
-  color: #66756d;
-  font-size: 10px;
-  font-weight: 750;
-}
-
-.coupon-order-tools {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.coupon-list .coupon-drag-handle {
-  min-width: 32px;
-  border: 1px solid #d8e1db;
-  border-radius: 8px;
-  background: #f7faf8;
-  color: #526158;
-  padding: 6px 8px;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-
-.coupon-list .coupon-drag-handle:active {
-  cursor: grabbing;
 }
 
 .coupon-list article.paused {

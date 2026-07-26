@@ -1,5 +1,4 @@
 import { ensureControlTables } from "../../../db/control-store";
-import { validateCoupon } from "../../../db/coupon-service";
 import { getRewardProgress } from "../../reward-offers";
 type Payload = {
   mobile?: string;
@@ -19,7 +18,7 @@ export async function POST(request: Request) {
       customerName = body.customerName?.trim() || "",
       address = body.address?.trim() || "",
       requestedArea = body.area?.trim() || "",
-      requestedCouponCode = body.couponCode?.trim().toUpperCase() || "",
+      couponCode = body.couponCode?.trim().toUpperCase() || "",
       rewardOfferId = Number(body.rewardOfferId || 0),
       storeId = Number(body.storeId);
     const requested = Object.entries(body.items || {})
@@ -187,24 +186,71 @@ export async function POST(request: Request) {
     const deliveryFee = appliedReward ? 0 : deliveryFeeBeforeReward;
     let discount = 0;
     let autoPauseCoupon = false;
-    let couponCode = "";
-    if (requestedCouponCode) {
-      const coupon = await validateCoupon({
-        db,
-        rawCode: requestedCouponCode,
-        mobile,
-        storeId,
-        subtotal,
-      });
-      if (!coupon.ok) {
+    if (couponCode) {
+      const promo = await db
+        .prepare(
+          `SELECT p.code,p.discount_type discountType,p.discount_value discountValue,p.min_order minOrder,p.is_active isActive,r.max_discount maxDiscount,r.expires_at expiresAt,r.user_mobile userMobile,r.store_id storeId,r.first_order_only firstOrderOnly,r.auto_pause_after_use autoPauseAfterUse FROM market_promotions p LEFT JOIN market_promotion_rules r ON r.code=p.code WHERE p.code=?`,
+        )
+        .bind(couponCode)
+        .first<{
+          code: string;
+          discountType: string;
+          discountValue: number;
+          minOrder: number;
+          isActive: number;
+          maxDiscount: number;
+          expiresAt: string | null;
+          userMobile: string | null;
+          storeId: number | null;
+          firstOrderOnly: number;
+          autoPauseAfterUse: number;
+        }>();
+      if (
+        !promo?.isActive ||
+        (promo.expiresAt &&
+          new Date(`${promo.expiresAt}T23:59:59`) < new Date()) ||
+        (promo.userMobile && promo.userMobile !== mobile) ||
+        (promo.storeId && promo.storeId !== storeId)
+      )
         return Response.json(
-          { error: coupon.error, reason: coupon.reason },
-          { status: coupon.status },
+          { error: "Coupon is order ke liye valid nahi hai" },
+          { status: 400 },
         );
+      if (subtotal < promo.minOrder)
+        return Response.json(
+          { error: `Coupon ke liye minimum order ₹${promo.minOrder} hai` },
+          { status: 400 },
+        );
+      const claimed = await db
+        .prepare(
+          "SELECT id FROM market_coupon_claims WHERE mobile=? AND coupon_code=?",
+        )
+        .bind(mobile, couponCode)
+        .first();
+      if (claimed)
+        return Response.json(
+          { error: "Ye coupon is mobile number par pehle use ho chuka hai" },
+          { status: 409 },
+        );
+      if (promo.firstOrderOnly) {
+        const old = await db
+          .prepare(
+            "SELECT order_code FROM market_orders WHERE mobile=? LIMIT 1",
+          )
+          .bind(mobile)
+          .first();
+        if (old)
+          return Response.json(
+            { error: "Ye offer sirf first order ke liye hai" },
+            { status: 409 },
+          );
       }
-      couponCode = coupon.coupon.code;
-      discount = coupon.discount;
-      autoPauseCoupon = !!coupon.coupon.autoPauseAfterUse;
+      discount =
+        promo.discountType === "PERCENT"
+          ? Math.floor((subtotal * promo.discountValue) / 100)
+          : promo.discountValue;
+      if (promo.maxDiscount) discount = Math.min(discount, promo.maxDiscount);
+      autoPauseCoupon = !!promo.autoPauseAfterUse;
     }
     const configuredPaymentTimeout = Number(
         config.payment_timeout_minutes || 15,

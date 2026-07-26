@@ -145,13 +145,12 @@ export async function GET() {
     ),
     db.prepare(
       `SELECT p.code,p.title,p.discount_type discountType,p.discount_value discountValue,
-              p.min_order minOrder,p.is_active isActive,p.uses,p.sort_order sortOrder,
+              p.min_order minOrder,p.is_active isActive,p.uses,
               r.max_discount maxDiscount,r.expires_at expiresAt,
               coalesce(r.auto_pause_after_use,0) autoPauseAfterUse,
-              coalesce(r.show_on_website,1) showOnWebsite,
-              coalesce(r.usage_limit,0) usageLimit
+              coalesce(r.show_on_website,1) showOnWebsite
        FROM market_promotions p LEFT JOIN market_promotion_rules r ON r.code=p.code
-       ORDER BY p.sort_order,p.created_at DESC,p.code`,
+       ORDER BY p.created_at DESC`,
     ),
     db.prepare(
       `SELECT id,title,description,qualifying_orders qualifyingOrders,
@@ -524,7 +523,6 @@ export async function POST(request: Request) {
       const discountValue = Number(body.discountValue);
       const minOrder = Number(body.minOrder || 0);
       const maxDiscount = Number(body.maxDiscount || 0);
-      const usageLimit = Number(body.usageLimit || 0);
       const showOnWebsite = body.showOnWebsite === undefined || body.showOnWebsite ? 1 : 0;
       if (
         !/^[A-Z0-9]{4,20}$/.test(code) ||
@@ -535,33 +533,28 @@ export async function POST(request: Request) {
         !Number.isFinite(minOrder) ||
         minOrder < 0 ||
         !Number.isFinite(maxDiscount) ||
-        maxDiscount < 0 ||
-        !Number.isInteger(usageLimit) ||
-        usageLimit < 0
+        maxDiscount < 0
       )
         return Response.json({ error: "Valid coupon details required" }, { status: 400 });
       await db.batch([
         db.prepare(
-          `INSERT INTO market_promotions
-           (code,title,discount_type,discount_value,min_order,is_active,sort_order)
-           SELECT ?,?,?,?,?,1,coalesce(max(sort_order),-1)+1 FROM market_promotions`,
+          `INSERT INTO market_promotions (code,title,discount_type,discount_value,min_order,is_active)
+           VALUES (?,?,?,?,?,1)`,
         ).bind(code,title,discountType,discountValue,minOrder),
         db.prepare(
           `INSERT INTO market_promotion_rules
-           (code,expires_at,max_discount,auto_pause_after_use,show_on_website,usage_limit)
-           VALUES (?,?,?,?,?,?)
+           (code,expires_at,max_discount,auto_pause_after_use,show_on_website)
+           VALUES (?,?,?,?,?)
            ON CONFLICT(code) DO UPDATE SET expires_at=excluded.expires_at,
              max_discount=excluded.max_discount,
              auto_pause_after_use=excluded.auto_pause_after_use,
-             show_on_website=excluded.show_on_website,
-             usage_limit=excluded.usage_limit`,
+             show_on_website=excluded.show_on_website`,
         ).bind(
           code,
           String(body.expiresAt || "") || null,
           maxDiscount,
           body.autoPauseAfterUse ? 1 : 0,
           showOnWebsite,
-          usageLimit,
         ),
       ]);
       await activity(db, session.username, "COUPON_CREATE", code);
@@ -1104,40 +1097,6 @@ export async function PATCH(request: Request) {
       .prepare("UPDATE market_admin_notifications SET is_read=1 WHERE id=?")
       .bind(Number(body.id))
       .run();
-  } else if (action === "couponOrder") {
-    const codes = Array.isArray(body.codes)
-      ? body.codes.map((value) => String(value).trim().toUpperCase())
-      : [];
-    const uniqueCodes = [...new Set(codes)];
-    if (
-      !codes.length ||
-      codes.length > 500 ||
-      uniqueCodes.length !== codes.length ||
-      codes.some((code) => !/^[A-Z0-9]{4,20}$/.test(code))
-    )
-      return Response.json({ error: "Valid coupon order required" }, { status: 400 });
-    const placeholders = codes.map(() => "?").join(",");
-    const existing = await db
-      .prepare(
-        `SELECT count(*) count FROM market_promotions WHERE upper(code) IN (${placeholders})`,
-      )
-      .bind(...codes)
-      .first<{ count: number }>();
-    const total = await db
-      .prepare("SELECT count(*) count FROM market_promotions")
-      .first<{ count: number }>();
-    if (
-      Number(existing?.count || 0) !== codes.length ||
-      Number(total?.count || 0) !== codes.length
-    )
-      return Response.json({ error: "Coupon list changed—refresh and retry" }, { status: 409 });
-    await db.batch(
-      codes.map((code, sortOrder) =>
-        db
-          .prepare("UPDATE market_promotions SET sort_order=? WHERE upper(code)=?")
-          .bind(sortOrder, code),
-      ),
-    );
   } else if (action === "coupon") {
     const code = String(body.code || "").trim().toUpperCase();
     if (!/^[A-Z0-9]{4,20}$/.test(code))
@@ -1148,7 +1107,6 @@ export async function PATCH(request: Request) {
       const discountValue = Number(body.discountValue);
       const minOrder = Number(body.minOrder || 0);
       const maxDiscount = Number(body.maxDiscount || 0);
-      const usageLimit = Number(body.usageLimit || 0);
       const expiresAt = String(body.expiresAt || "");
       const showOnWebsite = body.showOnWebsite === undefined || body.showOnWebsite ? 1 : 0;
       if (
@@ -1160,8 +1118,6 @@ export async function PATCH(request: Request) {
         minOrder < 0 ||
         !Number.isFinite(maxDiscount) ||
         maxDiscount < 0 ||
-        !Number.isInteger(usageLimit) ||
-        usageLimit < 0 ||
         (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt))
       )
         return Response.json({ error: "Valid coupon details required" }, { status: 400 });
@@ -1179,20 +1135,18 @@ export async function PATCH(request: Request) {
         ).bind(title, discountType, discountValue, minOrder, code),
         db.prepare(
           `INSERT INTO market_promotion_rules
-           (code,expires_at,max_discount,auto_pause_after_use,show_on_website,usage_limit)
-           VALUES (?,?,?,?,?,?)
+           (code,expires_at,max_discount,auto_pause_after_use,show_on_website)
+           VALUES (?,?,?,?,?)
            ON CONFLICT(code) DO UPDATE SET expires_at=excluded.expires_at,
              max_discount=excluded.max_discount,
              auto_pause_after_use=excluded.auto_pause_after_use,
-             show_on_website=excluded.show_on_website,
-             usage_limit=excluded.usage_limit`,
+             show_on_website=excluded.show_on_website`,
         ).bind(
           code,
           expiresAt || null,
           maxDiscount,
           body.autoPauseAfterUse ? 1 : 0,
           showOnWebsite,
-          usageLimit,
         ),
       ]);
     } else {
