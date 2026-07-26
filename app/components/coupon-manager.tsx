@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+  type PointerEvent,
+} from "react";
 
 export type AdminCoupon = {
   code: string;
@@ -14,6 +22,8 @@ export type AdminCoupon = {
   showOnWebsite: number;
   isActive: number;
   uses: number;
+  usageLimit: number;
+  sortOrder: number;
 };
 
 type Send = (
@@ -28,6 +38,7 @@ type OfferDraft = {
   discountValue: string;
   minOrder: string;
   maxDiscount: string;
+  usageLimit: string;
   expiresAt: string;
   autoPauseAfterUse: boolean;
   showOnWebsite: boolean;
@@ -40,6 +51,7 @@ const emptyDraft: OfferDraft = {
   discountValue: "",
   minOrder: "350",
   maxDiscount: "50",
+  usageLimit: "0",
   expiresAt: "",
   autoPauseAfterUse: false,
   showOnWebsite: true,
@@ -56,6 +68,25 @@ export default function CouponManager({
 }) {
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const [draft, setDraft] = useState<OfferDraft>(emptyDraft);
+  const [orderCodes, setOrderCodes] = useState<string[] | null>(null);
+  const [draggingCode, setDraggingCode] = useState<string | null>(null);
+  const orderedRef = useRef(coupons);
+  const pointerCode = useRef<string | null>(null);
+
+  const orderedCoupons = useMemo(() => {
+    if (!orderCodes) return coupons;
+    const byCode = new Map(coupons.map((coupon) => [coupon.code, coupon]));
+    return [
+      ...orderCodes
+        .map((code) => byCode.get(code))
+        .filter((coupon): coupon is AdminCoupon => !!coupon),
+      ...coupons.filter((coupon) => !orderCodes.includes(coupon.code)),
+    ];
+  }, [coupons, orderCodes]);
+
+  useEffect(() => {
+    orderedRef.current = orderedCoupons;
+  }, [orderedCoupons]);
 
   function update<K extends keyof OfferDraft>(key: K, value: OfferDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -80,6 +111,7 @@ export default function CouponManager({
       discountValue: String(coupon.discountValue),
       minOrder: String(coupon.minOrder),
       maxDiscount: String(coupon.maxDiscount || 0),
+      usageLimit: String(coupon.usageLimit || 0),
       expiresAt: coupon.expiresAt || "",
       autoPauseAfterUse: !!coupon.autoPauseAfterUse,
       showOnWebsite: coupon.showOnWebsite !== 0,
@@ -99,12 +131,83 @@ export default function CouponManager({
       discountValue: Number(draft.discountValue),
       minOrder: Number(draft.minOrder),
       maxDiscount: Number(draft.maxDiscount),
+      usageLimit: Number(draft.usageLimit),
       expiresAt: draft.expiresAt,
       autoPauseAfterUse: draft.autoPauseAfterUse,
       showOnWebsite: draft.showOnWebsite,
     };
     const saved = await send(editingCode ? "PATCH" : "POST", body);
     if (saved) resetForm();
+  }
+
+  function reorder(code: string, targetCode: string) {
+    if (code === targetCode) return;
+    const next = [...orderedRef.current];
+    const from = next.findIndex((coupon) => coupon.code === code);
+    const to = next.findIndex((coupon) => coupon.code === targetCode);
+    if (from < 0 || to < 0) return;
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    const normalized = next.map((coupon, sortOrder) => ({
+      ...coupon,
+      sortOrder,
+    }));
+    orderedRef.current = normalized;
+    setOrderCodes(normalized.map((coupon) => coupon.code));
+  }
+
+  async function persistOrder(next = orderedRef.current) {
+    await send("PATCH", {
+      action: "couponOrder",
+      codes: next.map((coupon) => coupon.code),
+    });
+  }
+
+  function dropCoupon(event: DragEvent<HTMLElement>, targetCode: string) {
+    event.preventDefault();
+    if (!draggingCode) return;
+    reorder(draggingCode, targetCode);
+    setDraggingCode(null);
+    void persistOrder();
+  }
+
+  function moveCoupon(code: string, direction: -1 | 1) {
+    const current = orderedRef.current;
+    const index = current.findIndex((coupon) => coupon.code === code);
+    const target = current[index + direction];
+    if (index < 0 || !target) return;
+    reorder(code, target.code);
+    void persistOrder();
+  }
+
+  function startPointerReorder(
+    event: PointerEvent<HTMLButtonElement>,
+    code: string,
+  ) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    pointerCode.current = code;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDraggingCode(code);
+  }
+
+  function continuePointerReorder(event: PointerEvent<HTMLButtonElement>) {
+    const code = pointerCode.current;
+    if (!code) return;
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-coupon-code]");
+    const targetCode = target?.dataset.couponCode;
+    if (targetCode) reorder(code, targetCode);
+  }
+
+  function finishPointerReorder(event: PointerEvent<HTMLButtonElement>) {
+    if (!pointerCode.current) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    pointerCode.current = null;
+    setDraggingCode(null);
+    void persistOrder();
   }
 
   return (
@@ -199,6 +302,17 @@ export default function CouponManager({
           />
         </label>
         <label>
+          Total usage limit
+          <input
+            value={draft.usageLimit}
+            onChange={(event) => update("usageLimit", event.target.value)}
+            type="number"
+            min="0"
+            required
+          />
+          <small>0 = unlimited</small>
+        </label>
+        <label>
           Expiry date
           <input
             value={draft.expiresAt}
@@ -244,11 +358,47 @@ export default function CouponManager({
         </div>
       </form>
 
+      <p className="coupon-order-help">
+        Drag handle se mouse ya touch par reorder karo. Keyboard ke liye up/down
+        buttons bhi diye gaye hain.
+      </p>
       <div className="coupon-list">
-        {coupons.map((coupon) => (
-          <article key={coupon.code} className={coupon.isActive ? "" : "paused"}>
+        {orderedCoupons.map((coupon, index) => (
+          <article
+            key={coupon.code}
+            data-coupon-code={coupon.code}
+            className={`${coupon.isActive ? "" : "paused"} ${
+              draggingCode === coupon.code ? "dragging" : ""
+            }`}
+            draggable={!busy}
+            onDragStart={(event) => {
+              setDraggingCode(coupon.code);
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", coupon.code);
+            }}
+            onDragEnd={() => setDraggingCode(null)}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => dropCoupon(event, coupon.code)}
+          >
             <header>
-              <code>{coupon.code}</code>
+              <span className="coupon-order-tools">
+                <button
+                  type="button"
+                  className="coupon-drag-handle"
+                  aria-label={`Reorder ${coupon.code}`}
+                  title="Drag to reorder"
+                  disabled={busy}
+                  onPointerDown={(event) =>
+                    startPointerReorder(event, coupon.code)
+                  }
+                  onPointerMove={continuePointerReorder}
+                  onPointerUp={finishPointerReorder}
+                  onPointerCancel={finishPointerReorder}
+                >
+                  ⋮⋮
+                </button>
+                <code>{coupon.code}</code>
+              </span>
               <span>{coupon.isActive ? "● ACTIVE" : "○ PAUSED"}</span>
             </header>
             <h2>{coupon.title}</h2>
@@ -265,8 +415,27 @@ export default function CouponManager({
               · {coupon.showOnWebsite !== 0 ? "PUBLIC" : "PRIVATE CODE"}
             </small>
             <footer>
-              <b>{coupon.uses} redeemed</b>
+              <b>
+                {coupon.uses}
+                {coupon.usageLimit > 0 ? ` / ${coupon.usageLimit}` : ""} redeemed
+              </b>
               <div className="coupon-card-actions">
+                <button
+                  type="button"
+                  aria-label={`Move ${coupon.code} up`}
+                  disabled={busy || index === 0}
+                  onClick={() => moveCoupon(coupon.code, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Move ${coupon.code} down`}
+                  disabled={busy || index === orderedCoupons.length - 1}
+                  onClick={() => moveCoupon(coupon.code, 1)}
+                >
+                  ↓
+                </button>
                 <button
                   disabled={busy}
                   onClick={() =>
@@ -296,7 +465,7 @@ export default function CouponManager({
             </footer>
           </article>
         ))}
-        {!coupons.length && (
+        {!orderedCoupons.length && (
           <div className="coupon-empty">Abhi koi coupon nahi hai—pehla coupon create karo.</div>
         )}
       </div>

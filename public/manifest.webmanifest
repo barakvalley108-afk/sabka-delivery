@@ -15,14 +15,14 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/images/sabka-delivery-logo.png",
-      "sizes": "1254x1254",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/images/sabka-delivery-logo.png",
-      "sizes": "1254x1254",
+      "src": "/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
@@ -32,19 +32,19 @@
       "name": "Food",
       "short_name": "Food",
       "url": "/?section=food&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Grocery",
       "short_name": "Grocery",
       "url": "/?section=grocery&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Order history",
       "short_name": "Orders",
       "url": "/?section=history&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

@@ -389,6 +389,10 @@ export default function MarketHome({
   const marketLoaded = useRef(initialMarket.catalogVersion > 0);
   const marketSignature = useRef(JSON.stringify(initialMarket));
   const marketVersion = useRef(Number(initialMarket.catalogVersion || 0));
+  // A short client-only cover prevents the empty/default catalog from flashing.
+  // It does not perform SSR/D1 work and therefore does not add Worker CPU load.
+  const [catalogReady, setCatalogReady] = useState(initialMarket.catalogVersion > 0);
+  const catalogLoadStartedAt = useRef(Date.now());
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get("source");
@@ -474,7 +478,19 @@ export default function MarketHome({
       marketLoaded.current = true;
     } catch {
       if (!marketLoaded.current) setMessage("Catalog load nahi hua");
+    } finally {
+      // Keep the cover visible only long enough to avoid a visual flash.
+      const minimumVisibleMs = 450;
+      const elapsed = Date.now() - catalogLoadStartedAt.current;
+      const remaining = Math.max(0, minimumVisibleMs - elapsed);
+      window.setTimeout(() => setCatalogReady(true), remaining);
     }
+  }, []);
+
+  useEffect(() => {
+    // Never trap the customer on the cover if the network is unavailable.
+    const fallback = window.setTimeout(() => setCatalogReady(true), 1800);
+    return () => window.clearTimeout(fallback);
   }, []);
 
   const refreshMarket = useCallback(async () => {
@@ -1172,6 +1188,13 @@ export default function MarketHome({
         } as CSSProperties
       }
     >
+      {!catalogReady && (
+        <div className="catalog-loading-screen" role="status" aria-live="polite">
+          <img src="/images/sabka-delivery-logo.png" alt="Sabka Delivery" />
+          <span className="catalog-loading-spinner" aria-hidden="true" />
+          <p>Loading...</p>
+        </div>
+      )}
       {maintenance && (
         <div className="maintenance-screen">
           <img src="/images/sabka-delivery-logo.png" alt="Sabka Delivery" />

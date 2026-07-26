@@ -3960,3 +3960,12 @@ footer > button {
   .tracking-timeline .step { min-width: 0 !important; }
   .tracking-timeline .step > small { max-width: 54px !important; overflow-wrap: anywhere; }
 }
+
+/* Short client-only catalog cover: prevents first-paint catalog flash without SSR/D1 work. */
+.catalog-loading-screen{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;align-content:center;gap:10px;background:#fffdf7;animation:catalogCoverIn .12s ease-out}
+.catalog-loading-screen img{width:76px;height:76px;object-fit:contain;border-radius:18px}
+.catalog-loading-screen p{margin:0;font-size:11px;font-weight:800;letter-spacing:.4px;color:#8d1d24}
+.catalog-loading-spinner{width:24px;height:24px;border:3px solid rgba(199,24,27,.16);border-top-color:#c7181b;border-radius:50%;animation:catalogSpin .65s linear infinite}
+@keyframes catalogSpin{to{transform:rotate(360deg)}}
+@keyframes catalogCoverIn{from{opacity:.75}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.catalog-loading-screen,.catalog-loading-spinner{animation:none}.catalog-loading-spinner{border-top-color:#c7181b}}
