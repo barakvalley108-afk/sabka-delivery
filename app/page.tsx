@@ -326,12 +326,58 @@ export default function Home() {
   const marketSignature = useRef("");
   const marketVersion = useRef(0);
   const successAudioContext = useRef<AudioContext | null>(null);
+  const successSoundData = useRef<ArrayBuffer | null>(null);
+  const successSoundBuffer = useRef<AudioBuffer | null>(null);
+  const successSoundLoading = useRef<Promise<ArrayBuffer | null> | null>(
+    null,
+  );
+  const successSoundDecoding = useRef<Promise<AudioBuffer | null> | null>(
+    null,
+  );
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get("source");
     if (source === "android-app") {
       window.localStorage.setItem("sabka_native_shell", "1");
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    successSoundLoading.current = fetch("/order-success.mp3", {
+      cache: "force-cache",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Success sound load nahi hua");
+        }
+
+        return response.arrayBuffer();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          successSoundData.current = data;
+        }
+
+        return data;
+      })
+      .catch(() => null);
+
+    return () => {
+      cancelled = true;
+      successSoundData.current = null;
+      successSoundBuffer.current = null;
+      successSoundLoading.current = null;
+      successSoundDecoding.current = null;
+
+      const context = successAudioContext.current;
+      successAudioContext.current = null;
+
+      if (context && context.state !== "closed") {
+        void context.close();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -885,6 +931,36 @@ export default function Home() {
     });
   }
 
+  function ensureSuccessSoundBuffer(
+    context: AudioContext,
+  ): Promise<AudioBuffer | null> {
+    if (successSoundBuffer.current) {
+      return Promise.resolve(successSoundBuffer.current);
+    }
+
+    if (successSoundDecoding.current) {
+      return successSoundDecoding.current;
+    }
+
+    const dataPromise = successSoundData.current
+      ? Promise.resolve(successSoundData.current)
+      : successSoundLoading.current || Promise.resolve(null);
+
+    successSoundDecoding.current = dataPromise
+      .then((data) => {
+        if (!data || context.state === "closed") return null;
+
+        return context.decodeAudioData(data.slice(0));
+      })
+      .then((buffer) => {
+        successSoundBuffer.current = buffer;
+        return buffer;
+      })
+      .catch(() => null);
+
+    return successSoundDecoding.current;
+  }
+
   function primeSuccessSound() {
     const AudioContextConstructor =
       window.AudioContext ||
@@ -904,43 +980,36 @@ export default function Home() {
     if (context.state === "suspended") {
       void context.resume();
     }
+
+    void ensureSuccessSoundBuffer(context);
   }
 
-  function playSuccessSound() {
+  async function playSuccessSound() {
     const context = successAudioContext.current;
 
     if (!context || context.state === "closed") return;
 
-    const startTime = context.currentTime;
-    const gain = context.createGain();
-
-    gain.gain.setValueAtTime(0.0001, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.14, startTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.72);
-    gain.connect(context.destination);
-
-    [
-      { frequency: 659.25, delay: 0, duration: 0.34 },
-      { frequency: 880, delay: 0.14, duration: 0.48 },
-    ].forEach(({ frequency, delay, duration }) => {
-      const oscillator = context.createOscillator();
-
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(
-        frequency,
-        startTime + delay,
-      );
-      oscillator.connect(gain);
-      oscillator.start(startTime + delay);
-      oscillator.stop(startTime + delay + duration);
-    });
-
-    window.setTimeout(() => {
-      if (successAudioContext.current === context) {
-        void context.close();
-        successAudioContext.current = null;
+    try {
+      if (context.state === "suspended") {
+        await context.resume();
       }
-    }, 1100);
+
+      const buffer = await ensureSuccessSoundBuffer(context);
+
+      if (!buffer) return;
+
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+
+      source.buffer = buffer;
+      gain.gain.value = 0.65;
+
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start(0);
+    } catch {
+      // Sound fail hone par order success screen phir bhi chalegi.
+    }
   }
 
   async function placeOrder(event: FormEvent<HTMLFormElement>) {
@@ -987,7 +1056,7 @@ export default function Home() {
       setCartStore(null);
       setCouponCode("");
       setCheckout("success");
-      playSuccessSound();
+      void playSuccessSound();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Order place nahi hua",
