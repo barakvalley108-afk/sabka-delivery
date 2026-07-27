@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Sabka Delivery — Food & Grocery",
+  "name": "Sabka Delivery",
   "short_name": "Sabka",
-  "description": "Food and grocery delivery across Lala Bazar, Hailakandi.",
+  "description": "Food, grocery and electronics delivery across Lala Bazar, Hailakandi.",
   "start_url": "/?source=android-app",
   "scope": "/",
   "display": "standalone",
@@ -32,19 +32,34 @@
       "name": "Food",
       "short_name": "Food",
       "url": "/?section=food&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [
+        {
+          "src": "/images/sabka-delivery-logo.png",
+          "sizes": "1254x1254"
+        }
+      ]
     },
     {
       "name": "Grocery",
       "short_name": "Grocery",
       "url": "/?section=grocery&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [
+        {
+          "src": "/images/sabka-delivery-logo.png",
+          "sizes": "1254x1254"
+        }
+      ]
     },
     {
       "name": "Order history",
       "short_name": "Orders",
       "url": "/?section=history&source=android-shortcut",
-      "icons": [{ "src": "/images/sabka-delivery-logo.png", "sizes": "1254x1254" }]
+      "icons": [
+        {
+          "src": "/images/sabka-delivery-logo.png",
+          "sizes": "1254x1254"
+        }
+      ]
     }
   ]
 }
