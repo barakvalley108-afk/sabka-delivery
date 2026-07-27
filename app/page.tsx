@@ -11,6 +11,8 @@ import {
 } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useLiveRefresh } from "./components/use-live-refresh";
+import OrderSuccess from "./order-success";
+import OrderFailed from "./order-failed";
 
 type Store = {
   id: number;
@@ -287,9 +289,9 @@ export default function Home() {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [cartStore, setCartStore] = useState<number | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [checkout, setCheckout] = useState<"cart" | "details" | "success">(
-    "cart",
-  );
+  const [checkout, setCheckout] = useState<
+    "cart" | "details" | "success" | "failed"
+  >("cart");
   const [couponCode, setCouponCode] = useState("");
   const [checkoutMobile, setCheckoutMobile] = useState("");
   const [rewardApplied, setRewardApplied] = useState("");
@@ -297,6 +299,7 @@ export default function Home() {
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "UPI">("COD");
   const [message, setMessage] = useState("");
+  const [failedReason, setFailedReason] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState<NavKey>("home");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
