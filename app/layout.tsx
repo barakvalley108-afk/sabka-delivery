@@ -178,7 +178,14 @@ const localBusinessJsonLd = {
     "@type": "Place",
     name: "Lala Bazar, Hailakandi, Assam",
   },
-
+<head>
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(localBusinessJsonLd),
+    }}
+  />
+</head>
   address: {
     "@type": "PostalAddress",
     addressLocality: "Lala Bazar",
