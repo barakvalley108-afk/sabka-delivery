@@ -153,7 +153,7 @@ export const metadata: Metadata = {
     },
   },
 
-  category: "Food and Grocery Delivery",
+  category: "Food, Grocery and Electronics Delivery",
 
   other: {
     "theme-color": "#ffffff",
@@ -163,11 +163,19 @@ export const metadata: Metadata = {
   },
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Sabka Delivery",
+  alternateName: ["SabkaDelivery", "Sabka Delivery Lala"],
+  url: "https://sabkadelivery.in/",
+};
+
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "DeliveryService",
   name: "Sabka Delivery",
-  url: "https://sabkadelivery.in",
+  url: "https://sabkadelivery.in/",
   logo: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
   image: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
 
@@ -178,14 +186,7 @@ const localBusinessJsonLd = {
     "@type": "Place",
     name: "Lala Bazar, Hailakandi, Assam",
   },
-<head>
-  <script
-    type="application/ld+json"
-    dangerouslySetInnerHTML={{
-      __html: JSON.stringify(localBusinessJsonLd),
-    }}
-  />
-</head>
+
   address: {
     "@type": "PostalAddress",
     addressLocality: "Lala Bazar",
@@ -200,8 +201,6 @@ const localBusinessJsonLd = {
     areaServed: "IN",
     availableLanguage: ["English", "Hindi", "Bengali"],
   },
-
-  sameAs: ["https://sabkadelivery.in"],
 };
 
 export default function RootLayout({
@@ -212,6 +211,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
