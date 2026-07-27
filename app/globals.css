@@ -3837,3 +3837,179 @@ footer > button {
   .tracking-timeline .step { min-width: 0 !important; }
   .tracking-timeline .step > small { max-width: 54px !important; overflow-wrap: anywhere; }
 }
+
+/* =========================================================
+   Sabka Delivery: loader, coupon feedback and mobile cart
+   ========================================================= */
+
+/* Fast branded loader:
+   - fast internet par 120ms tak invisible rahega
+   - slow internet par logo aur progress line dikhayega */
+.catalog-loading-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #fffaf0;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.catalog-loading-screen.visible {
+  opacity: 1;
+}
+
+.catalog-loading-card {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+
+.catalog-loading-card img {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px #00000014);
+}
+
+.catalog-loading-line {
+  width: 150px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eadfd2;
+}
+
+.catalog-loading-line span {
+  display: block;
+  width: 48%;
+  height: 100%;
+  border-radius: inherit;
+  background: #c7181b;
+  animation: sabka-loader-slide 0.78s ease-in-out infinite;
+}
+
+@keyframes sabka-loader-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+/* Success animation and action buttons */
+.success-animation {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+}
+
+.success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.success-actions button {
+  min-width: 155px;
+}
+
+/* Coupon feedback */
+.coupon-invalid,
+.coupon-warning,
+.coupon-applied {
+  display: block;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.coupon-invalid {
+  background: #fff0f0;
+  color: #b42318;
+  border: 1px solid #f3b8b3;
+}
+
+.coupon-warning {
+  background: #fff8e8;
+  color: #8a5a00;
+  border: 1px solid #f0d28a;
+}
+
+.coupon-applied {
+  background: #edf9ef;
+  color: #16733a;
+  border: 1px solid #b7dfc1;
+}
+
+/* Mobile cart, checkout and success screen full screen */
+@media (max-width: 680px) {
+  .cart-overlay {
+    display: block;
+    padding: 0;
+    background: #ffffff;
+    backdrop-filter: none;
+  }
+
+  .cart-overlay .cart-drawer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0;
+    padding:
+      18px
+      16px
+      calc(28px + env(safe-area-inset-bottom));
+    background: #ffffff;
+  }
+
+  .cart-overlay .cart-drawer > header {
+    position: sticky;
+    top: -18px;
+    z-index: 8;
+    margin: -18px -16px 0;
+    padding: 18px 16px 14px;
+    background: #ffffff;
+  }
+
+  .order-success {
+    min-height: calc(100dvh - 92px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 4px;
+  }
+
+  .success-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .success-actions button {
+    flex: 1 1 145px;
+    min-width: 0;
+    padding: 13px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-loading-screen {
+    transition: none;
+  }
+
+  .catalog-loading-line span {
+    width: 100%;
+    animation: none;
+  }
+}
