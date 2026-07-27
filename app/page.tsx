@@ -11,6 +11,7 @@ import {
 } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { useLiveRefresh } from "./components/use-live-refresh";
+import OrderSuccess from "./order-success";
 
 type Store = {
   id: number;
@@ -294,6 +295,7 @@ export default function Home() {
   const [checkoutMobile, setCheckoutMobile] = useState("");
   const [rewardApplied, setRewardApplied] = useState("");
   const [orderCode, setOrderCode] = useState("");
+  const [successEta, setSuccessEta] = useState("25-35 min");
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "UPI">("COD");
   const [message, setMessage] = useState("");
@@ -756,6 +758,9 @@ export default function Home() {
       setOrderCode(data.order.orderCode);
       setRewardApplied(data.order.rewardOffer?.title || "");
       setHistoryMobile(String(form.get("mobile") || ""));
+      setSuccessEta(
+        stores.find((store) => store.id === cartStore)?.eta || "25-35 min",
+      );
       setCart({});
       setCartStore(null);
       setCouponCode("");
@@ -1655,26 +1660,26 @@ export default function Home() {
               <button onClick={() => setCartOpen(false)}>×</button>
             </header>
             {checkout === "success" ? (
-              <div className="success">
-                <span>✓</span>
-                <h3>Order place ho gaya!</h3>
-                <p>
-                  Order ID: <b>{orderCode}</b>
-                </p>
-                {rewardApplied && (
-                  <p className="reward-success">★ {rewardApplied} applied</p>
-                )}
-                <button
-                  onClick={() => {
-                    setCartOpen(false);
-                    openHistory();
-                    if (historyMobile.length === 10)
-                      void fetchHistory(historyMobile);
-                  }}
-                >
-                  View order & tracking
-                </button>
-              </div>
+              <OrderSuccess
+                orderCode={orderCode}
+                estimatedDelivery={successEta}
+                rewardApplied={rewardApplied}
+                onTrackOrder={() => {
+                  setCartOpen(false);
+                  openHistory();
+
+                  if (historyMobile.length === 10) {
+                    void fetchHistory(historyMobile);
+                  }
+                }}
+                onContinueShopping={() => {
+                  setCartOpen(false);
+                  setCheckout("cart");
+                  setRewardApplied("");
+                  setOrderCode("");
+                  setSuccessEta("25-35 min");
+                }}
+              />
             ) : checkout === "details" ? (
               <form className="checkout-form" onSubmit={placeOrder}>
                 <button type="button" onClick={() => setCheckout("cart")}>
