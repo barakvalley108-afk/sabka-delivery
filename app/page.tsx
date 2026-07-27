@@ -117,6 +117,8 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
+
 const categoryImages: Record<string, string> = {
   All: "/images/hero-food-collage.png",
   "Biryani & Rice": "/images/biryani-card.png",
@@ -252,6 +254,8 @@ export default function Home() {
   const [rewardProgress, setRewardProgress] = useState<RewardProgress[]>([]);
   const [rewardProgressMobile, setRewardProgressMobile] = useState("");
   const [maintenance, setMaintenance] = useState(false);
+  const [catalogReady, setCatalogReady] = useState(false);
+  const [showCatalogLoader, setShowCatalogLoader] = useState(false);
   const [supportNumber, setSupportNumber] = useState("8011767897");
   const [upiId, setUpiId] = useState("bigbull577@ybl");
   const [theme, setTheme] = useState({
@@ -321,12 +325,114 @@ export default function Home() {
   const marketLoaded = useRef(false);
   const marketSignature = useRef("");
   const marketVersion = useRef(0);
+  const successAudioContext = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get("source");
     if (source === "android-app") {
       window.localStorage.setItem("sabka_native_shell", "1");
     }
+  }, []);
+
+  useEffect(() => {
+    const showLoaderTimer = window.setTimeout(
+      () => setShowCatalogLoader(true),
+      120,
+    );
+
+    const fallbackTimer = window.setTimeout(
+      () => setCatalogReady(true),
+      1800,
+    );
+
+    try {
+      const cachedValue = window.localStorage.getItem(CATALOG_CACHE_KEY);
+
+      if (cachedValue) {
+        const data = JSON.parse(cachedValue);
+
+        marketVersion.current = Number(data.catalogVersion || 1);
+        marketSignature.current = JSON.stringify(data);
+        setStores(data.stores || []);
+        setItems(data.items || []);
+        setVariants(data.variants || []);
+        setMaintenance(!!data.maintenanceMode);
+        setSupportNumber(data.supportNumber || "8011767897");
+        setUpiId(data.upiId || "bigbull577@ybl");
+
+        if (data.theme) {
+          setTheme(data.theme);
+        }
+
+        setBrandName(data.websiteName || "SABKA DELIVERY");
+
+        const initialSection = (data.sections || []).find(
+          (section: {
+            key: string;
+            deliveryCharge?: number;
+            minOrder?: number;
+          }) => section.key === "FOOD",
+        );
+
+        setDeliveryFee(
+          Number(initialSection?.deliveryCharge ?? data.deliveryFee ?? 20),
+        );
+        setMinimumOrder(Number(initialSection?.minOrder || 0));
+        setCouponList(
+          (data.promotions || []).map((promotion: Coupon) => promotion),
+        );
+        setRewardOffers(
+          (data.rewardOffers || []).map((offer: RewardOffer) => offer),
+        );
+        setMarketCategories(data.categories || []);
+
+        if (data.sections?.length) {
+          setMarketSections(data.sections);
+        }
+
+        const content = Object.fromEntries(
+          (data.content || []).map(
+            (block: {
+              key: string;
+              title: string;
+              body: string;
+              image: string;
+            }) => [block.key, block],
+          ),
+        ) as Record<string, SiteContentBlock>;
+
+        setSiteContent(content);
+
+        if (content.branding) {
+          setBrandName(content.branding.title || data.websiteName);
+          setBrandLogo(
+            content.branding.image || "/images/sabka-delivery-logo.png",
+          );
+        }
+
+        if (content.homepage_banner) {
+          setHeroTitle(
+            (current) => content.homepage_banner.title || current,
+          );
+          setHeroBody(
+            (current) => content.homepage_banner.body || current,
+          );
+          setHeroImage(
+            (current) => content.homepage_banner.image || current,
+          );
+        }
+
+        marketLoaded.current = true;
+        setCatalogReady(true);
+      }
+    } catch {
+      window.localStorage.removeItem(CATALOG_CACHE_KEY);
+    }
+
+    return () => {
+      window.clearTimeout(showLoaderTimer);
+      window.clearTimeout(fallbackTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -405,9 +511,24 @@ export default function Home() {
         setHeroBody((current) => content.homepage_banner.body || current);
         setHeroImage((current) => content.homepage_banner.image || current);
       }
+
+      try {
+        window.localStorage.setItem(
+          CATALOG_CACHE_KEY,
+          JSON.stringify(data),
+        );
+      } catch {
+        // Storage unavailable hone par fresh response phir bhi use hoga.
+      }
+
       marketLoaded.current = true;
+      setCatalogReady(true);
     } catch {
-      if (!marketLoaded.current) setMessage("Catalog load nahi hua");
+      if (!marketLoaded.current) {
+        setMessage("Catalog load nahi hua");
+      }
+
+      setCatalogReady(true);
     }
   }, [mode]);
 
@@ -571,10 +692,10 @@ export default function Home() {
   );
   const couponLooksValid = /^[A-Z0-9]{4,20}$/.test(couponCode);
   const selectedCoupon = couponList.find((c) => c.code === couponCode);
-  const couponEligible = selectedCoupon
-    ? subtotal >= selectedCoupon.minOrder
-    : couponLooksValid;
-  const activeCoupon = couponEligible ? couponCode : "";
+  const couponEligible =
+    !!selectedCoupon && subtotal >= selectedCoupon.minOrder;
+  const activeCoupon = couponEligible ? selectedCoupon.code : "";
+  const couponNeedsFix = couponCode.length > 0 && !couponEligible;
   let discount = selectedCoupon
     ? selectedCoupon.discountType === "PERCENT"
       ? Math.floor((subtotal * selectedCoupon.discountValue) / 100)
@@ -658,14 +779,26 @@ export default function Home() {
     setCategory("All");
     setSelectedStore(null);
   }
-  function chooseCoupon(code: string) {
-    const offer = couponList.find((c) => c.code === code);
-    setCouponCode((current) => (current === code ? "" : code));
-    setMessage(
-      offer && subtotal < offer.minOrder
-        ? `Coupon selected — discount ke liye ₹${offer.minOrder - subtotal} aur add karo`
-        : `${code} coupon applied`,
-    );
+  async function copyCouponCode(code: string) {
+    const copyWithFallback = () => {
+      const field = document.createElement("textarea");
+      field.value = code;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    };
+
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      copyWithFallback();
+    }
+
+    setMessage(`${code} copied — checkout mein paste karo`);
     window.setTimeout(() => setMessage(""), 2200);
   }
   function updateCouponCode(value: string) {
@@ -678,20 +811,39 @@ export default function Home() {
   }
   function applyManualCoupon() {
     const code = couponCode.trim().toUpperCase();
+    setCouponCode(code);
+
     if (!/^[A-Z0-9]{4,20}$/.test(code)) {
-      setMessage("Valid coupon code daalo");
+      setMessage("Invalid coupon code");
       window.setTimeout(() => setMessage(""), 2200);
       return;
     }
-    const offer = couponList.find((c) => c.code === code);
-    setCouponCode(code);
-    setMessage(
-      offer && subtotal < offer.minOrder
-        ? `Coupon selected — discount ke liye ₹${offer.minOrder - subtotal} aur add karo`
-        : offer
-          ? `${code} coupon applied`
-          : `${code} private coupon selected`,
-    );
+
+    const offer = couponList.find((coupon) => coupon.code === code);
+
+    if (!offer) {
+      setMessage("Invalid coupon code");
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    if (subtotal < offer.minOrder) {
+      setMessage(
+        `Coupon ke liye ₹${offer.minOrder - subtotal} aur add karo`,
+      );
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    const rawDiscount =
+      offer.discountType === "PERCENT"
+        ? Math.floor((subtotal * offer.discountValue) / 100)
+        : offer.discountValue;
+    const appliedDiscount = offer.maxDiscount
+      ? Math.min(rawDiscount, offer.maxDiscount)
+      : rawDiscount;
+
+    setMessage(`✓ ${code} applied — ₹${appliedDiscount} saved`);
     window.setTimeout(() => setMessage(""), 2200);
   }
   function pickVariant(item: Item) {
@@ -733,8 +885,78 @@ export default function Home() {
     });
   }
 
+  function primeSuccessSound() {
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (
+        window as typeof window & {
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).webkitAudioContext;
+
+    if (!AudioContextConstructor) return;
+
+    const context =
+      successAudioContext.current || new AudioContextConstructor();
+
+    successAudioContext.current = context;
+
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+  }
+
+  function playSuccessSound() {
+    const context = successAudioContext.current;
+
+    if (!context || context.state === "closed") return;
+
+    const startTime = context.currentTime;
+    const gain = context.createGain();
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.14, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.72);
+    gain.connect(context.destination);
+
+    [
+      { frequency: 659.25, delay: 0, duration: 0.34 },
+      { frequency: 880, delay: 0.14, duration: 0.48 },
+    ].forEach(({ frequency, delay, duration }) => {
+      const oscillator = context.createOscillator();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(
+        frequency,
+        startTime + delay,
+      );
+      oscillator.connect(gain);
+      oscillator.start(startTime + delay);
+      oscillator.stop(startTime + delay + duration);
+    });
+
+    window.setTimeout(() => {
+      if (successAudioContext.current === context) {
+        void context.close();
+        successAudioContext.current = null;
+      }
+    }, 1100);
+  }
+
   async function placeOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (couponNeedsFix) {
+      setMessage(
+        selectedCoupon
+          ? `Coupon ke liye ₹${selectedCoupon.minOrder - subtotal} aur add karo`
+          : "Invalid coupon code",
+      );
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    primeSuccessSound();
     setPlacing(true);
     setMessage("");
     const form = new FormData(event.currentTarget);
@@ -765,6 +987,7 @@ export default function Home() {
       setCartStore(null);
       setCouponCode("");
       setCheckout("success");
+      playSuccessSound();
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Order place nahi hua",
@@ -945,6 +1168,27 @@ export default function Home() {
     } finally {
       setCancelling(false);
     }
+  }
+
+  if (!catalogReady) {
+    return (
+      <main
+        className={`catalog-loading-screen ${
+          showCatalogLoader ? "visible" : ""
+        }`}
+        aria-label="Loading Sabka Delivery"
+      >
+        <div className="catalog-loading-card">
+          <img
+            src="/images/sabka-delivery-logo.png"
+            alt="Sabka Delivery"
+          />
+          <div className="catalog-loading-line">
+            <span />
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -1509,10 +1753,10 @@ export default function Home() {
               <aside>
                 <code>{c.code}</code>
                 <button
-                  className={couponCode === c.code ? "selected" : ""}
-                  onClick={() => chooseCoupon(c.code)}
+                  type="button"
+                  onClick={() => void copyCouponCode(c.code)}
                 >
-                  {couponCode === c.code ? "Selected ✓" : "Apply"}
+                  Copy code
                 </button>
               </aside>
             </article>
@@ -1637,7 +1881,10 @@ export default function Home() {
       {message && <div className="toast">{message}</div>}
 
       {cartOpen && (
-        <div className="overlay" onClick={() => setCartOpen(false)}>
+        <div
+          className="overlay cart-overlay"
+          onClick={() => setCartOpen(false)}
+        >
           <aside className="cart-drawer" onClick={(e) => e.stopPropagation()}>
             <header>
               <div>
@@ -1764,33 +2011,21 @@ export default function Home() {
                       Apply
                     </button>
                   </div>
-                  <div>
-                    {couponList.map((c) => (
-                      <button
-                        type="button"
-                        className={couponCode === c.code ? "selected" : ""}
-                        onClick={() => chooseCoupon(c.code)}
-                        key={c.code}
-                      >
-                        <b>{c.code}</b>
-                        <span>{c.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {couponCode && !couponEligible && selectedCoupon && (
-                    <p>
-                      ₹{selectedCoupon.minOrder - subtotal} aur add karo to
-                      unlock {couponCode}
-                    </p>
-                  )}
                   {couponCode && !couponLooksValid && (
-                    <p>Coupon code 4-20 letters/numbers ka hona chahiye.</p>
+                    <p className="coupon-invalid">Invalid coupon code</p>
+                  )}
+                  {couponCode && couponLooksValid && !selectedCoupon && (
+                    <p className="coupon-invalid">Invalid coupon code</p>
+                  )}
+                  {selectedCoupon && !couponEligible && (
+                    <p className="coupon-warning">
+                      Coupon ke liye ₹{selectedCoupon.minOrder - subtotal} aur
+                      add karo
+                    </p>
                   )}
                   {activeCoupon && (
                     <p className="coupon-applied">
-                      {selectedCoupon
-                        ? `✓ ${activeCoupon} applied — ₹${discount} saved`
-                        : `✓ ${activeCoupon} selected — final discount order place karte waqt check hoga`}
+                      ✓ {activeCoupon} applied — ₹{discount} saved
                     </p>
                   )}
                 </section>
@@ -1860,7 +2095,10 @@ export default function Home() {
                   </span>
                   <b>₹{total}</b>
                 </div>
-                <button className="place-order" disabled={placing}>
+                <button
+                  className="place-order"
+                  disabled={placing || couponNeedsFix}
+                >
                   {placing ? "Placing order…" : `Place order · ₹${total}`}
                 </button>
               </form>
@@ -1914,33 +2152,26 @@ export default function Home() {
                       Apply
                     </button>
                   </div>
-                  <div>
-                    {couponList.map((c) => (
-                      <button
-                        className={couponCode === c.code ? "selected" : ""}
-                        onClick={() => chooseCoupon(c.code)}
-                        key={c.code}
-                      >
-                        <code>{c.code}</code>
-                        <span>
-                          {couponCode === c.code ? "Selected ✓" : c.title}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {couponCode && !couponEligible && selectedCoupon && (
-                    <small>
-                      ₹{selectedCoupon.minOrder - subtotal} aur add karo to
-                      unlock coupon
-                    </small>
-                  )}
-                  {couponCode && !selectedCoupon && couponLooksValid && (
-                    <small>
-                      Private coupon selected - final discount order place karte waqt check hoga.
-                    </small>
-                  )}
                   {couponCode && !couponLooksValid && (
-                    <small>Coupon code 4-20 letters/numbers ka hona chahiye.</small>
+                    <small className="coupon-invalid">
+                      Invalid coupon code
+                    </small>
+                  )}
+                  {couponCode && couponLooksValid && !selectedCoupon && (
+                    <small className="coupon-invalid">
+                      Invalid coupon code
+                    </small>
+                  )}
+                  {selectedCoupon && !couponEligible && (
+                    <small className="coupon-warning">
+                      Coupon ke liye ₹{selectedCoupon.minOrder - subtotal} aur
+                      add karo
+                    </small>
+                  )}
+                  {activeCoupon && (
+                    <small className="coupon-applied">
+                      ✓ {activeCoupon} applied — ₹{discount} saved
+                    </small>
                   )}
                 </section>
                 <div className="bill">
@@ -1981,14 +2212,18 @@ export default function Home() {
                 </div>
                 <button
                   className="checkout-button"
-                  disabled={!minimumOrderMet}
+                  disabled={!minimumOrderMet || couponNeedsFix}
                   onClick={() => {
                     if (!checkoutMobile && user?.mobile)
                       setCheckoutMobile(user.mobile);
                     setCheckout("details");
                   }}
                 >
-                  {minimumOrderMet ? "Proceed to checkout" : `Add ₹${minimumOrderShortfall} more`}{" "}
+                  {couponNeedsFix
+                    ? "Fix coupon to continue"
+                    : minimumOrderMet
+                      ? "Proceed to checkout"
+                      : `Add ₹${minimumOrderShortfall} more`}{" "}
                   <span>₹{total} →</span>
                 </button>
               </>
