@@ -1002,7 +1002,7 @@ export default function Home() {
       const gain = context.createGain();
 
       source.buffer = buffer;
-      gain.gain.value = 0.65;
+      gain.gain.value = 0.85;
 
       source.connect(gain);
       gain.connect(context.destination);
