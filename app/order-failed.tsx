@@ -8,20 +8,34 @@ import {
 } from "react";
 
 type Props = {
-  reason: string;
-  onTryAgain: MouseEventHandler<HTMLButtonElement>;
-  onContinueShopping: MouseEventHandler<HTMLButtonElement>;
+  reason?: string;
+  error?: string;
+  onTryAgain?: MouseEventHandler<HTMLButtonElement>;
+  onContinueShopping?: MouseEventHandler<HTMLButtonElement>;
+  onRetry?: MouseEventHandler<HTMLButtonElement>;
+  onBackToCart?: MouseEventHandler<HTMLButtonElement>;
 };
 
 const PLAYER_SCRIPT_ID = "dotlottie-web-component-script";
 
 export default function OrderFailed({
   reason,
+  error,
   onTryAgain,
   onContinueShopping,
+  onRetry,
+  onBackToCart,
 }: Props) {
   const [playerReady, setPlayerReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  const failureReason =
+    reason ||
+    error ||
+    "Order place nahi hua. Dobara try karo.";
+
+  const retryHandler = onTryAgain || onRetry;
+  const continueHandler = onContinueShopping || onBackToCart;
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -98,16 +112,23 @@ export default function OrderFailed({
       </div>
 
       <h3>Order Place Nahi Hua</h3>
-      <p className="failed-reason">
-        {reason || "Order place nahi hua. Dobara try karo."}
-      </p>
+
+      <p className="failed-reason">{failureReason}</p>
 
       <div className="failed-actions">
-        <button type="button" onClick={onTryAgain}>
+        <button
+          type="button"
+          onClick={retryHandler}
+          disabled={!retryHandler}
+        >
           Try Again
         </button>
 
-        <button type="button" onClick={onContinueShopping}>
+        <button
+          type="button"
+          onClick={continueHandler}
+          disabled={!continueHandler}
+        >
           Continue Shopping
         </button>
       </div>
