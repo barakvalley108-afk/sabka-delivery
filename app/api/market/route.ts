@@ -159,8 +159,8 @@ export async function POST(request: Request) {
         {
           error:
             store.openingTime && store.closingTime
-              ? `Shop abhi band hai. Ordering time ${store.openingTime} se ${store.closingTime} tak hai.`
-              : "Shop abhi band hai. Thodi der baad dobara try karo.",
+              ? `Restaurant ka working time khatam ho gaya hai. Order timing ${store.openingTime} se ${store.closingTime} tak hai.`
+              : "Restaurant ka working time khatam ho gaya hai. Thodi der baad dobara try karo.",
         },
         { status: 409 },
       );
