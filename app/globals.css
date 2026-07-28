@@ -4089,3 +4089,103 @@ footer > button {
     padding: 13px 12px;
   }
 }
+
+/* Final order result colours */
+.order-success {
+  color: #126b3d;
+}
+
+.order-success h3 {
+  color: #126b3d !important;
+}
+
+.order-success .success-static-icon {
+  background: #e8f8ee !important;
+  color: #16804c !important;
+  border: 2px solid #8fd2aa;
+}
+
+.order-success .reward-success {
+  color: #126b3d !important;
+  background: #edf9f1;
+  border: 1px solid #a9ddbc;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 900;
+}
+
+.order-success .success-actions button {
+  min-width: 155px;
+  border: 1px solid #16804c !important;
+  border-radius: 9px !important;
+  background: #16804c !important;
+  color: #ffffff !important;
+  padding: 11px 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+  box-shadow: 0 4px 12px #16804c2b;
+}
+
+.order-success .success-actions button:hover {
+  background: #11683e !important;
+  border-color: #11683e !important;
+}
+
+.order-failed {
+  color: #a8141a;
+}
+
+.order-failed h3 {
+  color: #a8141a !important;
+}
+
+.order-failed .failed-static-icon {
+  background: #fff0f0 !important;
+  color: #d92330 !important;
+  border: 2px solid #ef9da2;
+}
+
+.order-failed .failed-reason {
+  border-color: #ef9da2 !important;
+  background: #fff1f1 !important;
+  color: #99191f !important;
+}
+
+.order-failed .failed-actions button {
+  min-width: 155px;
+  border: 1px solid #d92330 !important;
+  border-radius: 9px !important;
+  background: #d92330 !important;
+  color: #ffffff !important;
+  padding: 11px 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+  box-shadow: 0 4px 12px #d9233029;
+}
+
+.order-failed .failed-actions button:hover {
+  background: #b91824 !important;
+  border-color: #b91824 !important;
+}
+
+/* Tracking/order status colours */
+.status-delivered,
+.order-status-delivered,
+[data-status="DELIVERED"] {
+  color: #126b3d !important;
+}
+
+.status-cancelled,
+.order-status-cancelled,
+[data-status="CANCELLED"] {
+  color: #b51622 !important;
+}
+
+@media (max-width: 680px) {
+  .order-success .success-actions button,
+  .order-failed .failed-actions button {
+    flex: 1 1 145px;
+    min-width: 0;
+    padding: 13px 12px !important;
+  }
+}
