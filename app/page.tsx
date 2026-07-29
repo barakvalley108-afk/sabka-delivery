@@ -118,6 +118,8 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
+
 const categoryImages: Record<string, string> = {
   All: "/images/hero-food-collage.png",
   "Biryani & Rice": "/images/biryani-card.png",
@@ -253,6 +255,8 @@ export default function Home() {
   const [rewardProgress, setRewardProgress] = useState<RewardProgress[]>([]);
   const [rewardProgressMobile, setRewardProgressMobile] = useState("");
   const [maintenance, setMaintenance] = useState(false);
+  const [catalogReady, setCatalogReady] = useState(false);
+  const [showCatalogLoader, setShowCatalogLoader] = useState(false);
   const [supportNumber, setSupportNumber] = useState("8011767897");
   const [upiId, setUpiId] = useState("bigbull577@ybl");
   const [theme, setTheme] = useState({
@@ -296,10 +300,11 @@ export default function Home() {
   const [checkoutMobile, setCheckoutMobile] = useState("");
   const [rewardApplied, setRewardApplied] = useState("");
   const [orderCode, setOrderCode] = useState("");
+  const [orderFailure, setOrderFailure] = useState("");
+  const [successEta, setSuccessEta] = useState("25-35 min");
   const [placing, setPlacing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "UPI">("COD");
   const [message, setMessage] = useState("");
-  const [failedReason, setFailedReason] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [activeNav, setActiveNav] = useState<NavKey>("home");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
@@ -322,12 +327,191 @@ export default function Home() {
   const marketLoaded = useRef(false);
   const marketSignature = useRef("");
   const marketVersion = useRef(0);
+  const successAudioContext = useRef<AudioContext | null>(null);
+  const successSoundData = useRef<ArrayBuffer | null>(null);
+  const successSoundBuffer = useRef<AudioBuffer | null>(null);
+  const successSoundLoading = useRef<Promise<ArrayBuffer | null> | null>(
+    null,
+  );
+  const successSoundDecoding = useRef<Promise<AudioBuffer | null> | null>(
+    null,
+  );
+  const failedSoundData = useRef<ArrayBuffer | null>(null);
+  const failedSoundBuffer = useRef<AudioBuffer | null>(null);
+  const failedSoundLoading = useRef<Promise<ArrayBuffer | null> | null>(
+    null,
+  );
+  const failedSoundDecoding = useRef<Promise<AudioBuffer | null> | null>(
+    null,
+  );
 
   useEffect(() => {
     const source = new URLSearchParams(window.location.search).get("source");
     if (source === "android-app") {
       window.localStorage.setItem("sabka_native_shell", "1");
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    successSoundLoading.current = fetch("/order-success.mp3", {
+      cache: "force-cache",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Success sound load nahi hua");
+        }
+
+        return response.arrayBuffer();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          successSoundData.current = data;
+        }
+
+        return data;
+      })
+      .catch(() => null);
+
+    failedSoundLoading.current = fetch("/order-failed.mp3", {
+      cache: "force-cache",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed sound load nahi hua");
+        }
+
+        return response.arrayBuffer();
+      })
+      .then((data) => {
+        if (!cancelled) {
+          failedSoundData.current = data;
+        }
+
+        return data;
+      })
+      .catch(() => null);
+
+    return () => {
+      cancelled = true;
+      successSoundData.current = null;
+      successSoundBuffer.current = null;
+      successSoundLoading.current = null;
+      successSoundDecoding.current = null;
+      failedSoundData.current = null;
+      failedSoundBuffer.current = null;
+      failedSoundLoading.current = null;
+      failedSoundDecoding.current = null;
+
+      const context = successAudioContext.current;
+      successAudioContext.current = null;
+
+      if (context && context.state !== "closed") {
+        void context.close();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const showLoaderTimer = window.setTimeout(
+      () => setShowCatalogLoader(true),
+      120,
+    );
+
+    const fallbackTimer = window.setTimeout(
+      () => setCatalogReady(true),
+      1800,
+    );
+
+    try {
+      const cachedValue = window.localStorage.getItem(CATALOG_CACHE_KEY);
+
+      if (cachedValue) {
+        const data = JSON.parse(cachedValue);
+
+        marketVersion.current = Number(data.catalogVersion || 1);
+        marketSignature.current = JSON.stringify(data);
+        setStores(data.stores || []);
+        setItems(data.items || []);
+        setVariants(data.variants || []);
+        setMaintenance(!!data.maintenanceMode);
+        setSupportNumber(data.supportNumber || "8011767897");
+        setUpiId(data.upiId || "bigbull577@ybl");
+
+        if (data.theme) {
+          setTheme(data.theme);
+        }
+
+        setBrandName(data.websiteName || "SABKA DELIVERY");
+
+        const initialSection = (data.sections || []).find(
+          (section: {
+            key: string;
+            deliveryCharge?: number;
+            minOrder?: number;
+          }) => section.key === "FOOD",
+        );
+
+        setDeliveryFee(
+          Number(initialSection?.deliveryCharge ?? data.deliveryFee ?? 20),
+        );
+        setMinimumOrder(Number(initialSection?.minOrder || 0));
+        setCouponList(
+          (data.promotions || []).map((promotion: Coupon) => promotion),
+        );
+        setRewardOffers(
+          (data.rewardOffers || []).map((offer: RewardOffer) => offer),
+        );
+        setMarketCategories(data.categories || []);
+
+        if (data.sections?.length) {
+          setMarketSections(data.sections);
+        }
+
+        const content = Object.fromEntries(
+          (data.content || []).map(
+            (block: {
+              key: string;
+              title: string;
+              body: string;
+              image: string;
+            }) => [block.key, block],
+          ),
+        ) as Record<string, SiteContentBlock>;
+
+        setSiteContent(content);
+
+        if (content.branding) {
+          setBrandName(content.branding.title || data.websiteName);
+          setBrandLogo(
+            content.branding.image || "/images/sabka-delivery-logo.png",
+          );
+        }
+
+        if (content.homepage_banner) {
+          setHeroTitle(
+            (current) => content.homepage_banner.title || current,
+          );
+          setHeroBody(
+            (current) => content.homepage_banner.body || current,
+          );
+          setHeroImage(
+            (current) => content.homepage_banner.image || current,
+          );
+        }
+
+        marketLoaded.current = true;
+        setCatalogReady(true);
+      }
+    } catch {
+      window.localStorage.removeItem(CATALOG_CACHE_KEY);
+    }
+
+    return () => {
+      window.clearTimeout(showLoaderTimer);
+      window.clearTimeout(fallbackTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -406,9 +590,24 @@ export default function Home() {
         setHeroBody((current) => content.homepage_banner.body || current);
         setHeroImage((current) => content.homepage_banner.image || current);
       }
+
+      try {
+        window.localStorage.setItem(
+          CATALOG_CACHE_KEY,
+          JSON.stringify(data),
+        );
+      } catch {
+        // Storage unavailable hone par fresh response phir bhi use hoga.
+      }
+
       marketLoaded.current = true;
+      setCatalogReady(true);
     } catch {
-      if (!marketLoaded.current) setMessage("Catalog load nahi hua");
+      if (!marketLoaded.current) {
+        setMessage("Catalog load nahi hua");
+      }
+
+      setCatalogReady(true);
     }
   }, [mode]);
 
@@ -572,10 +771,10 @@ export default function Home() {
   );
   const couponLooksValid = /^[A-Z0-9]{4,20}$/.test(couponCode);
   const selectedCoupon = couponList.find((c) => c.code === couponCode);
-  const couponEligible = selectedCoupon
-    ? subtotal >= selectedCoupon.minOrder
-    : couponLooksValid;
-  const activeCoupon = couponEligible ? couponCode : "";
+  const couponEligible =
+    !!selectedCoupon && subtotal >= selectedCoupon.minOrder;
+  const activeCoupon = couponEligible ? selectedCoupon.code : "";
+  const couponNeedsFix = couponCode.length > 0 && !couponEligible;
   let discount = selectedCoupon
     ? selectedCoupon.discountType === "PERCENT"
       ? Math.floor((subtotal * selectedCoupon.discountValue) / 100)
@@ -659,14 +858,26 @@ export default function Home() {
     setCategory("All");
     setSelectedStore(null);
   }
-  function chooseCoupon(code: string) {
-    const offer = couponList.find((c) => c.code === code);
-    setCouponCode((current) => (current === code ? "" : code));
-    setMessage(
-      offer && subtotal < offer.minOrder
-        ? `Coupon selected — discount ke liye ₹${offer.minOrder - subtotal} aur add karo`
-        : `${code} coupon applied`,
-    );
+  async function copyCouponCode(code: string) {
+    const copyWithFallback = () => {
+      const field = document.createElement("textarea");
+      field.value = code;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    };
+
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      copyWithFallback();
+    }
+
+    setMessage(`${code} copied — checkout mein paste karo`);
     window.setTimeout(() => setMessage(""), 2200);
   }
   function updateCouponCode(value: string) {
@@ -679,20 +890,39 @@ export default function Home() {
   }
   function applyManualCoupon() {
     const code = couponCode.trim().toUpperCase();
+    setCouponCode(code);
+
     if (!/^[A-Z0-9]{4,20}$/.test(code)) {
-      setMessage("Valid coupon code daalo");
+      setMessage("Invalid coupon code");
       window.setTimeout(() => setMessage(""), 2200);
       return;
     }
-    const offer = couponList.find((c) => c.code === code);
-    setCouponCode(code);
-    setMessage(
-      offer && subtotal < offer.minOrder
-        ? `Coupon selected — discount ke liye ₹${offer.minOrder - subtotal} aur add karo`
-        : offer
-          ? `${code} coupon applied`
-          : `${code} private coupon selected`,
-    );
+
+    const offer = couponList.find((coupon) => coupon.code === code);
+
+    if (!offer) {
+      setMessage("Invalid coupon code");
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    if (subtotal < offer.minOrder) {
+      setMessage(
+        `Coupon ke liye ₹${offer.minOrder - subtotal} aur add karo`,
+      );
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    const rawDiscount =
+      offer.discountType === "PERCENT"
+        ? Math.floor((subtotal * offer.discountValue) / 100)
+        : offer.discountValue;
+    const appliedDiscount = offer.maxDiscount
+      ? Math.min(rawDiscount, offer.maxDiscount)
+      : rawDiscount;
+
+    setMessage(`✓ ${code} applied — ₹${appliedDiscount} saved`);
     window.setTimeout(() => setMessage(""), 2200);
   }
   function pickVariant(item: Item) {
@@ -734,8 +964,161 @@ export default function Home() {
     });
   }
 
+  function ensureSuccessSoundBuffer(
+    context: AudioContext,
+  ): Promise<AudioBuffer | null> {
+    if (successSoundBuffer.current) {
+      return Promise.resolve(successSoundBuffer.current);
+    }
+
+    if (successSoundDecoding.current) {
+      return successSoundDecoding.current;
+    }
+
+    const dataPromise = successSoundData.current
+      ? Promise.resolve(successSoundData.current)
+      : successSoundLoading.current || Promise.resolve(null);
+
+    successSoundDecoding.current = dataPromise
+      .then((data) => {
+        if (!data || context.state === "closed") return null;
+
+        return context.decodeAudioData(data.slice(0));
+      })
+      .then((buffer) => {
+        successSoundBuffer.current = buffer;
+        return buffer;
+      })
+      .catch(() => null);
+
+    return successSoundDecoding.current;
+  }
+
+  function ensureFailedSoundBuffer(
+    context: AudioContext,
+  ): Promise<AudioBuffer | null> {
+    if (failedSoundBuffer.current) {
+      return Promise.resolve(failedSoundBuffer.current);
+    }
+
+    if (failedSoundDecoding.current) {
+      return failedSoundDecoding.current;
+    }
+
+    const dataPromise = failedSoundData.current
+      ? Promise.resolve(failedSoundData.current)
+      : failedSoundLoading.current || Promise.resolve(null);
+
+    failedSoundDecoding.current = dataPromise
+      .then((data) => {
+        if (!data || context.state === "closed") return null;
+
+        return context.decodeAudioData(data.slice(0));
+      })
+      .then((buffer) => {
+        failedSoundBuffer.current = buffer;
+        return buffer;
+      })
+      .catch(() => null);
+
+    return failedSoundDecoding.current;
+  }
+
+  function primeSuccessSound() {
+    const AudioContextConstructor =
+      window.AudioContext ||
+      (
+        window as typeof window & {
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).webkitAudioContext;
+
+    if (!AudioContextConstructor) return;
+
+    const context =
+      successAudioContext.current || new AudioContextConstructor();
+
+    successAudioContext.current = context;
+
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+
+    void ensureSuccessSoundBuffer(context);
+    void ensureFailedSoundBuffer(context);
+  }
+
+  async function playSuccessSound() {
+    const context = successAudioContext.current;
+
+    if (!context || context.state === "closed") return;
+
+    try {
+      if (context.state === "suspended") {
+        await context.resume();
+      }
+
+      const buffer = await ensureSuccessSoundBuffer(context);
+
+      if (!buffer) return;
+
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+
+      source.buffer = buffer;
+      gain.gain.value = 0.65;
+
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start(0);
+    } catch {
+      // Sound fail hone par order success screen phir bhi chalegi.
+    }
+  }
+
+  async function playFailedSound() {
+    const context = successAudioContext.current;
+
+    if (!context || context.state === "closed") return;
+
+    try {
+      if (context.state === "suspended") {
+        await context.resume();
+      }
+
+      const buffer = await ensureFailedSoundBuffer(context);
+
+      if (!buffer) return;
+
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+
+      source.buffer = buffer;
+      gain.gain.value = 0.72;
+
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start(0);
+    } catch {
+      // Sound fail hone par exact error screen phir bhi dikhegi.
+    }
+  }
+
   async function placeOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (couponNeedsFix) {
+      setMessage(
+        selectedCoupon
+          ? `Coupon ke liye ₹${selectedCoupon.minOrder - subtotal} aur add karo`
+          : "Invalid coupon code",
+      );
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    primeSuccessSound();
+    setOrderFailure("");
     setPlacing(true);
     setMessage("");
     const form = new FormData(event.currentTarget);
@@ -759,14 +1142,22 @@ export default function Home() {
       setOrderCode(data.order.orderCode);
       setRewardApplied(data.order.rewardOffer?.title || "");
       setHistoryMobile(String(form.get("mobile") || ""));
+      setSuccessEta(
+        stores.find((store) => store.id === cartStore)?.eta || "25-35 min",
+      );
       setCart({});
       setCartStore(null);
       setCouponCode("");
       setCheckout("success");
+      void playSuccessSound();
     } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Order place nahi hua",
-      );
+      const failureMessage =
+        error instanceof Error ? error.message : "Order place nahi hua";
+
+      setOrderFailure(failureMessage);
+      setCheckout("failed");
+      setMessage("");
+      void playFailedSound();
     } finally {
       setPlacing(false);
     }
@@ -945,6 +1336,27 @@ export default function Home() {
     }
   }
 
+  if (!catalogReady) {
+    return (
+      <main
+        className={`catalog-loading-screen ${
+          showCatalogLoader ? "visible" : ""
+        }`}
+        aria-label="Loading Sabka Delivery"
+      >
+        <div className="catalog-loading-card">
+          <img
+            src="/images/sabka-delivery-logo.png"
+            alt="Sabka Delivery"
+          />
+          <div className="catalog-loading-line">
+            <span />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
       className={`apna-app ${mode === "FOOD" ? "royal-food-app" : mode === "ELECTRONICS" ? "electronics-theme-app" : "grocery-light-app"}`}
@@ -1040,15 +1452,6 @@ export default function Home() {
               </i>
             </button>
           )}
-          <button
-            className="header-cart"
-            onClick={() => {
-              setCheckout("cart");
-              setCartOpen(true);
-            }}
-          >
-            🛒 <span>View cart</span> <b>{cartCount}</b>
-          </button>
           {!appInstalled && (
             <button className="install-app-button" onClick={installApp}>
               ↓ <span>Install App</span>
@@ -1507,10 +1910,10 @@ export default function Home() {
               <aside>
                 <code>{c.code}</code>
                 <button
-                  className={couponCode === c.code ? "selected" : ""}
-                  onClick={() => chooseCoupon(c.code)}
+                  type="button"
+                  onClick={() => void copyCouponCode(c.code)}
                 >
-                  {couponCode === c.code ? "Selected ✓" : "Apply"}
+                  Copy code
                 </button>
               </aside>
             </article>
@@ -1594,28 +1997,77 @@ export default function Home() {
       </footer>
       <div
         className="mobile-nav"
-        style={{ gridTemplateColumns: `repeat(${marketSections.length + 2}, minmax(68px, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${
+            marketSections.filter((section) =>
+              ["FOOD", "GROCERY", "ELECTRONICS"].includes(section.key),
+            ).length + 2
+          }, minmax(72px, 1fr))`,
+          minHeight: "72px",
+        }}
       >
         <button
-          className={activeNav === "home" ? "active" : ""}
-          onClick={goHome}
+          className={cartOpen ? "active" : ""}
+          onClick={() => {
+            setCheckout("cart");
+            setCartOpen(true);
+          }}
+          style={{ minHeight: "64px", fontWeight: 900 }}
+          aria-label={`Cart mein ${cartCount} items`}
         >
-          ⌂<small>Home</small>
+          <span style={{ fontSize: "23px", lineHeight: 1 }}>🛒</span>
+          <small style={{ fontSize: "12px", fontWeight: 900 }}>
+            Cart
+            {cartCount > 0 ? ` (${cartCount})` : ""}
+          </small>
         </button>
-        {marketSections.map((section) => (
-          <button
-            className={activeNav === section.key.toLowerCase() ? "active" : ""}
-            onClick={() => switchMode(section.key)}
-            key={section.key}
-          >
-            {section.icon}<small>{section.name}</small>
-          </button>
-        ))}
+
+        {marketSections
+          .filter((section) =>
+            ["FOOD", "GROCERY", "ELECTRONICS"].includes(section.key),
+          )
+          .sort(
+            (left, right) =>
+              ["FOOD", "GROCERY", "ELECTRONICS"].indexOf(left.key) -
+              ["FOOD", "GROCERY", "ELECTRONICS"].indexOf(right.key),
+          )
+          .map((section) => (
+            <button
+              className={
+                !cartOpen && activeNav === section.key.toLowerCase()
+                  ? "active"
+                  : ""
+              }
+              onClick={() => {
+                setCartOpen(false);
+                switchMode(section.key);
+              }}
+              key={section.key}
+              style={{ minHeight: "64px", fontWeight: 900 }}
+            >
+              <span style={{ fontSize: "23px", lineHeight: 1 }}>
+                {section.icon}
+              </span>
+              <small style={{ fontSize: "12px", fontWeight: 900 }}>
+                {section.key === "ELECTRONICS"
+                  ? "Electronics"
+                  : section.name}
+              </small>
+            </button>
+          ))}
+
         <button
-          className={activeNav === "history" ? "active" : ""}
-          onClick={openHistory}
+          className={!cartOpen && activeNav === "history" ? "active" : ""}
+          onClick={() => {
+            setCartOpen(false);
+            openHistory();
+          }}
+          style={{ minHeight: "64px", fontWeight: 900 }}
         >
-          ▤<small>History</small>
+          <span style={{ fontSize: "23px", lineHeight: 1 }}>▤</span>
+          <small style={{ fontSize: "12px", fontWeight: 900 }}>
+            History
+          </small>
         </button>
       </div>
       {!cartOpen && (
@@ -1635,7 +2087,10 @@ export default function Home() {
       {message && <div className="toast">{message}</div>}
 
       {cartOpen && (
-        <div className="overlay" onClick={() => setCartOpen(false)}>
+        <div
+          className="overlay cart-overlay"
+          onClick={() => setCartOpen(false)}
+        >
           <aside className="cart-drawer" onClick={(e) => e.stopPropagation()}>
             <header>
               <div>
@@ -1644,7 +2099,9 @@ export default function Home() {
                     ? "YOUR CART"
                     : checkout === "details"
                       ? "CHECKOUT"
-                      : "ORDER CONFIRMED"}
+                      : checkout === "failed"
+                        ? "ORDER FAILED"
+                        : "ORDER CONFIRMED"}
                 </small>
                 <h2>
                   {checkout === "cart"
@@ -1652,32 +2109,46 @@ export default function Home() {
                       "Sabka Cart"
                     : checkout === "details"
                       ? "Delivery details"
-                      : "Thank you!"}
+                      : checkout === "failed"
+                        ? "Order complete nahi hua"
+                        : "Thank you!"}
                 </h2>
               </div>
               <button onClick={() => setCartOpen(false)}>×</button>
             </header>
             {checkout === "success" ? (
-              <div className="success">
-                <span>✓</span>
-                <h3>Order place ho gaya!</h3>
-                <p>
-                  Order ID: <b>{orderCode}</b>
-                </p>
-                {rewardApplied && (
-                  <p className="reward-success">★ {rewardApplied} applied</p>
-                )}
-                <button
-                  onClick={() => {
-                    setCartOpen(false);
-                    openHistory();
-                    if (historyMobile.length === 10)
-                      void fetchHistory(historyMobile);
-                  }}
-                >
-                  View order & tracking
-                </button>
-              </div>
+              <OrderSuccess
+                orderCode={orderCode}
+                estimatedDelivery={successEta}
+                rewardApplied={rewardApplied}
+                onTrackOrder={() => {
+                  setCartOpen(false);
+                  openHistory();
+
+                  if (historyMobile.length === 10) {
+                    void fetchHistory(historyMobile);
+                  }
+                }}
+                onContinueShopping={() => {
+                  setCartOpen(false);
+                  setCheckout("cart");
+                  setRewardApplied("");
+                  setOrderCode("");
+                  setSuccessEta("25-35 min");
+                }}
+              />
+            ) : checkout === "failed" ? (
+              <OrderFailed
+                error={orderFailure}
+                onRetry={() => {
+                  setOrderFailure("");
+                  setCheckout("details");
+                }}
+                onBackToCart={() => {
+                  setOrderFailure("");
+                  setCheckout("cart");
+                }}
+              />
             ) : checkout === "details" ? (
               <form className="checkout-form" onSubmit={placeOrder}>
                 <button type="button" onClick={() => setCheckout("cart")}>
@@ -1762,33 +2233,21 @@ export default function Home() {
                       Apply
                     </button>
                   </div>
-                  <div>
-                    {couponList.map((c) => (
-                      <button
-                        type="button"
-                        className={couponCode === c.code ? "selected" : ""}
-                        onClick={() => chooseCoupon(c.code)}
-                        key={c.code}
-                      >
-                        <b>{c.code}</b>
-                        <span>{c.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {couponCode && !couponEligible && selectedCoupon && (
-                    <p>
-                      ₹{selectedCoupon.minOrder - subtotal} aur add karo to
-                      unlock {couponCode}
-                    </p>
-                  )}
                   {couponCode && !couponLooksValid && (
-                    <p>Coupon code 4-20 letters/numbers ka hona chahiye.</p>
+                    <p className="coupon-invalid">Invalid coupon code</p>
+                  )}
+                  {couponCode && couponLooksValid && !selectedCoupon && (
+                    <p className="coupon-invalid">Invalid coupon code</p>
+                  )}
+                  {selectedCoupon && !couponEligible && (
+                    <p className="coupon-warning">
+                      Coupon ke liye ₹{selectedCoupon.minOrder - subtotal} aur
+                      add karo
+                    </p>
                   )}
                   {activeCoupon && (
                     <p className="coupon-applied">
-                      {selectedCoupon
-                        ? `✓ ${activeCoupon} applied — ₹${discount} saved`
-                        : `✓ ${activeCoupon} selected — final discount order place karte waqt check hoga`}
+                      ✓ {activeCoupon} applied — ₹{discount} saved
                     </p>
                   )}
                 </section>
@@ -1858,7 +2317,10 @@ export default function Home() {
                   </span>
                   <b>₹{total}</b>
                 </div>
-                <button className="place-order" disabled={placing}>
+                <button
+                  className="place-order"
+                  disabled={placing || couponNeedsFix}
+                >
                   {placing ? "Placing order…" : `Place order · ₹${total}`}
                 </button>
               </form>
@@ -1912,33 +2374,26 @@ export default function Home() {
                       Apply
                     </button>
                   </div>
-                  <div>
-                    {couponList.map((c) => (
-                      <button
-                        className={couponCode === c.code ? "selected" : ""}
-                        onClick={() => chooseCoupon(c.code)}
-                        key={c.code}
-                      >
-                        <code>{c.code}</code>
-                        <span>
-                          {couponCode === c.code ? "Selected ✓" : c.title}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  {couponCode && !couponEligible && selectedCoupon && (
-                    <small>
-                      ₹{selectedCoupon.minOrder - subtotal} aur add karo to
-                      unlock coupon
-                    </small>
-                  )}
-                  {couponCode && !selectedCoupon && couponLooksValid && (
-                    <small>
-                      Private coupon selected - final discount order place karte waqt check hoga.
-                    </small>
-                  )}
                   {couponCode && !couponLooksValid && (
-                    <small>Coupon code 4-20 letters/numbers ka hona chahiye.</small>
+                    <small className="coupon-invalid">
+                      Invalid coupon code
+                    </small>
+                  )}
+                  {couponCode && couponLooksValid && !selectedCoupon && (
+                    <small className="coupon-invalid">
+                      Invalid coupon code
+                    </small>
+                  )}
+                  {selectedCoupon && !couponEligible && (
+                    <small className="coupon-warning">
+                      Coupon ke liye ₹{selectedCoupon.minOrder - subtotal} aur
+                      add karo
+                    </small>
+                  )}
+                  {activeCoupon && (
+                    <small className="coupon-applied">
+                      ✓ {activeCoupon} applied — ₹{discount} saved
+                    </small>
                   )}
                 </section>
                 <div className="bill">
@@ -1979,14 +2434,19 @@ export default function Home() {
                 </div>
                 <button
                   className="checkout-button"
-                  disabled={!minimumOrderMet}
+                  disabled={!minimumOrderMet || couponNeedsFix}
                   onClick={() => {
                     if (!checkoutMobile && user?.mobile)
                       setCheckoutMobile(user.mobile);
+                    setOrderFailure("");
                     setCheckout("details");
                   }}
                 >
-                  {minimumOrderMet ? "Proceed to checkout" : `Add ₹${minimumOrderShortfall} more`}{" "}
+                  {couponNeedsFix
+                    ? "Fix coupon to continue"
+                    : minimumOrderMet
+                      ? "Proceed to checkout"
+                      : `Add ₹${minimumOrderShortfall} more`}{" "}
                   <span>₹{total} →</span>
                 </button>
               </>
