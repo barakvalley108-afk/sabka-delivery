@@ -309,6 +309,7 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState<NavKey>("home");
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [appInstalled, setAppInstalled] = useState(false);
+  const [desktopCartVisible, setDesktopCartVisible] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [mobile, setMobile] = useState("");
@@ -350,6 +351,21 @@ export default function Home() {
     if (source === "android-app") {
       window.localStorage.setItem("sabka_native_shell", "1");
     }
+  }, []);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 681px)");
+
+    const updateDesktopCart = () => {
+      setDesktopCartVisible(desktopQuery.matches);
+    };
+
+    updateDesktopCart();
+    desktopQuery.addEventListener("change", updateDesktopCart);
+
+    return () => {
+      desktopQuery.removeEventListener("change", updateDesktopCart);
+    };
   }, []);
 
   useEffect(() => {
@@ -1450,6 +1466,19 @@ export default function Home() {
               <i>
                 <span />
               </i>
+            </button>
+          )}
+          {desktopCartVisible && (
+            <button
+              className="header-cart"
+              type="button"
+              aria-label={`Cart mein ${cartCount} items`}
+              onClick={() => {
+                setCheckout("cart");
+                setCartOpen(true);
+              }}
+            >
+              🛒 <span>View cart</span> <b>{cartCount}</b>
             </button>
           )}
           {!appInstalled && (
