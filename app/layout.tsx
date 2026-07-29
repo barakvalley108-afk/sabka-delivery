@@ -5,6 +5,7 @@ import "./globals.css";
 import "./brand.css";
 import "./royal-food.css";
 
+import CartFlightAnimation from "./components/cart-flight-animation";
 import PwaRegister from "./pwa-register";
 
 const geistSans = Geist({
@@ -230,6 +231,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <PwaRegister />
+        <CartFlightAnimation />
         {children}
       </body>
     </html>
