@@ -1452,15 +1452,6 @@ export default function Home() {
               </i>
             </button>
           )}
-          <button
-            className="header-cart"
-            onClick={() => {
-              setCheckout("cart");
-              setCartOpen(true);
-            }}
-          >
-            🛒 <span>View cart</span> <b>{cartCount}</b>
-          </button>
           {!appInstalled && (
             <button className="install-app-button" onClick={installApp}>
               ↓ <span>Install App</span>
@@ -2006,28 +1997,77 @@ export default function Home() {
       </footer>
       <div
         className="mobile-nav"
-        style={{ gridTemplateColumns: `repeat(${marketSections.length + 2}, minmax(68px, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${
+            marketSections.filter((section) =>
+              ["FOOD", "GROCERY", "ELECTRONICS"].includes(section.key),
+            ).length + 2
+          }, minmax(72px, 1fr))`,
+          minHeight: "72px",
+        }}
       >
         <button
-          className={activeNav === "home" ? "active" : ""}
-          onClick={goHome}
+          className={cartOpen ? "active" : ""}
+          onClick={() => {
+            setCheckout("cart");
+            setCartOpen(true);
+          }}
+          style={{ minHeight: "64px", fontWeight: 900 }}
+          aria-label={`Cart mein ${cartCount} items`}
         >
-          ⌂<small>Home</small>
+          <span style={{ fontSize: "23px", lineHeight: 1 }}>🛒</span>
+          <small style={{ fontSize: "12px", fontWeight: 900 }}>
+            Cart
+            {cartCount > 0 ? ` (${cartCount})` : ""}
+          </small>
         </button>
-        {marketSections.map((section) => (
-          <button
-            className={activeNav === section.key.toLowerCase() ? "active" : ""}
-            onClick={() => switchMode(section.key)}
-            key={section.key}
-          >
-            {section.icon}<small>{section.name}</small>
-          </button>
-        ))}
+
+        {marketSections
+          .filter((section) =>
+            ["FOOD", "GROCERY", "ELECTRONICS"].includes(section.key),
+          )
+          .sort(
+            (left, right) =>
+              ["FOOD", "GROCERY", "ELECTRONICS"].indexOf(left.key) -
+              ["FOOD", "GROCERY", "ELECTRONICS"].indexOf(right.key),
+          )
+          .map((section) => (
+            <button
+              className={
+                !cartOpen && activeNav === section.key.toLowerCase()
+                  ? "active"
+                  : ""
+              }
+              onClick={() => {
+                setCartOpen(false);
+                switchMode(section.key);
+              }}
+              key={section.key}
+              style={{ minHeight: "64px", fontWeight: 900 }}
+            >
+              <span style={{ fontSize: "23px", lineHeight: 1 }}>
+                {section.icon}
+              </span>
+              <small style={{ fontSize: "12px", fontWeight: 900 }}>
+                {section.key === "ELECTRONICS"
+                  ? "Electronics"
+                  : section.name}
+              </small>
+            </button>
+          ))}
+
         <button
-          className={activeNav === "history" ? "active" : ""}
-          onClick={openHistory}
+          className={!cartOpen && activeNav === "history" ? "active" : ""}
+          onClick={() => {
+            setCartOpen(false);
+            openHistory();
+          }}
+          style={{ minHeight: "64px", fontWeight: 900 }}
         >
-          ▤<small>History</small>
+          <span style={{ fontSize: "23px", lineHeight: 1 }}>▤</span>
+          <small style={{ fontSize: "12px", fontWeight: 900 }}>
+            History
+          </small>
         </button>
       </div>
       {!cartOpen && (
