@@ -130,15 +130,9 @@ export async function GET() {
        ORDER BY sort_order,name`,
     ),
     db.prepare(
-      `SELECT max(version) version,max(updatedAt) updatedAt
-       FROM (
-         SELECT cast(version as integer) version,updated_at updatedAt
-         FROM market_catalog_revision
-         WHERE id=1
-         UNION ALL
-         SELECT cast(strftime('%s',updated_at) as integer) version,updated_at updatedAt
-         FROM market_sections
-       )`,
+      `SELECT cast(version as integer) version,updated_at updatedAt
+       FROM market_catalog_revision
+       WHERE id=1`,
     ),
   ]);
 
