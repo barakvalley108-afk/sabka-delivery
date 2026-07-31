@@ -6,6 +6,7 @@ import "./brand.css";
 import "./royal-food.css";
 
 import CartFlightAnimation from "./components/cart-flight-animation";
+import MobileCustomerNav from "./components/mobile-customer-nav";
 import PwaRegister from "./pwa-register";
 
 const geistSans = Geist({
@@ -233,6 +234,7 @@ export default function RootLayout({
         <PwaRegister />
         <CartFlightAnimation />
         {children}
+        <MobileCustomerNav />
       </body>
     </html>
   );
