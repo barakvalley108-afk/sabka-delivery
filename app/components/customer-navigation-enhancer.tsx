@@ -14,41 +14,54 @@ export default function CustomerNavigationEnhancer() {
 
     const enhance = () => {
       const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("button"));
-      const historyButton = buttons.find((button) => {
+      const historyButtons = buttons.filter((button) => {
         const text = cleanText(button.textContent || "");
         return text === "history" || text === "order history";
       });
 
-      if (!historyButton || !historyButton.parentElement) return;
+      historyButtons.forEach((historyButton) => {
+        const nav = historyButton.parentElement;
+        if (!nav) return;
 
-      const nav = historyButton.parentElement;
-      nav.dataset.customerNav = "true";
+        nav.dataset.customerNav = "true";
 
-      if (!nav.querySelector<HTMLButtonElement>("[data-profile-nav='true']")) {
-        const profileButton = historyButton.cloneNode(true) as HTMLButtonElement;
-        profileButton.classList.remove("active");
-        profileButton.dataset.profileNav = "true";
-        profileButton.type = "button";
-        profileButton.innerHTML = "<span aria-hidden='true'>👤</span><span>Profile</span>";
-        profileButton.addEventListener("click", () => router.push("/profile"));
-        nav.appendChild(profileButton);
-      }
+        if (!nav.querySelector<HTMLButtonElement>("[data-profile-nav='true']")) {
+          const profileButton = historyButton.cloneNode(true) as HTMLButtonElement;
+          profileButton.dataset.profileNav = "true";
+          profileButton.type = "button";
+          profileButton.innerHTML = "<span aria-hidden='true'>👤</span><span>Profile</span>";
+          profileButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            router.push("/profile");
+          });
+          nav.appendChild(profileButton);
+        }
 
-      const childButtons = Array.from(nav.querySelectorAll<HTMLButtonElement>(":scope > button"));
-      if (childButtons.length >= 5) {
-        nav.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
-      }
+        const childButtons = Array.from(nav.querySelectorAll<HTMLButtonElement>(":scope > button"));
+        if (childButtons.length >= 5) {
+          nav.style.gridTemplateColumns = "repeat(5, minmax(0, 1fr))";
+        }
+      });
     };
 
     const clickHandler = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const button = target?.closest("button");
       if (!button) return;
+
       const text = cleanText(button.textContent || "");
+
       if (text === "history" || text === "order history") {
         event.preventDefault();
         event.stopPropagation();
         router.push("/orders");
+      }
+
+      if (button.dataset.profileNav === "true" || text === "profile") {
+        event.preventDefault();
+        event.stopPropagation();
+        router.push("/profile");
       }
     };
 
