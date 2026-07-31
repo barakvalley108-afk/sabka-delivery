@@ -12,6 +12,7 @@ import {
   normalizeCustomerPin,
   normalizeCustomerPincode,
 } from "../../../db/customer-pin";
+import { randomHex, sha256 } from "../../../db/otp-utils";
 
 type Runtime = {
   CUSTOMER_PIN_SECRET?: string;
@@ -25,13 +26,46 @@ type SignupBody = {
   pin?: unknown;
 };
 
-function json(body: Record<string, unknown>, status = 200) {
+type ServiceArea = {
+  id: number;
+  name: string;
+  pin_code: string;
+  delivery_charge: number;
+  min_order: number;
+  free_delivery_above: number;
+};
+
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
+function json(
+  body: Record<string, unknown>,
+  status = 200,
+  headers?: Headers,
+) {
+  const responseHeaders = headers ?? new Headers();
+  responseHeaders.set("Cache-Control", "no-store");
+
   return Response.json(body, {
     status,
-    headers: {
-      "Cache-Control": "no-store",
-    },
+    headers: responseHeaders,
   });
+}
+
+async function recordSignupAttempt(
+  db: D1Database,
+  mobile: string,
+  success: boolean,
+  ip: string,
+  userAgent: string,
+) {
+  await db
+    .prepare(
+      `INSERT INTO market_customer_login_activity
+         (mobile, success, ip_address, user_agent)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .bind(mobile, success ? 1 : 0, ip, userAgent)
+    .run();
 }
 
 export async function POST(request: Request) {
@@ -95,6 +129,42 @@ export async function POST(request: Request) {
     );
   }
 
+  const serviceArea = await db
+    .prepare(
+      `SELECT
+         id,
+         name,
+         pin_code,
+         delivery_charge,
+         min_order,
+         free_delivery_above
+       FROM market_service_areas
+       WHERE is_active = 1
+         AND TRIM(pin_code) = ?
+       LIMIT 1`,
+    )
+    .bind(pincode)
+    .first<ServiceArea>();
+
+  if (!serviceArea) {
+    await recordSignupAttempt(
+      db,
+      mobile,
+      false,
+      meta.ip,
+      meta.userAgent,
+    );
+
+    return json(
+      {
+        error: "Currently unavailable in your area",
+        message: `Sabka Delivery abhi ${pincode} pincode par available nahi hai.`,
+        unavailablePincode: pincode,
+      },
+      409,
+    );
+  }
+
   const existing = await db
     .prepare(
       `SELECT u.id, a.user_id AS auth_user_id
@@ -106,14 +176,13 @@ export async function POST(request: Request) {
     .first<{ id: number; auth_user_id: number | null }>();
 
   if (existing?.auth_user_id) {
-    await db
-      .prepare(
-        `INSERT INTO market_customer_login_activity
-           (mobile, success, ip_address, user_agent)
-         VALUES (?, 0, ?, ?)`,
-      )
-      .bind(mobile, meta.ip, meta.userAgent)
-      .run();
+    await recordSignupAttempt(
+      db,
+      mobile,
+      false,
+      meta.ip,
+      meta.userAgent,
+    );
 
     return json(
       { error: "Ye phone number pehle se registered hai. Login karo." },
@@ -161,14 +230,13 @@ export async function POST(request: Request) {
       .bind(userId, pincode, salt, pinHash)
       .run();
   } catch {
-    await db
-      .prepare(
-        `INSERT INTO market_customer_login_activity
-           (mobile, success, ip_address, user_agent)
-         VALUES (?, 0, ?, ?)`,
-      )
-      .bind(mobile, meta.ip, meta.userAgent)
-      .run();
+    await recordSignupAttempt(
+      db,
+      mobile,
+      false,
+      meta.ip,
+      meta.userAgent,
+    );
 
     return json(
       { error: "Ye phone number pehle se registered hai. Login karo." },
@@ -176,21 +244,67 @@ export async function POST(request: Request) {
     );
   }
 
+  const token = randomHex(32);
+  const tokenHash = await sha256(token);
+  const expiresAt = new Date(
+    Date.now() + SESSION_MAX_AGE_SECONDS * 1000,
+  ).toISOString();
+
   await db
     .prepare(
-      `INSERT INTO market_customer_login_activity
-         (mobile, success, ip_address, user_agent)
-       VALUES (?, 1, ?, ?)`,
+      `DELETE FROM market_sessions
+       WHERE user_id = ? OR expires_at <= CURRENT_TIMESTAMP`,
     )
-    .bind(mobile, meta.ip, meta.userAgent)
+    .bind(userId)
     .run();
+
+  await db
+    .prepare(
+      `INSERT INTO market_sessions (token_hash, user_id, expires_at)
+       VALUES (?, ?, ?)`,
+    )
+    .bind(tokenHash, userId, expiresAt)
+    .run();
+
+  await recordSignupAttempt(
+    db,
+    mobile,
+    true,
+    meta.ip,
+    meta.userAgent,
+  );
+
+  const headers = new Headers();
+  headers.append(
+    "Set-Cookie",
+    `sabka_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${SESSION_MAX_AGE_SECONDS}`,
+  );
+  headers.append(
+    "Set-Cookie",
+    "apna_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
+  );
 
   return json(
     {
-      message: "Account successfully create ho gaya. Ab login karo.",
-      redirectTo: "login",
-      mobile,
+      message: "Account successfully create ho gaya",
+      redirectTo: "home",
+      user: {
+        id: userId,
+        name,
+        mobile,
+        pincode,
+        address: null,
+      },
+      serviceArea: {
+        id: serviceArea.id,
+        name: serviceArea.name,
+        pincode: serviceArea.pin_code,
+        deliveryCharge: Number(serviceArea.delivery_charge),
+        minOrder: Number(serviceArea.min_order),
+        freeDeliveryAbove: Number(serviceArea.free_delivery_above),
+      },
     },
     201,
+    headers,
   );
 }
