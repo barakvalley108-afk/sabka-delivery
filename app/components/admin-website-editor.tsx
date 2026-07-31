@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import ImagePicker from "./image-picker";
+import FreeDesignEditor from "./free-design-editor";
 
 export type WebsiteContentBlock = {
   key: string;
@@ -48,6 +49,11 @@ function ContentCard({ block, send }: { block: WebsiteContentBlock; send: Send }
         <textarea name="body" defaultValue={block.body} rows={3} />
       </label>
       <ImagePicker value={image} onChange={setImage} label="Select section image" />
+      <FreeDesignEditor
+        image={image}
+        onApply={setImage}
+        title={`${block.key.replaceAll("_", " ")} design`}
+      />
       <button disabled={saving}>{saving ? "Saving…" : "Save section"}</button>
     </form>
   );
@@ -108,7 +114,7 @@ export default function AdminWebsiteEditor({
       <div className="website-editor-head">
         <div>
           <small>ALL CUSTOMER CONTENT</small>
-          <h2>Text & image editor</h2>
+          <h2>Text, image & free design editor</h2>
         </div>
         <span>{content.length} editable sections</span>
       </div>
