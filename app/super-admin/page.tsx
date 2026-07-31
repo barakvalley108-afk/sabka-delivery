@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPanelSession } from "../panel-auth";
 import AdminConsole from "./admin-console";
+import CustomerPinManager from "./customer-pin-manager";
 import "./super-admin.css";
 import "./withdrawals.css";
 import "../panel-enhancements.css";
@@ -11,5 +12,11 @@ export default async function SuperAdminPage() {
   const session = await getPanelSession("SUPER_ADMIN");
   if (!session) redirect("/panel-login");
   if (session.role !== "SUPER_ADMIN") redirect("/");
-  return <AdminConsole owner={session.displayName} />;
+
+  return (
+    <>
+      <AdminConsole owner={session.displayName} />
+      <CustomerPinManager />
+    </>
+  );
 }
