@@ -35,6 +35,8 @@ export default function OrdersPage() {
   const [orderId, setOrderId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelError, setCancelError] = useState("");
+  const [cancellingOrder, setCancellingOrder] = useState("");
 
   const loadOrders = useCallback(async (searchOrderId = "") => {
     setLoading(true);
@@ -67,6 +69,40 @@ export default function OrdersPage() {
     void loadOrders(orderId);
   }
 
+  async function cancelOrder(order: Order) {
+    if (cancellingOrder) return;
+    const confirmed = window.confirm(
+      `Kya aap ${order.orderCode} order ko cancel karna chahte hain?`,
+    );
+    if (!confirmed) return;
+
+    setCancellingOrder(order.orderCode);
+    setCancelError("");
+    try {
+      const response = await fetch("/api/customer-orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderCode: order.orderCode }),
+      });
+      const data = await response.json().catch(() => ({ error: "Server response invalid hai" }));
+      if (response.status === 401) {
+        window.location.replace("/customer-access?next=/orders");
+        return;
+      }
+      if (!response.ok) throw new Error(data.error || "Order cancel nahi hua");
+
+      setOrders((current) =>
+        current.map((item) =>
+          item.orderCode === order.orderCode ? { ...item, status: "CANCELLED" } : item,
+        ),
+      );
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : "Order cancel nahi hua");
+    } finally {
+      setCancellingOrder("");
+    }
+  }
+
   return (
     <main className="orders-page">
       <header>
@@ -91,6 +127,7 @@ export default function OrdersPage() {
 
       {loading && <div className="state">Orders load ho rahe hain...</div>}
       {error && <div className="state error">{error}</div>}
+      {cancelError && <div className="cancel-error">{cancelError}</div>}
       {!loading && !error && orders.length === 0 && (
         <div className="state"><b>Koi order nahi mila</b><span>Naya order karne ke baad automatically yahan dikhega.</span></div>
       )}
@@ -109,6 +146,15 @@ export default function OrdersPage() {
               <span><small>Payment</small><b>{order.paymentMethod || "COD"}</b></span>
               <span><small>Ordered</small><b>{new Date(order.createdAt).toLocaleDateString("en-IN")}</b></span>
             </div>
+            {order.status === "ACCEPTED" && (
+              <button
+                className="cancel-order"
+                disabled={Boolean(cancellingOrder)}
+                onClick={() => void cancelOrder(order)}
+              >
+                {cancellingOrder === order.orderCode ? "Cancelling..." : "Cancel Order"}
+              </button>
+            )}
             {order.status === "OUT_FOR_DELIVERY" && (
               <div className="delivery-box">
                 {order.deliveryOtp && <span>Delivery OTP: <b>{order.deliveryOtp}</b></span>}
@@ -129,8 +175,8 @@ export default function OrdersPage() {
         .orders-card{background:white;border:1px solid #f0ddd1;border-radius:20px;padding:18px;box-shadow:0 8px 28px #63351f12;margin-bottom:14px}
         .search-card h2{margin:0 0 5px}.search-card p{margin:0 0 14px;color:#775d55;font-size:13px;line-height:1.5}
         form{display:grid;grid-template-columns:1fr auto;gap:8px} input{min-width:0;border:1.5px solid #e5d4cb;border-radius:13px;padding:13px;font-size:15px;outline:none} form button{border:0;border-radius:13px;background:#c7181b;color:white;font-weight:800;padding:0 18px}.clear{border:0;background:transparent;color:#c7181b;font-weight:800;margin-top:10px}
-        .state{display:grid;gap:6px;text-align:center;padding:35px 15px;color:#765d55}.state.error{color:#a51317}
-        .order-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.order-top div{display:grid;gap:3px}.order-top small,.details small{font-size:10px;color:#8a7067;font-weight:800}.order-top b{font-size:14px}.status{padding:8px 10px;border-radius:999px;background:#fff3d6;color:#8c5900;font-size:11px;font-weight:900}.status.delivered{background:#e9f8ed;color:#176b2c}.status.cancelled{background:#fff0ef;color:#a51317}.orders-card h3{margin:16px 0 4px}.orders-card>p{margin:0;color:#80675f;font-size:13px}.details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.details span{display:grid;gap:4px;background:#fff9ef;border-radius:12px;padding:10px}.details b{font-size:13px}.delivery-box{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding:12px;border-radius:13px;background:#edf7ff;font-size:13px}.delivery-box a{color:#075ca8;font-weight:800}
+        .state{display:grid;gap:6px;text-align:center;padding:35px 15px;color:#765d55}.state.error{color:#a51317}.cancel-error{margin:0 0 14px;padding:12px 14px;border-radius:12px;background:#fff0ef;color:#a51317;font-size:13px;font-weight:800}
+        .order-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.order-top div{display:grid;gap:3px}.order-top small,.details small{font-size:10px;color:#8a7067;font-weight:800}.order-top b{font-size:14px}.status{padding:8px 10px;border-radius:999px;background:#fff3d6;color:#8c5900;font-size:11px;font-weight:900}.status.delivered{background:#e9f8ed;color:#176b2c}.status.cancelled{background:#fff0ef;color:#a51317}.orders-card h3{margin:16px 0 4px}.orders-card>p{margin:0;color:#80675f;font-size:13px}.details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.details span{display:grid;gap:4px;background:#fff9ef;border-radius:12px;padding:10px}.details b{font-size:13px}.cancel-order{width:100%;margin-top:14px;padding:12px 16px;border:1px solid #c7181b;border-radius:13px;background:#fff;color:#c7181b;font-weight:900}.cancel-order:hover{background:#fff0ef}.cancel-order:disabled{opacity:.55;cursor:not-allowed}.delivery-box{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding:12px;border-radius:13px;background:#edf7ff;font-size:13px}.delivery-box a{color:#075ca8;font-weight:800}
       `}</style>
     </main>
   );
