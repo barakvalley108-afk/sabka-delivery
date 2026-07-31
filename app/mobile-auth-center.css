@@ -1,0 +1,17 @@
+@media (max-width: 680px) {
+  .overlay:has(> .login-modal) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100dvh;
+    padding: 16px !important;
+    overflow-y: auto;
+  }
+
+  .overlay:has(> .login-modal) > .login-modal {
+    width: min(100%, 420px) !important;
+    max-height: calc(100dvh - 32px);
+    margin: auto !important;
+    overflow-y: auto;
+  }
+}
