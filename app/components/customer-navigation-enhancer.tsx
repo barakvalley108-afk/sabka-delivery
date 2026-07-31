@@ -26,7 +26,7 @@ export default function CustomerNavigationEnhancer() {
 
       if (!nav.querySelector<HTMLButtonElement>("[data-profile-nav='true']")) {
         const profileButton = historyButton.cloneNode(true) as HTMLButtonElement;
-        profileButton.removeAttribute("class");
+        profileButton.classList.remove("active");
         profileButton.dataset.profileNav = "true";
         profileButton.type = "button";
         profileButton.innerHTML = "<span aria-hidden='true'>👤</span><span>Profile</span>";
