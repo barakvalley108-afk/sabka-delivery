@@ -1,0 +1,21 @@
+.grocery-light-app .product-card{overflow:hidden;border-radius:16px;background:#fff}
+.grocery-light-app .product-visual{aspect-ratio:16/9!important;min-height:0!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+.grocery-light-app .product-visual>span,
+.grocery-light-app .product-visual>.veg,
+.grocery-light-app .product-visual>.nonveg,
+.grocery-light-app .product-visual>.item-discount-badge,
+.grocery-light-app .product-info>small:first-child,
+.grocery-light-app .product-info>p,
+.grocery-light-app .stock-low{display:none!important}
+.grocery-light-app .product-info{display:grid;gap:8px;padding:12px!important}
+.grocery-light-app .product-info h3{margin:0;font-size:15px;line-height:1.25;font-weight:900;color:#171717}
+.grocery-light-app .variant-label,
+.grocery-light-app .product-info select{margin:0!important;font-size:12px;font-weight:800;color:#626262}
+.grocery-light-app .price-row{align-items:end!important;gap:8px}
+.grocery-light-app .price-row>div{display:grid;gap:2px}
+.grocery-light-app .price-row del{display:block!important;font-size:12px;color:#777;text-decoration-thickness:1px}
+.grocery-light-app .price-row del::before{content:"MRP ";text-decoration:none}
+.grocery-light-app .price-row b{font-size:16px;color:#16833d}
+.grocery-light-app .price-row b::before{content:"Offer ";font-size:11px;color:#555;font-weight:800}
+.grocery-light-app .price-row button{min-width:64px;border-radius:9px;font-weight:950}
+@media(max-width:640px){.grocery-light-app .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.grocery-light-app .product-info{padding:10px!important}.grocery-light-app .product-info h3{font-size:13px}.grocery-light-app .price-row b{font-size:14px}.grocery-light-app .price-row button{min-width:54px;padding-inline:8px!important}}
