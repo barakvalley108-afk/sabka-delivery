@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import CustomerNavigationEnhancer from "./components/customer-navigation-enhancer";
 
 export default function PwaRegister() {
   useEffect(() => {
@@ -44,5 +45,5 @@ export default function PwaRegister() {
     };
   }, []);
 
-  return null;
+  return <CustomerNavigationEnhancer />;
 }
