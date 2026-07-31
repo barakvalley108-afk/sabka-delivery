@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
 import "./royal-food.css";
+import "./mobile-auth-center.css";
 
 import CartFlightAnimation from "./components/cart-flight-animation";
 import CheckoutAddressSync from "./components/checkout-address-sync";
