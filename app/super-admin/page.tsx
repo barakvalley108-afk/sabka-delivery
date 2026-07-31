@@ -6,6 +6,7 @@ import GroceryExpiryField from "./grocery-expiry-field";
 import "./super-admin.css";
 import "./withdrawals.css";
 import "../panel-enhancements.css";
+import "./responsive-fix.css";
 
 export const dynamic = "force-dynamic";
 
