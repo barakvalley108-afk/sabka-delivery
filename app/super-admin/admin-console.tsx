@@ -48,6 +48,7 @@ export default function AdminConsole({owner}:{owner:string}){
    {tab==="Catalog"&&<Catalog data={data} send={send} busy={busy}/>} 
    {tab==="Sections"&&<SectionManager data={data} send={send} busy={busy}/>}
    {tab==="Categories"&&<CategoryManager data={data} send={send} busy={busy}/>}
+   {tab==="Delivery Areas"&&<ServiceAreaManager/>}
    {tab==="Offers"&&<RewardOfferManager offers={data.offers} send={send} busy={busy}/>}
    {tab==="Coupons"&&<CouponManager coupons={data.promotions} send={send} busy={busy}/>}
    {tab==="Website Editor"&&<AdminWebsiteEditor content={data.content} settings={data.settings} send={send} busy={busy}/>}
