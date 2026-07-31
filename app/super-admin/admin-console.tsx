@@ -6,6 +6,7 @@ import FullItemEditor from "../components/full-item-editor";
 import AdminWebsiteEditor, { type WebsiteContentBlock } from "../components/admin-website-editor";
 import CouponManager, { type AdminCoupon } from "../components/coupon-manager";
 import RewardOfferManager, { type AdminRewardOffer } from "../components/reward-offer-manager";
+import ServiceAreaManager from "../components/service-area-manager";
 import { requestBackgroundNotifications, showBackgroundNotification } from "../components/background-notifications";
 import { useLiveRefresh } from "../components/use-live-refresh";
 import { QRCodeSVG } from "qrcode.react";
