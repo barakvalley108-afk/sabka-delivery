@@ -120,15 +120,9 @@ export default function OrdersPage() {
         ))}
       </section>
 
-      <nav>
-        <button onClick={() => router.push("/")}>🏠<span>Home</span></button>
-        <button className="active">▤<span>Orders</span></button>
-        <button onClick={() => router.push("/profile")}>👤<span>Profile</span></button>
-      </nav>
-
       <style jsx>{`
         :global(body){margin:0;background:#fff9ef;color:#241413;font-family:Arial,sans-serif}
-        .orders-page{min-height:100vh;padding:18px 16px 96px;max-width:720px;margin:auto}
+        .orders-page{min-height:100vh;padding:18px 16px 104px;max-width:720px;margin:auto}
         header{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:10px;margin-bottom:18px}
         header button{width:44px;height:44px;border:0;border-radius:14px;background:white;box-shadow:0 5px 18px #5b302018;font-size:20px}
         header small{color:#c7181b;font-weight:800;letter-spacing:.12em} h1{margin:3px 0 0;font-size:28px}
@@ -137,7 +131,6 @@ export default function OrdersPage() {
         form{display:grid;grid-template-columns:1fr auto;gap:8px} input{min-width:0;border:1.5px solid #e5d4cb;border-radius:13px;padding:13px;font-size:15px;outline:none} form button{border:0;border-radius:13px;background:#c7181b;color:white;font-weight:800;padding:0 18px}.clear{border:0;background:transparent;color:#c7181b;font-weight:800;margin-top:10px}
         .state{display:grid;gap:6px;text-align:center;padding:35px 15px;color:#765d55}.state.error{color:#a51317}
         .order-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.order-top div{display:grid;gap:3px}.order-top small,.details small{font-size:10px;color:#8a7067;font-weight:800}.order-top b{font-size:14px}.status{padding:8px 10px;border-radius:999px;background:#fff3d6;color:#8c5900;font-size:11px;font-weight:900}.status.delivered{background:#e9f8ed;color:#176b2c}.status.cancelled{background:#fff0ef;color:#a51317}.orders-card h3{margin:16px 0 4px}.orders-card>p{margin:0;color:#80675f;font-size:13px}.details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.details span{display:grid;gap:4px;background:#fff9ef;border-radius:12px;padding:10px}.details b{font-size:13px}.delivery-box{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding:12px;border-radius:13px;background:#edf7ff;font-size:13px}.delivery-box a{color:#075ca8;font-weight:800}
-        nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(100%,720px);display:grid;grid-template-columns:repeat(3,1fr);background:white;border-top:1px solid #eadbd3;padding:8px 12px max(8px,env(safe-area-inset-bottom));z-index:20}nav button{border:0;background:transparent;display:grid;place-items:center;gap:4px;padding:8px;font-size:19px;color:#6f554d}nav span{font-size:11px;font-weight:800}nav .active{color:#c7181b}
       `}</style>
     </main>
   );
