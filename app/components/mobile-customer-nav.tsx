@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import ForgotPinSupport from "./forgot-pin-support";
 
 type ActiveKey = "cart" | "food" | "grocery" | "orders" | "profile";
 
@@ -44,8 +45,6 @@ export default function MobileCustomerNav() {
     return () => observer.disconnect();
   }, [pathname]);
 
-  if (!["/", "/orders", "/profile"].includes(pathname)) return null;
-
   function clickOldButton(label: "cart" | "food" | "grocery") {
     const oldNav = document.querySelector<HTMLElement>(".mobile-nav");
     const buttons = Array.from(oldNav?.querySelectorAll<HTMLButtonElement>("button") || []);
@@ -56,40 +55,46 @@ export default function MobileCustomerNav() {
     button.click();
   }
 
+  const showNav = ["/", "/orders", "/profile"].includes(pathname);
+
   return (
     <>
-      <nav className="customer-mobile-nav" aria-label="Customer navigation">
-        <button className={active === "cart" ? "active" : ""} onClick={() => clickOldButton("cart")}>
-          <span>🛒</span>
-          <small>Cart</small>
-        </button>
-        <button className={active === "food" ? "active" : ""} onClick={() => {
-          if (pathname !== "/") router.push("/");
-          window.setTimeout(() => clickOldButton("food"), 120);
-        }}>
-          <span>🍲</span>
-          <small>Food</small>
-        </button>
-        <button className={active === "grocery" ? "active" : ""} onClick={() => {
-          if (pathname !== "/") router.push("/");
-          window.setTimeout(() => clickOldButton("grocery"), 120);
-        }}>
-          <span>🛍️</span>
-          <small>Grocery</small>
-        </button>
-        <button className={active === "orders" ? "active" : ""} onClick={() => router.push("/orders")}>
-          <span>▤</span>
-          <small>Orders</small>
-        </button>
-        <button className={active === "profile" ? "active" : ""} onClick={() => router.push("/profile")}>
-          <span>👤</span>
-          <small>Profile</small>
-        </button>
-      </nav>
+      <ForgotPinSupport />
+      {showNav && (
+        <nav className="customer-mobile-nav" aria-label="Customer navigation">
+          <button className={active === "cart" ? "active" : ""} onClick={() => clickOldButton("cart")}>
+            <span>🛒</span>
+            <small>Cart</small>
+          </button>
+          <button className={active === "food" ? "active" : ""} onClick={() => {
+            if (pathname !== "/") router.push("/");
+            window.setTimeout(() => clickOldButton("food"), 120);
+          }}>
+            <span>🍲</span>
+            <small>Food</small>
+          </button>
+          <button className={active === "grocery" ? "active" : ""} onClick={() => {
+            if (pathname !== "/") router.push("/");
+            window.setTimeout(() => clickOldButton("grocery"), 120);
+          }}>
+            <span>🛍️</span>
+            <small>Grocery</small>
+          </button>
+          <button className={active === "orders" ? "active" : ""} onClick={() => router.push("/orders")}>
+            <span>▤</span>
+            <small>Orders</small>
+          </button>
+          <button className={active === "profile" ? "active" : ""} onClick={() => router.push("/profile")}>
+            <span>👤</span>
+            <small>Profile</small>
+          </button>
+        </nav>
+      )}
       <style jsx global>{`
         .customer-mobile-nav { display: none; }
         @media (max-width: 680px) {
           body { padding-bottom: 76px !important; }
+          body:has(.customer-access-shell) { padding-bottom: 0 !important; }
           .mobile-nav { display: none !important; }
           .customer-mobile-nav {
             position: fixed;
