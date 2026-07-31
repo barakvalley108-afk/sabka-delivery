@@ -38,6 +38,27 @@ export default function CustomerPinManager() {
   }
 
   useEffect(() => {
+    const nav = document.querySelector<HTMLElement>(".admin-side nav");
+    if (!nav) return;
+
+    const oldButton = nav.querySelector<HTMLButtonElement>("[data-customer-pin-menu]");
+    oldButton?.remove();
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.customerPinMenu = "true";
+    button.innerHTML = "<i>🔐</i>Customer PIN";
+    button.addEventListener("click", () => setOpen(true));
+
+    const settingsButton = Array.from(nav.querySelectorAll<HTMLButtonElement>("button")).find(
+      (item) => item.textContent?.trim().endsWith("Settings"),
+    );
+    nav.insertBefore(button, settingsButton || null);
+
+    return () => button.remove();
+  }, []);
+
+  useEffect(() => {
     if (open) void loadCustomers();
   }, [open]);
 
@@ -70,89 +91,82 @@ export default function CustomerPinManager() {
     }
   }
 
+  if (!open) return null;
+
   return (
-    <>
-      <button className="customer-pin-fab" type="button" onClick={() => setOpen(true)}>
-        🔐 Customer PIN
-      </button>
+    <div className="customer-pin-overlay" onClick={() => setOpen(false)}>
+      <section className="customer-pin-panel" onClick={(event) => event.stopPropagation()}>
+        <header>
+          <div>
+            <small>SUPER ADMIN</small>
+            <h2>Customer PIN Management</h2>
+            <p>PIN dekhna possible nahi hai. Sirf secure reset kiya ja sakta hai.</p>
+          </div>
+          <button type="button" onClick={() => setOpen(false)}>×</button>
+        </header>
 
-      {open && (
-        <div className="customer-pin-overlay" onClick={() => setOpen(false)}>
-          <section className="customer-pin-panel" onClick={(event) => event.stopPropagation()}>
-            <header>
+        <form
+          className="customer-pin-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void loadCustomers(search);
+          }}
+        >
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value.replace(/\D/g, "").slice(0, 10))}
+            placeholder="Customer mobile search"
+            inputMode="numeric"
+          />
+          <button disabled={loading}>{loading ? "..." : "Search"}</button>
+        </form>
+
+        {message && <p className="customer-pin-message">{message}</p>}
+
+        <div className="customer-pin-list">
+          {customers.map((customer) => (
+            <article key={customer.id}>
               <div>
-                <small>SUPER ADMIN</small>
-                <h2>Customer PIN Management</h2>
-                <p>PIN dekhna possible nahi hai. Sirf secure reset kiya ja sakta hai.</p>
+                <b>{customer.name || "Customer"}</b>
+                <span>{customer.mobile}</span>
+                <small>Pincode: {customer.pincode}</small>
               </div>
-              <button type="button" onClick={() => setOpen(false)}>×</button>
-            </header>
-
-            <form
-              className="customer-pin-search"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void loadCustomers(search);
-              }}
-            >
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="Customer mobile search"
-                inputMode="numeric"
-              />
-              <button disabled={loading}>{loading ? "..." : "Search"}</button>
-            </form>
-
-            {message && <p className="customer-pin-message">{message}</p>}
-
-            <div className="customer-pin-list">
-              {customers.map((customer) => (
-                <article key={customer.id}>
-                  <div>
-                    <b>{customer.name || "Customer"}</b>
-                    <span>{customer.mobile}</span>
-                    <small>Pincode: {customer.pincode}</small>
-                  </div>
-                  <button type="button" onClick={() => {
-                    setSelected(customer);
-                    setPin("");
-                    setMessage("");
-                  }}>
-                    Reset PIN
-                  </button>
-                </article>
-              ))}
-              {!loading && customers.length === 0 && <p>Koi customer nahi mila.</p>}
-            </div>
-
-            {selected && (
-              <form className="customer-pin-reset" onSubmit={resetPin}>
-                <h3>Reset PIN</h3>
-                <p>{selected.name || "Customer"} · {selected.mobile}</p>
-                <label>
-                  New 4-digit PIN
-                  <input
-                    value={pin}
-                    onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                    type="password"
-                    inputMode="numeric"
-                    placeholder="••••"
-                    required
-                  />
-                </label>
-                <div>
-                  <button type="button" onClick={() => setSelected(null)}>Cancel</button>
-                  <button className="danger" disabled={loading}>Reset & Logout User</button>
-                </div>
-              </form>
-            )}
-          </section>
+              <button type="button" onClick={() => {
+                setSelected(customer);
+                setPin("");
+                setMessage("");
+              }}>
+                Reset PIN
+              </button>
+            </article>
+          ))}
+          {!loading && customers.length === 0 && <p>Koi customer nahi mila.</p>}
         </div>
-      )}
+
+        {selected && (
+          <form className="customer-pin-reset" onSubmit={resetPin}>
+            <h3>Reset PIN</h3>
+            <p>{selected.name || "Customer"} · {selected.mobile}</p>
+            <label>
+              New 4-digit PIN
+              <input
+                value={pin}
+                onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                type="password"
+                inputMode="numeric"
+                placeholder="••••"
+                required
+              />
+            </label>
+            <div>
+              <button type="button" onClick={() => setSelected(null)}>Cancel</button>
+              <button className="danger" disabled={loading}>Reset & Logout User</button>
+            </div>
+          </form>
+        )}
+      </section>
 
       <style jsx>{`
-        .customer-pin-fab { position: fixed; z-index: 9500; right: 20px; bottom: 20px; border: 0; border-radius: 999px; padding: 13px 18px; background: #241815; color: white; font-weight: 900; box-shadow: 0 10px 30px rgba(0,0,0,.25); cursor: pointer; }
         .customer-pin-overlay { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(25,14,11,.62); backdrop-filter: blur(5px); }
         .customer-pin-panel { width: min(100%, 720px); max-height: 90vh; overflow: auto; border-radius: 24px; padding: 22px; background: #fffdf9; color: #2b1c18; box-shadow: 0 30px 90px rgba(0,0,0,.3); }
         header { display: flex; justify-content: space-between; gap: 16px; }
@@ -177,8 +191,8 @@ export default function CustomerPinManager() {
         .customer-pin-reset div { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
         .customer-pin-reset button { border: 0; border-radius: 11px; padding: 11px 14px; font-weight: 900; }
         .customer-pin-reset .danger { background: #c7181b; color: white; }
-        @media (max-width: 680px) { .customer-pin-fab { right: 12px; bottom: 82px; } .customer-pin-panel { padding: 17px; } article { align-items: flex-start; } }
+        @media (max-width: 680px) { .customer-pin-panel { padding: 17px; } article { align-items: flex-start; } }
       `}</style>
-    </>
+    </div>
   );
 }
