@@ -38,24 +38,37 @@ export default function CustomerPinManager() {
   }
 
   useEffect(() => {
-    const nav = document.querySelector<HTMLElement>(".admin-side nav");
-    if (!nav) return;
+    let button: HTMLButtonElement | null = null;
 
-    const oldButton = nav.querySelector<HTMLButtonElement>("[data-customer-pin-menu]");
-    oldButton?.remove();
+    const mountButton = () => {
+      const nav = document.querySelector<HTMLElement>(".admin-side nav");
+      if (!nav) return;
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.dataset.customerPinMenu = "true";
-    button.innerHTML = "<i>🔐</i>Customer PIN";
-    button.addEventListener("click", () => setOpen(true));
+      const existing = nav.querySelector<HTMLButtonElement>("[data-customer-pin-menu]");
+      if (existing) {
+        button = existing;
+        return;
+      }
 
-    const settingsButton = Array.from(nav.querySelectorAll<HTMLButtonElement>("button")).find(
-      (item) => item.textContent?.trim().endsWith("Settings"),
-    );
-    nav.insertBefore(button, settingsButton || null);
+      button = document.createElement("button");
+      button.type = "button";
+      button.dataset.customerPinMenu = "true";
+      button.innerHTML = "<i>🔐</i>Customer PIN";
+      button.addEventListener("click", () => setOpen(true));
 
-    return () => button.remove();
+      const settingsButton = Array.from(nav.querySelectorAll<HTMLButtonElement>("button")).find(
+        (item) => item.textContent?.trim().endsWith("Settings"),
+      );
+      nav.insertBefore(button, settingsButton || null);
+    };
+
+    mountButton();
+    const timer = window.setInterval(mountButton, 500);
+
+    return () => {
+      window.clearInterval(timer);
+      button?.remove();
+    };
   }, []);
 
   useEffect(() => {
