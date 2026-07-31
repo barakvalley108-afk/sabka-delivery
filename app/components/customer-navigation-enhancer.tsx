@@ -52,15 +52,23 @@ export default function CustomerNavigationEnhancer() {
 
       const text = cleanText(button.textContent || "");
 
-      if (text === "history" || text === "order history") {
+      if (
+        text === "history" ||
+        text === "order history" ||
+        text === "track order" ||
+        text === "track my order"
+      ) {
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
         router.push("/orders");
+        return;
       }
 
       if (button.dataset.profileNav === "true" || text === "profile") {
         event.preventDefault();
         event.stopPropagation();
+        event.stopImmediatePropagation();
         router.push("/profile");
       }
     };
