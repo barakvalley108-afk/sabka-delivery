@@ -10,21 +10,27 @@ export default function GroceryExpiryField() {
     let stores = new Map<number, string>();
     const originalFetch = window.fetch.bind(window);
 
-    async function loadStores() {
-      try {
-        const response = await originalFetch("/api/admin/control", { cache: "no-store" });
-        const data = await response.json();
-        stores = new Map(
-          ((data.stores || []) as StoreInfo[]).map((store) => [Number(store.id), String(store.vertical || "")]),
-        );
-        refreshField();
-      } catch {
-        // Main admin panel already handles load errors.
-      }
+    function refreshRecoveryButton() {
+      if (disposed) return;
+      const loading = document.querySelector<HTMLElement>("main.panel-loading");
+      if (!loading || loading.querySelector("[data-admin-retry]")) return;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.adminRetry = "true";
+      button.textContent = "↻ Retry";
+      button.onclick = () => {
+        button.disabled = true;
+        button.textContent = "Retrying…";
+        window.location.reload();
+      };
+      loading.appendChild(button);
     }
 
     function refreshField() {
       if (disposed) return;
+      refreshRecoveryButton();
+
       const form = document.querySelector<HTMLFormElement>("form.catalog-create");
       if (!form) return;
 
@@ -55,10 +61,11 @@ export default function GroceryExpiryField() {
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      const method = String(init?.method || "GET").toUpperCase();
       let itemPayload: Record<string, unknown> | null = null;
       let expiryDate = "";
 
-      if (url.includes("/api/admin/control") && init?.method === "POST" && typeof init.body === "string") {
+      if (url.includes("/api/admin/control") && method === "POST" && typeof init?.body === "string") {
         try {
           const parsed = JSON.parse(init.body) as Record<string, unknown>;
           if (parsed.action === "item") {
@@ -71,9 +78,26 @@ export default function GroceryExpiryField() {
       }
 
       const response = await originalFetch(input, init);
+
+      // Reuse the admin panel's own GET response. Do not send a second heavy
+      // /api/admin/control request during startup.
+      if (url.includes("/api/admin/control") && method === "GET" && response.ok) {
+        void response
+          .clone()
+          .json()
+          .then((data: { stores?: StoreInfo[] }) => {
+            if (disposed) return;
+            stores = new Map(
+              (data.stores || []).map((store) => [Number(store.id), String(store.vertical || "")]),
+            );
+            refreshField();
+          })
+          .catch(() => undefined);
+      }
+
       if (itemPayload && expiryDate && response.ok) {
         try {
-          const result = await response.clone().json() as { itemId?: number };
+          const result = (await response.clone().json()) as { itemId?: number };
           if (result.itemId) {
             const expiryResponse = await originalFetch("/api/admin/item-expiry", {
               method: "POST",
@@ -94,7 +118,6 @@ export default function GroceryExpiryField() {
 
     const observer = new MutationObserver(refreshField);
     observer.observe(document.body, { childList: true, subtree: true });
-    void loadStores();
     refreshField();
 
     return () => {
@@ -129,6 +152,21 @@ export default function GroceryExpiryField() {
       }
       .grocery-expiry-field[hidden] {
         display: none !important;
+      }
+      .panel-loading [data-admin-retry] {
+        min-width: 130px;
+        margin-top: 14px;
+        padding: 12px 20px;
+        border: 0;
+        border-radius: 12px;
+        background: #c7181b;
+        color: #fff;
+        font-weight: 900;
+        box-shadow: 0 8px 22px #c7181b33;
+      }
+      .panel-loading [data-admin-retry]:disabled {
+        cursor: wait;
+        opacity: 0.7;
       }
     `}</style>
   );
