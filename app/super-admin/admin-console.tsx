@@ -22,7 +22,7 @@ type Category={id:number;name:string;image:string;isActive:number;sortOrder:numb
 type MarketSection={key:string;name:string;description:string;image:string;icon:string;isActive:number;sortOrder:number;minOrder:number;deliveryCharge:number};
 type Notice={id:number;type:string;title:string;message:string;orderCode:string|null;isRead:number;createdAt:string};
 type Data={owner:string;stores:Store[];accounts:Account[];riders:Rider[];payouts:Payout[];orders:Order[];orderItems:OrderItem[];items:Item[];categories:Category[];sections:MarketSection[];notifications:Notice[];settings:Record<string,string>;promotions:AdminCoupon[];offers:AdminRewardOffer[];content:WebsiteContentBlock[];summary:{totalOrders:number;totalSales:number;activeOrders:number;openStores:number;onlineRiders:number;activePanels:number}};
-type Tab="Dashboard"|"Orders"|"Shops"|"Catalog"|"Sections"|"Categories"|"Offers"|"Coupons"|"Website Editor"|"Panel Users"|"Riders"|"Withdrawals"|"Settings";
+type Tab="Dashboard"|"Orders"|"Shops"|"Catalog"|"Sections"|"Categories"|"Delivery Areas"|"Offers"|"Coupons"|"Website Editor"|"Panel Users"|"Riders"|"Withdrawals"|"Settings";
 const statuses=["ACCEPTED","CONFIRMED","PREPARING","PACKING","READY_FOR_PICKUP","OUT_FOR_DELIVERY","DELIVERED","CANCELLED"];
 const money=(value:number)=>`₹${Number(value||0).toLocaleString("en-IN")}`;
 
