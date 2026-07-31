@@ -4,6 +4,7 @@ import AdminConsole from "./admin-console";
 import CustomerPinManager from "./customer-pin-manager";
 import GroceryExpiryField from "./grocery-expiry-field";
 import RetryButtonFix from "./retry-button-fix";
+import RetailMartImporter from "./retail-mart-importer";
 import "./super-admin.css";
 import "./withdrawals.css";
 import "../panel-enhancements.css";
@@ -22,6 +23,7 @@ export default async function SuperAdminPage() {
       <CustomerPinManager />
       <GroceryExpiryField />
       <RetryButtonFix />
+      <RetailMartImporter />
     </>
   );
 }
