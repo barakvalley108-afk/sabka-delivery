@@ -1,0 +1,26 @@
+/* Keep stale UI hidden, but do not hold the branded loading screen for long. */
+@media (prefers-reduced-motion: no-preference) {
+  .catalog-loading-screen.visible {
+    animation: catalog-loader-fast-exit 140ms ease 800ms forwards !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-loading-screen.visible {
+    animation: catalog-loader-fast-exit 1ms linear 650ms forwards !important;
+  }
+}
+
+.catalog-loading-screen .catalog-loading-card,
+.catalog-loading-screen .catalog-loading-card * {
+  animation-duration: 420ms !important;
+  transition-duration: 140ms !important;
+}
+
+@keyframes catalog-loader-fast-exit {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
