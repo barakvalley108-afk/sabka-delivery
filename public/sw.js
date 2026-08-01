@@ -1,8 +1,12 @@
-const CACHE_NAME = "sabka-delivery-app-v5";
+const CACHE_NAME = "sabka-delivery-app-v6";
+const DATA_CACHE = "sabka-delivery-data-v1";
+const IMAGE_CACHE = "sabka-delivery-images-v1";
+const STATIC_CACHE = "sabka-delivery-static-v1";
+
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
-  "/images/sabka-delivery-logo.png"
+  "/images/sabka-delivery-logo.png",
 ];
 
 function showSabkaNotification(payload) {
@@ -12,8 +16,54 @@ function showSabkaNotification(payload) {
     badge: "/images/sabka-delivery-logo.png",
     data: { url: payload.url || "/" },
     tag: payload.tag || "sabka-delivery-update",
-    renotify: true
+    renotify: true,
   });
+}
+
+function fetchWithTimeout(request, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(request, { signal: controller.signal }).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
+async function cacheSuccessfulResponse(cacheName, request, response) {
+  if (!response || !response.ok || response.type === "opaque") return response;
+
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response.clone());
+  return response;
+}
+
+async function networkFirstWithFallback(request, cacheName, timeoutMs) {
+  try {
+    const response = await fetchWithTimeout(request, timeoutMs);
+    return await cacheSuccessfulResponse(cacheName, request, response);
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    throw new Error("Network unavailable and no cached response");
+  }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const refresh = fetch(request)
+    .then((response) => cacheSuccessfulResponse(cacheName, request, response))
+    .catch(() => undefined);
+
+  if (cached) {
+    void refresh;
+    return cached;
+  }
+
+  const response = await refresh;
+  if (response) return response;
+  throw new Error("Resource unavailable");
 }
 
 self.addEventListener("install", (event) => {
@@ -30,6 +80,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  const allowedCaches = new Set([
+    CACHE_NAME,
+    DATA_CACHE,
+    IMAGE_CACHE,
+    STATIC_CACHE,
+  ]);
+
   event.waitUntil(
     caches
       .keys()
@@ -37,7 +94,10 @@ self.addEventListener("activate", (event) => {
         Promise.all(
           keys
             .filter(
-              (key) => key.startsWith("sabka-delivery-app-") && key !== CACHE_NAME,
+              (key) =>
+                (key.startsWith("sabka-delivery-") ||
+                  key.startsWith("sabka-delivery-app-")) &&
+                !allowedCaches.has(key),
             )
             .map((key) => caches.delete(key)),
         ),
@@ -55,23 +115,46 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request, { cache: "no-store" }).catch(() => caches.match("/offline.html"))
+      fetch(request, { cache: "no-store" }).catch(() =>
+        caches.match("/offline.html"),
+      ),
     );
     return;
   }
 
-  if (url.pathname.startsWith("/images/") || url.pathname === "/manifest.webmanifest") {
+  if (url.pathname === "/api/market") {
     event.respondWith(
-      fetch(request, { cache: "no-cache" })
-          .then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(() => caches.match(request)),
+      networkFirstWithFallback(request, DATA_CACHE, 2200).catch(() =>
+        Response.json(
+          { error: "Catalog abhi load nahi hua" },
+          { status: 503 },
+        ),
+      ),
     );
+    return;
+  }
+
+  if (url.pathname === "/api/market-version") {
+    event.respondWith(fetch(request).catch(() => new Response("", { status: 503 })));
+    return;
+  }
+
+  if (
+    url.pathname.startsWith("/images/") ||
+    url.pathname === "/manifest.webmanifest" ||
+    request.destination === "image"
+  ) {
+    event.respondWith(staleWhileRevalidate(request, IMAGE_CACHE));
+    return;
+  }
+
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    request.destination === "style" ||
+    request.destination === "script" ||
+    request.destination === "font"
+  ) {
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
   }
 });
 
@@ -98,16 +181,22 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  const target = new URL(
+    event.notification.data?.url || "/",
+    self.location.origin,
+  ).href;
+
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      for (const client of clients) {
-        if ("focus" in client) {
-          client.navigate(target);
-          return client.focus();
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        for (const client of clients) {
+          if ("focus" in client) {
+            client.navigate(target);
+            return client.focus();
+          }
         }
-      }
-      return self.clients.openWindow(target);
-    })
+        return self.clients.openWindow(target);
+      }),
   );
 });
