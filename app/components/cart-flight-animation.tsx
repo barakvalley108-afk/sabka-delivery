@@ -2,164 +2,30 @@
 
 import { useEffect } from "react";
 
+const normalize = (value: string) => value.replace(/\s+/g, " ").trim().toUpperCase();
+const isAddButton = (button: HTMLButtonElement | null) => {
+  const label = normalize(button?.textContent || "");
+  return !!button && !button.disabled && (label === "ADD" || label === "ADD TO CART");
+};
+
+const findVisibleCartTarget = () => {
+  const mobileButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".customer-mobile-nav button"),
+  );
+  const mobileCart = mobileButtons.find((button) =>
+    button.textContent?.toLowerCase().includes("cart"),
+  );
+  if (mobileCart && getComputedStyle(mobileCart).display !== "none") return mobileCart;
+  return (
+    document.querySelector<HTMLElement>(".header-cart") ||
+    document.querySelector<HTMLElement>('[aria-label^="Cart mein"]')
+  );
+};
+
 const cartCountFromTarget = (target: Element | null) => {
   const text = target?.textContent || "";
   const match = text.match(/\((\d+)\)/);
   return match ? Number(match[1]) : 0;
-};
-
-const findCartTarget = () =>
-  document.querySelector<HTMLElement>('[aria-label^="Cart mein"]') ||
-  document.querySelector<HTMLElement>(".header-cart");
-
-const createFlyingLight = (
-  sourceRect: DOMRect,
-  targetRect: DOMRect,
-  imageUrl?: string,
-) => {
-  const startX = sourceRect.left + sourceRect.width / 2;
-  const startY = sourceRect.top + sourceRect.height / 2;
-
-  const endX =
-    targetRect.width > 0
-      ? targetRect.left + targetRect.width / 2
-      : Math.max(38, window.innerWidth * 0.1);
-
-  const endY =
-    targetRect.height > 0
-      ? targetRect.top + targetRect.height / 2
-      : window.innerHeight - 40;
-
-  const deltaX = endX - startX;
-  const deltaY = endY - startY;
-  const lift = Math.min(190, Math.max(100, Math.abs(deltaX) * 0.24));
-
-  const light = document.createElement("span");
-  light.setAttribute("aria-hidden", "true");
-
-  Object.assign(light.style, {
-    position: "fixed",
-    left: `${startX}px`,
-    top: `${startY}px`,
-    width: "44px",
-    height: "44px",
-    borderRadius: "999px",
-    pointerEvents: "none",
-    zIndex: "2147483647",
-    opacity: "0",
-    background:
-      "radial-gradient(circle at 36% 30%, #ffffff 0 14%, #fff8b0 24%, #ffe04c 42%, #ff9d00 64%, #ff3d00 82%, rgba(255,61,0,0) 100%)",
-    boxShadow:
-      "0 0 12px #ffffff, 0 0 28px #fff36b, 0 0 52px #ffb000, 0 0 86px rgba(255,74,0,.95)",
-    filter: "saturate(1.35) brightness(1.1)",
-    willChange: "transform, opacity",
-  });
-
-  if (imageUrl) {
-    light.style.backgroundImage = `url("${imageUrl}")`;
-    light.style.backgroundPosition = "center";
-    light.style.backgroundSize = "cover";
-    light.style.border = "3px solid rgba(255,255,255,.96)";
-    light.style.boxShadow =
-      "0 0 12px #ffffff, 0 0 30px #fff36b, 0 0 58px #ff9d00, 0 0 90px rgba(255,74,0,.92)";
-  }
-
-  const innerGlow = document.createElement("span");
-  Object.assign(innerGlow.style, {
-    position: "absolute",
-    inset: "-8px",
-    borderRadius: "999px",
-    border: "2px solid rgba(255,244,130,.72)",
-    boxShadow:
-      "0 0 18px rgba(255,255,255,.85), inset 0 0 18px rgba(255,221,65,.9)",
-  });
-
-  const trail = document.createElement("span");
-  Object.assign(trail.style, {
-    position: "absolute",
-    left: "-78px",
-    top: "14px",
-    width: "92px",
-    height: "16px",
-    borderRadius: "999px",
-    background:
-      "linear-gradient(90deg, rgba(255,93,0,0), rgba(255,170,0,.42), rgba(255,226,74,.72), rgba(255,255,255,.98))",
-    filter: "blur(5px)",
-    transformOrigin: "right center",
-  });
-
-  const sparkleOne = document.createElement("span");
-  const sparkleTwo = document.createElement("span");
-
-  for (const [sparkle, left, top] of [
-    [sparkleOne, "-22px", "-12px"],
-    [sparkleTwo, "-42px", "34px"],
-  ] as const) {
-    Object.assign(sparkle.style, {
-      position: "absolute",
-      left,
-      top,
-      width: "9px",
-      height: "9px",
-      borderRadius: "999px",
-      background: "#ffffff",
-      boxShadow: "0 0 12px #fff6a3, 0 0 22px #ff9d00",
-    });
-  }
-
-  light.appendChild(trail);
-  light.appendChild(innerGlow);
-  light.appendChild(sparkleOne);
-  light.appendChild(sparkleTwo);
-  document.body.appendChild(light);
-
-  const animation = light.animate(
-    [
-      {
-        transform: "translate(-50%, -50%) scale(.22) rotate(-8deg)",
-        opacity: 0,
-        offset: 0,
-      },
-      {
-        transform: "translate(-50%, -50%) scale(1.28) rotate(0deg)",
-        opacity: 1,
-        offset: 0.12,
-      },
-      {
-        transform: `translate(calc(-50% + ${deltaX * 0.26}px), calc(-50% + ${
-          deltaY * 0.12 - lift * 0.72
-        }px)) scale(1.18) rotate(8deg)`,
-        opacity: 1,
-        offset: 0.34,
-      },
-      {
-        transform: `translate(calc(-50% + ${deltaX * 0.52}px), calc(-50% + ${
-          deltaY * 0.34 - lift
-        }px)) scale(1.05) rotate(16deg)`,
-        opacity: 1,
-        offset: 0.58,
-      },
-      {
-        transform: `translate(calc(-50% + ${deltaX * 0.78}px), calc(-50% + ${
-          deltaY * 0.68 - lift * 0.46
-        }px)) scale(.78) rotate(24deg)`,
-        opacity: 0.96,
-        offset: 0.82,
-      },
-      {
-        transform: `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(.08) rotate(34deg)`,
-        opacity: 0,
-        offset: 1,
-      },
-    ],
-    {
-      duration: 1320,
-      easing: "cubic-bezier(.18,.72,.2,1)",
-      fill: "forwards",
-    },
-  );
-
-  animation.finished.catch(() => undefined).finally(() => light.remove());
 };
 
 const bounceCart = (target: HTMLElement) => {
@@ -171,47 +37,123 @@ const bounceCart = (target: HTMLElement) => {
       { transform: "scale(1.12)", offset: 0.78 },
       { transform: "scale(1)", offset: 1 },
     ],
-    {
-      duration: 560,
-      easing: "cubic-bezier(.2,.9,.3,1)",
-    },
+    { duration: 560, easing: "cubic-bezier(.2,.9,.3,1)" },
   );
 };
 
+const createFlyingLight = (
+  sourceRect: DOMRect,
+  targetRect: DOMRect,
+  imageUrl?: string,
+) => {
+  const startX = sourceRect.left + sourceRect.width / 2;
+  const startY = sourceRect.top + sourceRect.height / 2;
+  const endX = targetRect.left + targetRect.width / 2;
+  const endY = targetRect.top + targetRect.height / 2;
+  const deltaX = endX - startX;
+  const deltaY = endY - startY;
+  const lift = Math.min(180, Math.max(90, Math.abs(deltaX) * 0.22));
+  const light = document.createElement("span");
+  light.setAttribute("aria-hidden", "true");
+  Object.assign(light.style, {
+    position: "fixed",
+    left: `${startX}px`,
+    top: `${startY}px`,
+    width: "44px",
+    height: "44px",
+    borderRadius: "999px",
+    pointerEvents: "none",
+    zIndex: "2147483647",
+    opacity: "0",
+    background: imageUrl
+      ? `url("${imageUrl}") center/cover no-repeat`
+      : "radial-gradient(circle,#fff 0 12%,#ffe04c 40%,#ff7000 72%,transparent 100%)",
+    border: imageUrl ? "3px solid #fff" : "0",
+    boxShadow: "0 0 14px #fff,0 0 34px #ffd84a,0 0 70px #ff7a00",
+    willChange: "transform,opacity",
+  });
+  document.body.appendChild(light);
+  const animation = light.animate(
+    [
+      { transform: "translate(-50%,-50%) scale(.25)", opacity: 0 },
+      { transform: "translate(-50%,-50%) scale(1.2)", opacity: 1, offset: 0.14 },
+      {
+        transform: `translate(calc(-50% + ${deltaX * 0.5}px),calc(-50% + ${deltaY * 0.35 - lift}px)) scale(1)`,
+        opacity: 1,
+        offset: 0.58,
+      },
+      {
+        transform: `translate(calc(-50% + ${deltaX}px),calc(-50% + ${deltaY}px)) scale(.08)`,
+        opacity: 0,
+      },
+    ],
+    { duration: 1050, easing: "cubic-bezier(.18,.72,.2,1)", fill: "forwards" },
+  );
+  animation.finished.catch(() => undefined).finally(() => light.remove());
+};
+
+function openDirectCheckout() {
+  const cartTarget = findVisibleCartTarget();
+  cartTarget?.click();
+  window.setTimeout(() => {
+    const checkoutButton = document.querySelector<HTMLButtonElement>(
+      ".cart-drawer .checkout-button:not(:disabled)",
+    );
+    checkoutButton?.click();
+  }, 260);
+}
+
+function enhanceProductButtons() {
+  document.querySelectorAll<HTMLElement>(".product-card .price-row").forEach((row) => {
+    const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>(":scope > button"));
+    const addButton = buttons.find((button) => isAddButton(button));
+    if (!addButton || addButton.dataset.dualActionReady === "1") return;
+
+    addButton.dataset.dualActionReady = "1";
+    addButton.textContent = "Add to Cart";
+    addButton.classList.add("add-to-cart-button");
+    row.classList.add("two-product-actions");
+
+    const buyNow = document.createElement("button");
+    buyNow.type = "button";
+    buyNow.className = "buy-now-button";
+    buyNow.textContent = "Buy Now";
+    buyNow.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (addButton.disabled) return;
+      addButton.click();
+      window.setTimeout(openDirectCheckout, 120);
+    });
+    row.appendChild(buyNow);
+  });
+}
+
 export default function CartFlightAnimation() {
   useEffect(() => {
+    enhanceProductButtons();
+    const observer = new MutationObserver(enhanceProductButtons);
+    observer.observe(document.body, { subtree: true, childList: true });
+
     let pending:
-      | {
-          sourceRect: DOMRect;
-          oldCount: number;
-          imageUrl?: string;
-        }
+      | { sourceRect: DOMRect; oldCount: number; imageUrl?: string }
       | undefined;
 
     const onPointerDown = (event: PointerEvent) => {
       const button = (event.target as HTMLElement | null)?.closest(
         "button",
       ) as HTMLButtonElement | null;
-
-      if (
-        !button ||
-        button.disabled ||
-        button.textContent?.trim().toUpperCase() !== "ADD"
-      ) {
+      if (!isAddButton(button)) {
         pending = undefined;
         return;
       }
-
       const card = button.closest(".product-card");
-      const productVisual =
-        card?.querySelector<HTMLElement>(".product-visual");
-
+      const productVisual = card?.querySelector<HTMLElement>(".product-visual");
       const backgroundImage = productVisual?.style.backgroundImage || "";
       const imageMatch = backgroundImage.match(/url\(["']?(.*?)["']?\)/);
-
       pending = {
         sourceRect: button.getBoundingClientRect(),
-        oldCount: cartCountFromTarget(findCartTarget()),
+        oldCount: cartCountFromTarget(findVisibleCartTarget()),
         imageUrl: imageMatch?.[1],
       };
     };
@@ -220,47 +162,46 @@ export default function CartFlightAnimation() {
       const button = (event.target as HTMLElement | null)?.closest(
         "button",
       ) as HTMLButtonElement | null;
-
-      if (
-        !pending ||
-        !button ||
-        button.disabled ||
-        button.textContent?.trim().toUpperCase() !== "ADD"
-      ) {
-        return;
-      }
-
+      if (!pending || !isAddButton(button)) return;
       const captured = pending;
       pending = undefined;
-
       window.setTimeout(() => {
-        const target = findCartTarget();
+        const target = findVisibleCartTarget();
         if (!target) return;
-
-        const newCount = cartCountFromTarget(target);
-        if (newCount < 0 || captured.oldCount < 0) return;
-
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
           bounceCart(target);
           return;
         }
-
         createFlyingLight(
           captured.sourceRect,
           target.getBoundingClientRect(),
           captured.imageUrl,
         );
-
-        window.setTimeout(() => bounceCart(target), 1160);
-      }, 80);
+        window.setTimeout(() => bounceCart(target), 900);
+      }, 70);
     };
 
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("click", onClick);
 
+    const style = document.createElement("style");
+    style.id = "product-dual-actions-style";
+    style.textContent = `
+      .price-row.two-product-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+      .price-row.two-product-actions>div{grid-column:1/-1}
+      .price-row.two-product-actions>.add-to-cart-button,
+      .price-row.two-product-actions>.buy-now-button{width:100%!important;min-height:42px!important;margin:0!important;border-radius:10px!important;font-size:11px!important;font-weight:950!important;padding:9px 7px!important}
+      .price-row.two-product-actions>.add-to-cart-button{background:#fff!important;color:#c7181b!important;border:1.5px solid #c7181b!important}
+      .price-row.two-product-actions>.buy-now-button{background:#c7181b!important;color:#fff!important;border:1.5px solid #c7181b!important}
+      @media(max-width:420px){.price-row.two-product-actions{gap:6px}.price-row.two-product-actions>.add-to-cart-button,.price-row.two-product-actions>.buy-now-button{font-size:10px!important}}
+    `;
+    document.head.appendChild(style);
+
     return () => {
+      observer.disconnect();
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("click", onClick);
+      style.remove();
     };
   }, []);
 
