@@ -168,7 +168,8 @@ export async function GET() {
     },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=60",
+        "CDN-Cache-Control": "public, s-maxage=15, stale-while-revalidate=60",
       },
     },
   );
