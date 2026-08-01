@@ -2,6 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
+const LEGACY_CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
+
+// Clear the old partial catalog before Home's hydration effect can render it.
+// Fresh /api/market data will load normally, so shops and items appear together.
+if (typeof window !== "undefined") {
+  try {
+    window.localStorage.removeItem(LEGACY_CATALOG_CACHE_KEY);
+  } catch {
+    // Storage can be unavailable in private/restricted browser modes.
+  }
+}
+
 export function useLiveRefresh(
   refresh: () => Promise<void>,
   intervalMs = 5000,
