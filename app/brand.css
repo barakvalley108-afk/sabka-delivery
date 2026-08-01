@@ -49,7 +49,7 @@
   box-shadow:0 15px 40px #0005;
 }
 
-/* Keep the temporary catalog-loader logo the same visual size as the header logo. */
+/* Stable temporary loader: never reuse the header logo's zoom transform. */
 .catalog-loading-card>img{
   display:block!important;
   width:52px!important;
@@ -57,10 +57,9 @@
   max-width:52px!important;
   max-height:52px!important;
   margin:0 auto!important;
-  object-fit:cover!important;
+  object-fit:contain!important;
   border-radius:14px!important;
-  transform:scale(1.58);
-  transform-origin:50% 29%;
+  transform:none!important;
 }
 
 @media(max-width:680px){
@@ -72,6 +71,7 @@
     max-width:40px!important;
     max-height:40px!important;
     border-radius:10px!important;
+    transform:none!important;
   }
   .location-pill{margin-left:auto}
 }
