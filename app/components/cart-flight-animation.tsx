@@ -100,12 +100,12 @@ function openDirectCheckout() {
       ".cart-drawer .checkout-button:not(:disabled)",
     );
     checkoutButton?.click();
-  }, 260);
+  }, 320);
 }
 
 function enhanceProductButtons() {
   document.querySelectorAll<HTMLElement>(".product-card .price-row").forEach((row) => {
-    const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>(":scope > button"));
+    const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>("button"));
     const addButton = buttons.find((button) => isAddButton(button));
     if (!addButton || addButton.dataset.dualActionReady === "1") return;
 
@@ -113,6 +113,9 @@ function enhanceProductButtons() {
     addButton.textContent = "Add to Cart";
     addButton.classList.add("add-to-cart-button");
     row.classList.add("two-product-actions");
+
+    const existingBuyNow = row.querySelector<HTMLButtonElement>(".buy-now-button");
+    if (existingBuyNow) return;
 
     const buyNow = document.createElement("button");
     buyNow.type = "button";
@@ -123,26 +126,10 @@ function enhanceProductButtons() {
       event.stopPropagation();
       if (addButton.disabled) return;
       addButton.click();
-      window.setTimeout(openDirectCheckout, 120);
+      window.setTimeout(openDirectCheckout, 160);
     });
     row.appendChild(buyNow);
   });
-}
-
-function clearRestaurantFilterForAll(event: MouseEvent) {
-  const button = (event.target as HTMLElement | null)?.closest(
-    ".category-row button",
-  ) as HTMLButtonElement | null;
-  if (!button || normalize(button.textContent || "") !== "ALL") return;
-
-  window.setTimeout(() => {
-    const clearStoreButton = Array.from(
-      document.querySelectorAll<HTMLButtonElement>(".section-title button"),
-    ).find((entry) =>
-      normalize(entry.textContent || "").startsWith("VIEW ALL STORES"),
-    );
-    clearStoreButton?.click();
-  }, 0);
 }
 
 export default function CartFlightAnimation() {
@@ -150,6 +137,7 @@ export default function CartFlightAnimation() {
     enhanceProductButtons();
     const observer = new MutationObserver(enhanceProductButtons);
     observer.observe(document.body, { subtree: true, childList: true });
+    const reliabilityTimer = window.setInterval(enhanceProductButtons, 500);
 
     let pending:
       | { sourceRect: DOMRect; oldCount: number; imageUrl?: string }
@@ -175,8 +163,6 @@ export default function CartFlightAnimation() {
     };
 
     const onClick = (event: MouseEvent) => {
-      clearRestaurantFilterForAll(event);
-
       const button = (event.target as HTMLElement | null)?.closest(
         "button",
       ) as HTMLButtonElement | null;
@@ -208,15 +194,16 @@ export default function CartFlightAnimation() {
       .price-row.two-product-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
       .price-row.two-product-actions>div{grid-column:1/-1}
       .price-row.two-product-actions>.add-to-cart-button,
-      .price-row.two-product-actions>.buy-now-button{width:100%!important;min-height:42px!important;margin:0!important;border-radius:10px!important;font-size:11px!important;font-weight:950!important;padding:9px 7px!important}
-      .price-row.two-product-actions>.add-to-cart-button{background:#fff!important;color:#c7181b!important;border:1.5px solid #c7181b!important}
-      .price-row.two-product-actions>.buy-now-button{background:#c7181b!important;color:#fff!important;border:1.5px solid #c7181b!important}
-      @media(max-width:420px){.price-row.two-product-actions{gap:6px}.price-row.two-product-actions>.add-to-cart-button,.price-row.two-product-actions>.buy-now-button{font-size:10px!important}}
+      .price-row.two-product-actions>.buy-now-button{display:block!important;width:100%!important;min-height:42px!important;margin:0!important;border-radius:10px!important;font-size:11px!important;font-weight:950!important;padding:9px 7px!important;visibility:visible!important;opacity:1!important}
+      .price-row.two-product-actions>.add-to-cart-button{background:#fff!important;color:#d8a637!important;border:1.5px solid #d8a637!important}
+      .price-row.two-product-actions>.buy-now-button{background:#d8a637!important;color:#17120a!important;border:1.5px solid #d8a637!important}
+      @media(max-width:420px){.price-row.two-product-actions{gap:6px}.price-row.two-product-actions>.add-to-cart-button,.price-row.two-product-actions>.buy-now-button{font-size:9px!important;padding:8px 4px!important}}
     `;
     document.head.appendChild(style);
 
     return () => {
       observer.disconnect();
+      window.clearInterval(reliabilityTimer);
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("click", onClick);
       style.remove();
