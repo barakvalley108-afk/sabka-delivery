@@ -952,16 +952,7 @@ export default function Home() {
   function addItem(item: Item) {
     const variant = pickVariant(item);
     if (!variant) return;
-    if (cartStore && cartStore !== item.store_id && cartCount) {
-      if (
-        !window.confirm(
-          "Dusre store ka cart start karne par current cart clear ho jayega. Continue?",
-        )
-      )
-        return;
-      setCart({});
-    }
-    setCartStore(item.store_id);
+    setCartStore((current) => current ?? item.store_id);
     setCart((current) => ({
       ...current,
       [variant.id]: (current[variant.id] || 0) + 1,
