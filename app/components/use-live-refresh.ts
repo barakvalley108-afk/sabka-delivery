@@ -2,6 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
+const CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
+
+// This module is imported before the Home component runs its first effect.
+// Remove the old cached catalog here so Home cannot render stale shops/items first.
+if (typeof window !== "undefined") {
+  try {
+    window.localStorage.removeItem(CATALOG_CACHE_KEY);
+  } catch {
+    // Restricted/private browser storage should not block the app.
+  }
+}
+
 export function useLiveRefresh(
   refresh: () => Promise<void>,
   intervalMs = 5000,
