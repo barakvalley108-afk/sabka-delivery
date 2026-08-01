@@ -206,6 +206,20 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script
+          id="clear-stale-market-catalog"
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{localStorage.removeItem("sabka-delivery-market-catalog-v1")}catch(e){}',
+          }}
+        />
+        <style
+          id="critical-logo-size"
+          dangerouslySetInnerHTML={{
+            __html:
+              '.logo>span.brand-mark{display:block;width:52px;height:52px;flex:0 0 52px;overflow:hidden}.logo>span.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}@media(max-width:680px){.logo>span.brand-mark{width:40px;height:40px;flex-basis:40px}}',
+          }}
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(localBusinessJsonLd),
