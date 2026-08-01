@@ -48,8 +48,30 @@
   background:#fff;
   box-shadow:0 15px 40px #0005;
 }
+
+/* Keep the customer-header logo at one fixed size during refresh/hydration. */
+.logo>span.brand-mark,
+.royal-food-app .logo>span.brand-mark{
+  contain:layout paint;
+  flex-shrink:0;
+}
+.logo .brand-mark img,
+.royal-food-app .logo .brand-mark img{
+  max-width:100%;
+  max-height:100%;
+}
+
 @media(max-width:680px){
-  .logo>span.brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:10px}
+  .logo>span.brand-mark,
+  .royal-food-app .logo>span.brand-mark{
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    min-height:40px!important;
+    flex:0 0 40px!important;
+    border-radius:10px;
+  }
   .logo>b{max-width:65px;font-size:11px}
+  .royal-food-app .logo>b{font-size:11px;line-height:.9;max-width:65px}
   .location-pill{margin-left:auto}
 }
