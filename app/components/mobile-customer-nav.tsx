@@ -98,6 +98,7 @@ export default function MobileCustomerNav() {
       {showNav && (
         <nav className="customer-mobile-nav" aria-label="Customer navigation">
           <button
+            aria-label="Cart mein items"
             className={active === "cart" ? "active" : ""}
             onPointerDown={() => pathname === "/" && findOldButton("cart")}
             onClick={() => {
