@@ -4,8 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
 import "./royal-food.css";
+import "./customer-ui-fixes.css";
 
 import PwaRegister from "./pwa-register";
+import CustomerUiFixes from "./customer-ui-fixes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -231,6 +233,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <PwaRegister />
+        <CustomerUiFixes />
         {children}
       </body>
     </html>
