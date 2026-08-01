@@ -49,18 +49,18 @@
   box-shadow:0 15px 40px #0005;
 }
 
-/* Never reveal default/old UI while the complete fresh market catalog is loading. */
+/* Never reveal default/old customer UI while the complete fresh catalog is loading. */
 html:not(.catalog-fresh-ready) .apna-app{
   visibility:hidden!important;
 }
-html:not(.catalog-fresh-ready) body::before{
+html:not(.catalog-fresh-ready) body:has(.apna-app)::before{
   content:"";
   position:fixed;
   inset:0;
   z-index:2147483645;
   background:#fff;
 }
-html:not(.catalog-fresh-ready) body::after{
+html:not(.catalog-fresh-ready) body:has(.apna-app)::after{
   content:"";
   position:fixed;
   left:50%;
@@ -90,16 +90,17 @@ html:not(.catalog-fresh-ready) body::after{
 @media(max-width:680px){
   .logo>span.brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:10px}
   .logo>b{max-width:65px;font-size:11px}
-  html:not(.catalog-fresh-ready) body::after,
+  html:not(.catalog-fresh-ready) body:has(.apna-app)::after{
+    width:40px;
+    height:40px;
+    border-radius:10px;
+  }
   .catalog-loading-card>img{
     width:40px!important;
     height:40px!important;
     max-width:40px!important;
     max-height:40px!important;
     border-radius:10px!important;
-    transform:translate(-50%,-50%);
-  }
-  .catalog-loading-card>img{
     margin:0 auto!important;
     transform:none!important;
   }
