@@ -129,6 +129,22 @@ function enhanceProductButtons() {
   });
 }
 
+function clearRestaurantFilterForAll(event: MouseEvent) {
+  const button = (event.target as HTMLElement | null)?.closest(
+    ".category-row button",
+  ) as HTMLButtonElement | null;
+  if (!button || normalize(button.textContent || "") !== "ALL") return;
+
+  window.setTimeout(() => {
+    const clearStoreButton = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(".section-title button"),
+    ).find((entry) =>
+      normalize(entry.textContent || "").startsWith("VIEW ALL STORES"),
+    );
+    clearStoreButton?.click();
+  }, 0);
+}
+
 export default function CartFlightAnimation() {
   useEffect(() => {
     enhanceProductButtons();
@@ -159,6 +175,8 @@ export default function CartFlightAnimation() {
     };
 
     const onClick = (event: MouseEvent) => {
+      clearRestaurantFilterForAll(event);
+
       const button = (event.target as HTMLElement | null)?.closest(
         "button",
       ) as HTMLButtonElement | null;
