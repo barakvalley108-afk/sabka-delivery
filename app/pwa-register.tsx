@@ -5,15 +5,20 @@ import { useEffect } from "react";
 const LEGACY_CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
 
 export default function PwaRegister() {
-  useEffect(() => {
-    // Remove the old partial catalog before the Home page reads localStorage.
-    // Fresh /api/market data then renders all shops and items together.
+  /*
+   * This runs during render, before Home's useEffect reads localStorage.
+   * Parent passive effects run after child effects, so clearing only inside
+   * useEffect was too late and allowed the old catalog/UI to flash first.
+   */
+  if (typeof window !== "undefined") {
     try {
       window.localStorage.removeItem(LEGACY_CATALOG_CACHE_KEY);
     } catch {
       // Storage can be unavailable in private/restricted browser modes.
     }
+  }
 
+  useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
     const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -40,7 +45,13 @@ export default function PwaRegister() {
     const register = () => {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/", updateViaCache: "none" })
-        .then((registration) => registration.update())
+        .then(async (registration) => {
+          await registration.update();
+
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+        })
         .catch(() => {
           // The web experience must remain usable if service-worker setup fails.
         });
