@@ -2,8 +2,18 @@
 
 import { useEffect } from "react";
 
+const LEGACY_CATALOG_CACHE_KEY = "sabka-delivery-market-catalog-v1";
+
 export default function PwaRegister() {
   useEffect(() => {
+    // Remove the old partial catalog before the Home page reads localStorage.
+    // Fresh /api/market data then renders all shops and items together.
+    try {
+      window.localStorage.removeItem(LEGACY_CATALOG_CACHE_KEY);
+    } catch {
+      // Storage can be unavailable in private/restricted browser modes.
+    }
+
     if (!("serviceWorker" in navigator)) return;
 
     const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
