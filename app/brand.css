@@ -49,6 +49,31 @@
   box-shadow:0 15px 40px #0005;
 }
 
+/* Never reveal default/old UI while the complete fresh market catalog is loading. */
+html:not(.catalog-fresh-ready) .apna-app{
+  visibility:hidden!important;
+}
+html:not(.catalog-fresh-ready) body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:2147483645;
+  background:#fff;
+}
+html:not(.catalog-fresh-ready) body::after{
+  content:"";
+  position:fixed;
+  left:50%;
+  top:50%;
+  z-index:2147483646;
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  background:#fff url("/images/sabka-delivery-logo.png") center/contain no-repeat;
+  box-shadow:0 8px 28px #0002;
+  transform:translate(-50%,-50%);
+}
+
 /* Stable temporary loader: never reuse the header logo's zoom transform. */
 .catalog-loading-card>img{
   display:block!important;
@@ -65,12 +90,17 @@
 @media(max-width:680px){
   .logo>span.brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:10px}
   .logo>b{max-width:65px;font-size:11px}
+  html:not(.catalog-fresh-ready) body::after,
   .catalog-loading-card>img{
     width:40px!important;
     height:40px!important;
     max-width:40px!important;
     max-height:40px!important;
     border-radius:10px!important;
+    transform:translate(-50%,-50%);
+  }
+  .catalog-loading-card>img{
+    margin:0 auto!important;
     transform:none!important;
   }
   .location-pill{margin-left:auto}
