@@ -1,0 +1,58 @@
+name: One-time mixed restaurant cart patch
+
+on:
+  push:
+    branches: [manual-fix]
+    paths:
+      - .github/workflows/mixed-cart-page-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: manual-fix
+          fetch-depth: 0
+
+      - name: Remove single-store cart restriction
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('app/page.tsx')
+          text = path.read_text(encoding='utf-8')
+          marker = 'setCartStore((current) => current ?? item.store_id);'
+          if marker in text:
+              print('Mixed cart patch already applied')
+              raise SystemExit(0)
+
+          pattern = re.compile(
+              r'''\s*if \(cartStore && cartStore !== item\.store_id && cartCount\) \{\s*'''
+              r'''if \(\s*!window\.confirm\(\s*"Dusre store ka cart start karne par current cart clear ho jayega\. Continue\?",\s*\)\s*\)\s*return;\s*'''
+              r'''setCart\(\{\}\);\s*\}\s*setCartStore\(item\.store_id\);''',
+              re.MULTILINE,
+          )
+          replacement = '\n    setCartStore((current) => current ?? item.store_id);'
+          updated, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('Expected single-store cart block was not found exactly once')
+          path.write_text(updated, encoding='utf-8')
+          print('Mixed restaurant cart restriction removed')
+          PY
+
+      - name: Commit page patch
+        run: |
+          if git diff --quiet -- app/page.tsx; then
+            echo "No page change needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git commit -m "Allow items from multiple restaurants in one cart"
+          git push origin HEAD:manual-fix
