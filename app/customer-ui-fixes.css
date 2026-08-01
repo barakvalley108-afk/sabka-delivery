@@ -1,0 +1,70 @@
+/* Isolated customer UI fixes: cart visibility and Buy Now only. */
+.product-action-buttons {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  margin-left: auto;
+}
+
+.product-action-buttons > button {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.product-action-buttons .buy-now-button {
+  border: 1px solid #d8a847 !important;
+  background: transparent !important;
+  color: #d8a847 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  padding-inline: 10px !important;
+}
+
+/* Cart must always cover the sticky customer header and start at the viewport top. */
+.cart-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 500 !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.cart-overlay .cart-drawer {
+  position: relative !important;
+  width: min(100%, 560px) !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  margin: 0 0 0 auto !important;
+  padding-top: env(safe-area-inset-top) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cart-overlay .cart-drawer > header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  background: inherit;
+}
+
+@media (max-width: 680px) {
+  .cart-overlay .cart-drawer {
+    width: 100% !important;
+  }
+
+  .product-action-buttons {
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .product-action-buttons > button {
+    flex: 1 1 0;
+    min-height: 38px;
+  }
+
+  .price-row {
+    flex-wrap: wrap;
+  }
+}
