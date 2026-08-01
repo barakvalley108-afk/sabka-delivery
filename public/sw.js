@@ -1,7 +1,7 @@
-const CACHE_NAME = "sabka-delivery-app-v6";
-const DATA_CACHE = "sabka-delivery-data-v1";
-const IMAGE_CACHE = "sabka-delivery-images-v1";
-const STATIC_CACHE = "sabka-delivery-static-v1";
+const CACHE_NAME = "sabka-delivery-app-v7";
+const DATA_CACHE = "sabka-delivery-data-v2";
+const IMAGE_CACHE = "sabka-delivery-images-v2";
+const STATIC_CACHE = "sabka-delivery-static-v2";
 
 const APP_SHELL = [
   "/offline.html",
@@ -42,7 +42,8 @@ async function networkFirstWithFallback(request, cacheName, timeoutMs) {
     const response = await fetchWithTimeout(request, timeoutMs);
     return await cacheSuccessfulResponse(cacheName, request, response);
   } catch {
-    const cached = await caches.match(request);
+    const cache = await caches.open(cacheName);
+    const cached = await cache.match(request);
     if (cached) return cached;
     throw new Error("Network unavailable and no cached response");
   }
@@ -124,7 +125,7 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname === "/api/market") {
     event.respondWith(
-      networkFirstWithFallback(request, DATA_CACHE, 2200).catch(() =>
+      networkFirstWithFallback(request, DATA_CACHE, 1200).catch(() =>
         Response.json(
           { error: "Catalog abhi load nahi hua" },
           { status: 503 },
@@ -135,7 +136,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (url.pathname === "/api/market-version") {
-    event.respondWith(fetch(request).catch(() => new Response("", { status: 503 })));
+    event.respondWith(
+      fetchWithTimeout(request, 1000).catch(
+        () => new Response("", { status: 503 }),
+      ),
+    );
     return;
   }
 
