@@ -48,8 +48,30 @@
   background:#fff;
   box-shadow:0 15px 40px #0005;
 }
+
+/* Keep the temporary catalog-loader logo the same visual size as the header logo. */
+.catalog-loading-card>img{
+  display:block!important;
+  width:52px!important;
+  height:52px!important;
+  max-width:52px!important;
+  max-height:52px!important;
+  margin:0 auto!important;
+  object-fit:cover!important;
+  border-radius:14px!important;
+  transform:scale(1.58);
+  transform-origin:50% 29%;
+}
+
 @media(max-width:680px){
   .logo>span.brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:10px}
   .logo>b{max-width:65px;font-size:11px}
+  .catalog-loading-card>img{
+    width:40px!important;
+    height:40px!important;
+    max-width:40px!important;
+    max-height:40px!important;
+    border-radius:10px!important;
+  }
   .location-pill{margin-left:auto}
 }
