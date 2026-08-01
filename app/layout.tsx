@@ -7,6 +7,7 @@ import "./royal-food.css";
 import "./mobile-auth-center.css";
 import "./retail-mart-products.css";
 import "./mobile-checkout-button-fix.css";
+import "./fast-catalog-loader.css";
 
 import CartFlightAnimation from "./components/cart-flight-animation";
 import CheckoutAddressSync from "./components/checkout-address-sync";
