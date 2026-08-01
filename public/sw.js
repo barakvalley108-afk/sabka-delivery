@@ -1,4 +1,4 @@
-const CACHE_NAME = "sabka-delivery-app-v4";
+const CACHE_NAME = "sabka-delivery-app-v5";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -55,7 +55,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("/offline.html"))
+      fetch(request, { cache: "no-store" }).catch(() => caches.match("/offline.html"))
     );
     return;
   }
@@ -83,13 +83,15 @@ self.addEventListener("push", (event) => {
     if (event.data) payload.body = event.data.text();
   }
 
-  event.waitUntil(
-    showSabkaNotification(payload)
-  );
+  event.waitUntil(showSabkaNotification(payload));
 });
 
 self.addEventListener("message", (event) => {
   const payload = event.data || {};
+  if (payload.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (payload.type !== "SABKA_NOTIFY") return;
   event.waitUntil(showSabkaNotification(payload));
 });
