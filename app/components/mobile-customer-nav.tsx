@@ -8,11 +8,17 @@ type ActiveKey = "cart" | "food" | "grocery" | "orders" | "profile";
 type HomeTarget = "food" | "grocery";
 
 const normalize = (value: string) => value.replace(/\s+/g, " ").trim().toLowerCase();
+const readCount = (element: Element | null) => {
+  const source = `${element?.getAttribute("aria-label") || ""} ${element?.textContent || ""}`;
+  const matches = source.match(/\d+/g);
+  return matches?.length ? Number(matches[matches.length - 1]) : 0;
+};
 
 export default function MobileCustomerNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [active, setActive] = useState<ActiveKey>("food");
+  const [cartCount, setCartCount] = useState(0);
   const pendingHomeTarget = useRef<HomeTarget | null>(null);
 
   useEffect(() => {
@@ -41,7 +47,10 @@ export default function MobileCustomerNav() {
   }
 
   useEffect(() => {
-    if (pathname !== "/") return;
+    if (pathname !== "/") {
+      setCartCount(0);
+      return;
+    }
 
     const syncActive = () => {
       const oldNav = document.querySelector<HTMLElement>(".mobile-nav");
@@ -52,6 +61,10 @@ export default function MobileCustomerNav() {
         const target = pendingHomeTarget.current;
         if (clickOldButton(target)) pendingHomeTarget.current = null;
       }
+
+      const oldCartButton = findOldButton("cart");
+      const headerCart = document.querySelector<HTMLElement>(".header-cart");
+      setCartCount(Math.max(readCount(oldCartButton), readCount(headerCart)));
 
       const activeButton = oldNav.querySelector<HTMLButtonElement>("button.active");
       const text = normalize(activeButton?.textContent || "");
@@ -65,11 +78,16 @@ export default function MobileCustomerNav() {
     observer.observe(document.body, {
       subtree: true,
       childList: true,
+      characterData: true,
       attributes: true,
-      attributeFilter: ["class", "style"],
+      attributeFilter: ["class", "style", "aria-label"],
     });
 
-    return () => observer.disconnect();
+    const timer = window.setInterval(syncActive, 400);
+    return () => {
+      observer.disconnect();
+      window.clearInterval(timer);
+    };
   }, [pathname]);
 
   function openHomeSection(target: HomeTarget) {
@@ -98,7 +116,7 @@ export default function MobileCustomerNav() {
       {showNav && (
         <nav className="customer-mobile-nav" aria-label="Customer navigation">
           <button
-            aria-label="Cart mein items"
+            aria-label={`Cart mein ${cartCount} items`}
             className={active === "cart" ? "active" : ""}
             onPointerDown={() => pathname === "/" && findOldButton("cart")}
             onClick={() => {
@@ -106,7 +124,10 @@ export default function MobileCustomerNav() {
               else router.push("/");
             }}
           >
-            <span>🛒</span>
+            <span className="customer-cart-icon">
+              🛒
+              {cartCount > 0 ? <b>{cartCount > 99 ? "99+" : cartCount}</b> : null}
+            </span>
             <small>Cart</small>
           </button>
           <button className={active === "food" ? "active" : ""} onClick={() => openHomeSection("food")}>
@@ -177,6 +198,25 @@ export default function MobileCustomerNav() {
           .customer-mobile-nav button span { font-size: 22px; line-height: 1; }
           .customer-mobile-nav button small { font-size: 11px; font-weight: 900; }
           .customer-mobile-nav button.active { background: #fff0eb; color: #c7181b; }
+          .customer-mobile-nav .customer-cart-icon { position: relative; display: inline-grid; place-items: center; }
+          .customer-mobile-nav .customer-cart-icon b {
+            position: absolute;
+            top: -9px;
+            right: -13px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            display: grid;
+            place-items: center;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            background: #c7181b;
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(199,24,27,.35);
+            font-size: 10px;
+            font-weight: 950;
+            line-height: 1;
+          }
         }
       `}</style>
     </>
