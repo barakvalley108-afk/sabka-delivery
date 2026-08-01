@@ -2,24 +2,11 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
+import { retailMartSeedCatalog, type RetailMartSeedItem } from "./retail-mart-seed";
 
-type ParsedItem = {
-  category: string;
-  name: string;
-  quantity: string;
-  mrp: number;
-  stock: number;
-  expiry: string;
-};
+type ParsedItem = RetailMartSeedItem;
 
-const ignored = [
-  "RETAIL MART",
-  "STOCK VALUATION",
-  "S.NO.",
-  "CONTINUED",
-  "PAGE NO",
-  "TOTAL",
-];
+const ignored = ["RETAIL MART", "STOCK VALUATION", "S.NO.", "CONTINUED", "PAGE NO", "TOTAL"];
 
 function quantityFromName(name: string) {
   const pack = name.match(/(\d+(?:\.\d+)?\s*(?:KG|GM|G|ML|LTR|LITRE|L))\b/i);
@@ -57,14 +44,7 @@ function parseStock(text: string) {
     const expiry = match[4] || "";
     const stock = Math.floor(Number(match[5]));
     if (!name || mrp <= 0 || stock <= 0) continue;
-    result.push({
-      category,
-      name,
-      quantity: quantityFromName(name),
-      mrp,
-      stock,
-      expiry,
-    });
+    result.push({ category, name, quantity: quantityFromName(name), mrp, stock, expiry });
   }
   return result;
 }
@@ -72,9 +52,9 @@ function parseStock(text: string) {
 export default function RetailMartImporter() {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [fileName, setFileName] = useState("");
-  const [items, setItems] = useState<ParsedItem[]>([]);
+  const [items, setItems] = useState<ParsedItem[]>(retailMartSeedCatalog);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(`${retailMartSeedCatalog.length} provided products ready`);
   const categoryCount = useMemo(() => new Set(items.map((item) => item.category)).size, [items]);
 
   useEffect(() => {
@@ -91,8 +71,7 @@ export default function RetailMartImporter() {
       if (!slot) {
         slot = document.createElement("div");
         slot.id = "retail-mart-import-slot";
-        const top = work.querySelector(".admin-top");
-        top?.insertAdjacentElement("afterend", slot);
+        work.querySelector(".admin-top")?.insertAdjacentElement("afterend", slot);
       }
       setTarget(slot as HTMLElement);
     }
@@ -111,8 +90,7 @@ export default function RetailMartImporter() {
     if (!file) return;
     setMessage("");
     try {
-      const text = await file.text();
-      const parsed = parseStock(text);
+      const parsed = parseStock(await file.text());
       setFileName(file.name);
       setItems(parsed);
       setMessage(parsed.length ? `${parsed.length} positive-stock products ready` : "Products parse nahi hue");
@@ -121,11 +99,17 @@ export default function RetailMartImporter() {
     }
   }
 
+  function useProvidedCatalog() {
+    setFileName("Provided Retail Mart stock list");
+    setItems(retailMartSeedCatalog);
+    setMessage(`${retailMartSeedCatalog.length} provided products ready`);
+  }
+
   async function importCatalog() {
     if (!items.length || busy) return;
-    if (!window.confirm(`${items.length} products Retail Mart me import karna hai?`)) return;
+    if (!window.confirm(`${items.length} products Retail Mart me actual add karna hai?`)) return;
     setBusy(true);
-    setMessage("Import ho raha hai…");
+    setMessage("Products database me add ho rahe hain…");
     try {
       const response = await fetch("/api/admin/retail-mart-import", {
         method: "POST",
@@ -134,8 +118,8 @@ export default function RetailMartImporter() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Import failed");
-      setMessage(`✓ ${data.added} products added · ${data.skipped} duplicate/invalid skipped`);
-      window.setTimeout(() => window.location.reload(), 1400);
+      setMessage(`✓ ${data.added} products actual catalog me added · ${data.skipped} duplicate/invalid skipped`);
+      window.setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Import failed");
     } finally {
@@ -147,23 +131,26 @@ export default function RetailMartImporter() {
   return createPortal(
     <section className="retail-import-card">
       <div>
-        <small>RETAIL MART BULK CATALOG</small>
-        <h2>Stock TXT se products add karo</h2>
-        <p>Category, quantity, real MRP, stock aur ₹1 kam offer price automatic hoga. Duplicate items skip honge.</p>
+        <small>RETAIL MART ACTUAL CATALOG</small>
+        <h2>Provided stock list website me add karo</h2>
+        <p>Button dabate hi products Retail Mart database me add honge. Grocery page par category, item, quantity, MRP, ₹1 kam offer aur ADD button dikhega.</p>
       </div>
-      <label>
-        <input type="file" accept=".txt,text/plain" onChange={chooseFile} />
-        {fileName ? `✓ ${fileName}` : "Choose Retail Mart TXT file"}
-      </label>
+      <div className="retail-import-actions">
+        <button type="button" className="provided" onClick={useProvidedCatalog}>Use provided catalog</button>
+        <label>
+          <input type="file" accept=".txt,text/plain" onChange={chooseFile} />
+          {fileName ? `✓ ${fileName}` : "Or choose another TXT"}
+        </label>
+      </div>
       <div className="retail-import-stats">
         <b>{items.length}</b><span>products</span><b>{categoryCount}</b><span>categories</span>
       </div>
       <button type="button" disabled={!items.length || busy} onClick={() => void importCatalog()}>
-        {busy ? "Importing…" : "Import into Retail Mart"}
+        {busy ? "Adding products…" : "ADD TO RETAIL MART NOW"}
       </button>
       {message && <strong>{message}</strong>}
       <style jsx global>{`
-        .retail-import-card{margin:16px 22px 0;padding:18px;border:1px solid #ead6a0;border-radius:16px;background:linear-gradient(135deg,#fffdf5,#fff4ce);display:grid;grid-template-columns:minmax(240px,1fr) minmax(220px,.7fr) auto;align-items:center;gap:14px;box-shadow:0 8px 28px #4d3b1210}.retail-import-card small{font-size:9px;font-weight:950;letter-spacing:1.4px;color:#b51622}.retail-import-card h2{margin:4px 0;font-size:20px}.retail-import-card p{margin:0;color:#657068;font-size:12px}.retail-import-card label{min-height:48px;border:2px dashed #d3ad4f;border-radius:12px;background:#fff;padding:12px;display:grid;place-items:center;text-align:center;font-weight:900;cursor:pointer}.retail-import-card label input{position:absolute;width:1px;height:1px;opacity:0}.retail-import-stats{display:grid;grid-template-columns:auto auto;gap:2px 7px;align-items:center}.retail-import-stats b{font-size:20px;color:#b51622}.retail-import-stats span{font-size:10px;color:#68736c}.retail-import-card>button{grid-column:3;min-height:46px;border:0;border-radius:11px;background:#c7181b;color:#fff;padding:0 18px;font-weight:950;cursor:pointer}.retail-import-card>button:disabled{opacity:.5;cursor:not-allowed}.retail-import-card>strong{grid-column:1/-1;font-size:12px;color:#34543f}@media(max-width:800px){.retail-import-card{margin:12px;grid-template-columns:1fr}.retail-import-card>button{grid-column:1}.retail-import-card>strong{grid-column:1}}
+        .retail-import-card{margin:16px 22px 0;padding:18px;border:1px solid #b9dfc2;border-radius:16px;background:linear-gradient(135deg,#f7fff8,#eaffee);display:grid;grid-template-columns:minmax(260px,1fr) minmax(230px,.8fr) auto;align-items:center;gap:14px;box-shadow:0 8px 28px #17432110}.retail-import-card small{font-size:9px;font-weight:950;letter-spacing:1.4px;color:#16833b}.retail-import-card h2{margin:4px 0;font-size:20px}.retail-import-card p{margin:0;color:#657068;font-size:12px}.retail-import-actions{display:grid;gap:8px}.retail-import-actions button,.retail-import-actions label{min-height:44px;border:1px solid #b9d7c0;border-radius:11px;background:#fff;padding:10px 12px;display:grid;place-items:center;text-align:center;font-weight:900;cursor:pointer}.retail-import-actions .provided{background:#e8f8ec;color:#126f32}.retail-import-actions label input{position:absolute;width:1px;height:1px;opacity:0}.retail-import-stats{display:grid;grid-template-columns:auto auto;gap:2px 7px;align-items:center}.retail-import-stats b{font-size:20px;color:#16833b}.retail-import-stats span{font-size:10px;color:#68736c}.retail-import-card>button{grid-column:3;min-height:48px;border:0;border-radius:11px;background:#16833b;color:#fff;padding:0 18px;font-weight:950;cursor:pointer}.retail-import-card>button:disabled{opacity:.5;cursor:not-allowed}.retail-import-card>strong{grid-column:1/-1;font-size:12px;color:#245c35}@media(max-width:800px){.retail-import-card{margin:12px;grid-template-columns:1fr}.retail-import-card>button{grid-column:1}.retail-import-card>strong{grid-column:1}}
       `}</style>
     </section>,
     target,
