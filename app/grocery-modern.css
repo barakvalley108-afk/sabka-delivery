@@ -1,0 +1,335 @@
+/* Modern grocery catalogue. Scoped to Grocery mode only. */
+.apna-app.grocery-modern {
+  --grocery-green: #087f5b;
+  --grocery-deep: #07543f;
+  --grocery-mint: #eaf8f2;
+  --grocery-yellow: #ffd84d;
+  background: #f6f8f7;
+}
+
+.apna-app.grocery-modern .hero {
+  overflow: hidden;
+  border-radius: 0 0 30px 30px;
+  background: linear-gradient(145deg, #063c31 0%, #087f5b 62%, #10a26f 100%) !important;
+  color: #fff;
+}
+
+.apna-app.grocery-modern .hero-copy small,
+.apna-app.grocery-modern .hero-copy h1,
+.apna-app.grocery-modern .hero-copy p {
+  color: #fff !important;
+}
+
+.apna-app.grocery-modern .hero-copy h1 {
+  max-width: 720px;
+  letter-spacing: -0.045em;
+}
+
+.apna-app.grocery-modern .search-box,
+.apna-app.grocery-modern .hero-search,
+.apna-app.grocery-modern .search-wrap {
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 35px #022a2050 !important;
+}
+
+.apna-app.grocery-modern .hero-points > span {
+  border-color: #ffffff32 !important;
+  background: #ffffff16 !important;
+  color: #fff !important;
+  backdrop-filter: blur(8px);
+}
+
+.apna-app.grocery-modern .hero-art {
+  border-radius: 28px;
+  background-color: #fff6 !important;
+  box-shadow: inset 0 0 0 1px #ffffff25;
+}
+
+.apna-app.grocery-modern .main-content {
+  padding-top: 26px;
+}
+
+.apna-app.grocery-modern .section-title {
+  align-items: end;
+}
+
+.apna-app.grocery-modern .section-title small {
+  color: var(--grocery-green) !important;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.apna-app.grocery-modern .section-title h2 {
+  color: #15211d;
+  letter-spacing: -.035em;
+}
+
+.apna-app.grocery-modern .section-title > button {
+  border: 0;
+  color: var(--grocery-green);
+  background: transparent;
+  font-weight: 900;
+}
+
+.apna-app.grocery-modern .category-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(92px, 112px);
+  gap: 12px;
+  overflow-x: auto;
+  padding: 5px 2px 14px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.apna-app.grocery-modern .category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.apna-app.grocery-modern .category-row > button {
+  min-height: 122px;
+  padding: 10px 8px;
+  border: 1px solid #dfe8e3 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  color: #33413b !important;
+  box-shadow: 0 8px 24px #1235270c;
+  scroll-snap-align: start;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.apna-app.grocery-modern .category-row > button.active {
+  border-color: var(--grocery-green) !important;
+  background: var(--grocery-mint) !important;
+  color: var(--grocery-deep) !important;
+  box-shadow: 0 10px 25px #087f5b20;
+}
+
+.apna-app.grocery-modern .category-image {
+  width: 68px !important;
+  height: 68px !important;
+  margin-bottom: 8px;
+  border-radius: 17px !important;
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #f6faf8;
+}
+
+.apna-app.grocery-modern .store-row {
+  gap: 14px;
+  padding-bottom: 8px;
+}
+
+.apna-app.grocery-modern .store-card {
+  overflow: hidden;
+  border: 1px solid #dfe8e3 !important;
+  border-radius: 22px !important;
+  background: #fff !important;
+  box-shadow: 0 12px 30px #12352710;
+}
+
+.apna-app.grocery-modern .store-card.selected {
+  border-color: var(--grocery-green) !important;
+  box-shadow: 0 12px 32px #087f5b22;
+}
+
+.apna-app.grocery-modern .product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.apna-app.grocery-modern .product-card {
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid #e2e9e5 !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: 0 9px 25px #1235270d !important;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.apna-app.grocery-modern .product-card:active {
+  transform: scale(.985);
+}
+
+.apna-app.grocery-modern .product-visual {
+  aspect-ratio: 1 / 1;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-color: #f8faf9 !important;
+}
+
+.apna-app.grocery-modern .item-discount-badge {
+  top: 9px;
+  left: 9px;
+  right: auto;
+  border-radius: 8px;
+  background: #16a36e !important;
+  color: #fff !important;
+  font-size: 10px;
+}
+
+.apna-app.grocery-modern .product-info {
+  padding: 11px 12px 13px;
+}
+
+.apna-app.grocery-modern .product-info > small:first-child {
+  display: none;
+}
+
+.apna-app.grocery-modern .product-info h3 {
+  min-height: 42px;
+  margin: 0 0 4px;
+  color: #1b2923;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 850;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.apna-app.grocery-modern .product-info p {
+  display: none;
+}
+
+.apna-app.grocery-modern .variant-label,
+.apna-app.grocery-modern .product-info select {
+  min-height: 29px;
+  margin-top: 5px;
+  border-radius: 8px !important;
+  border-color: #dde5e1 !important;
+  background: #f4f7f5 !important;
+  color: #59665f !important;
+  font-size: 11px !important;
+}
+
+.apna-app.grocery-modern .price-row {
+  align-items: end;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.apna-app.grocery-modern .price-row del {
+  color: #8c9691;
+  font-size: 11px;
+}
+
+.apna-app.grocery-modern .price-row b {
+  color: #18251f;
+  font-size: 17px;
+}
+
+.apna-app.grocery-modern .price-row > button,
+.apna-app.grocery-modern .product-action-buttons > button {
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border: 1.5px solid var(--grocery-green) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: var(--grocery-green) !important;
+  box-shadow: 0 5px 14px #087f5b18;
+  font-weight: 950 !important;
+}
+
+.apna-app.grocery-modern .product-action-buttons .buy-now-button {
+  color: #6c4d00 !important;
+  border-color: #e6b62c !important;
+  background: #fff9df !important;
+}
+
+.apna-app.grocery-modern .mobile-nav {
+  border-top: 1px solid #dfe7e3;
+  background: #fffffff2 !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 -8px 30px #0a37251a;
+}
+
+.apna-app.grocery-modern .mobile-nav button.active {
+  color: var(--grocery-green) !important;
+  background: var(--grocery-mint) !important;
+}
+
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label^="Cart mein"] {
+  position: relative;
+}
+
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label*="Cart mein 1"],
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label*="Cart mein 2"],
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label*="Cart mein 3"],
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label*="Cart mein 4"],
+.apna-app.grocery-modern .mobile-nav button:first-child[aria-label*="Cart mein 5"] {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--grocery-green), #0aa970) !important;
+  box-shadow: 0 9px 24px #087f5b48;
+}
+
+@media (max-width: 900px) {
+  .apna-app.grocery-modern .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .apna-app.grocery-modern .hero {
+    border-radius: 0 0 24px 24px;
+  }
+
+  .apna-app.grocery-modern .hero-copy h1 {
+    font-size: clamp(30px, 10vw, 44px) !important;
+  }
+
+  .apna-app.grocery-modern .hero-points {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .apna-app.grocery-modern .hero-points > span {
+    min-width: 0;
+    padding: 10px 5px !important;
+    font-size: 10px;
+  }
+
+  .apna-app.grocery-modern .main-content {
+    padding-inline: 12px;
+  }
+
+  .apna-app.grocery-modern .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .apna-app.grocery-modern .product-info {
+    padding: 9px 9px 11px;
+  }
+
+  .apna-app.grocery-modern .product-action-buttons {
+    width: auto;
+    margin-top: 0;
+    gap: 5px;
+  }
+
+  .apna-app.grocery-modern .product-action-buttons > button {
+    flex: 0 0 auto;
+    padding-inline: 8px !important;
+    font-size: 9px !important;
+  }
+
+  .apna-app.grocery-modern .price-row {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apna-app.grocery-modern .product-card {
+    transition: none;
+  }
+}
