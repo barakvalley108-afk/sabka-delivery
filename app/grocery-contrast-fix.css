@@ -1,0 +1,115 @@
+/* Grocery-only readability fix. No cart, checkout or product logic changes. */
+.apna-app.grocery-modern .hero {
+  position: relative !important;
+  isolation: isolate !important;
+  color: #fff !important;
+}
+
+.apna-app.grocery-modern .hero::before,
+.apna-app.grocery-modern .hero::after {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.apna-app.grocery-modern .hero > * {
+  position: relative !important;
+  z-index: 1 !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.apna-app.grocery-modern .hero-copy,
+.apna-app.grocery-modern .hero-copy * {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+.apna-app.grocery-modern .hero-copy > small {
+  color: #d7ffb8 !important;
+  font-weight: 900 !important;
+  text-shadow: 0 1px 3px rgba(0, 45, 32, .75) !important;
+}
+
+.apna-app.grocery-modern .hero-copy h1 {
+  color: #fff !important;
+  text-shadow: 0 3px 18px rgba(0, 35, 25, .5) !important;
+}
+
+.apna-app.grocery-modern .hero-copy p {
+  color: #e9fff7 !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 5px rgba(0, 40, 29, .55) !important;
+}
+
+.apna-app.grocery-modern .hero-points {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.apna-app.grocery-modern .hero-points > span {
+  opacity: 1 !important;
+  filter: none !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,.38) !important;
+  background: rgba(255,255,255,.16) !important;
+}
+
+.apna-app.grocery-modern .hero-points > span b {
+  color: #fff !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 3px rgba(0, 40, 29, .7) !important;
+}
+
+.apna-app.grocery-modern .hero-points > span small {
+  color: #dcfff2 !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 2px rgba(0, 40, 29, .7) !important;
+}
+
+.apna-app.grocery-modern .search-box,
+.apna-app.grocery-modern .hero-search,
+.apna-app.grocery-modern .search-wrap,
+.apna-app.grocery-modern .search-box input,
+.apna-app.grocery-modern .hero-search input,
+.apna-app.grocery-modern .search-wrap input {
+  opacity: 1 !important;
+  filter: none !important;
+  color: #17211d !important;
+}
+
+.apna-app.grocery-modern .hero-art,
+.apna-app.grocery-modern .hero-art * {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+@media (max-width: 680px) {
+  .apna-app.grocery-modern .hero-copy h1 {
+    line-height: 1.02 !important;
+  }
+
+  .apna-app.grocery-modern .hero-copy p {
+    font-size: 14px !important;
+    line-height: 1.55 !important;
+  }
+
+  .apna-app.grocery-modern .hero-points {
+    gap: 9px !important;
+  }
+
+  .apna-app.grocery-modern .hero-points > span {
+    min-height: 112px !important;
+    padding: 13px 6px !important;
+    border-radius: 15px !important;
+  }
+
+  .apna-app.grocery-modern .hero-points > span b {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .apna-app.grocery-modern .hero-points > span small {
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+  }
+}
