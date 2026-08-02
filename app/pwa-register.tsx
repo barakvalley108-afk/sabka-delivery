@@ -1,20 +1,36 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 const LOCAL_CATALOG_KEYS = [
   "sabka-delivery-market-catalog-v1",
   "sabka-delivery-market-catalog-v2",
+  "sabka-delivery-market-catalog-v3",
 ];
 
 export default function PwaRegister() {
-  useEffect(() => {
-    // Do not hydrate the customer homepage from an old local catalog.
-    // Low-network fallback is handled by the versioned service-worker API cache.
+  useLayoutEffect(() => {
+    // Run before page useEffect so stale catalog can never paint first.
     for (const key of LOCAL_CATALOG_KEYS) {
       window.localStorage.removeItem(key);
     }
 
+    if ("caches" in window) {
+      void caches.keys().then((keys) =>
+        Promise.all(
+          keys
+            .filter(
+              (key) =>
+                key.startsWith("sabka-delivery-data-") &&
+                key !== "sabka-delivery-data-v3",
+            )
+            .map((key) => caches.delete(key)),
+        ),
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
     const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -25,15 +41,13 @@ export default function PwaRegister() {
           Promise.all(registrations.map((registration) => registration.unregister())),
         );
       if ("caches" in window) {
-        void caches
-          .keys()
-          .then((keys) =>
-            Promise.all(
-              keys
-                .filter((key) => key.startsWith("sabka-delivery-app-"))
-                .map((key) => caches.delete(key)),
-            ),
-          );
+        void caches.keys().then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key.startsWith("sabka-delivery-"))
+              .map((key) => caches.delete(key)),
+          ),
+        );
       }
       return;
     }
@@ -46,16 +60,14 @@ export default function PwaRegister() {
           registration.waiting?.postMessage({ type: "SKIP_WAITING" });
         })
         .catch(() => {
-          // The web experience must remain usable if service-worker setup fails.
+          // Website remains usable if service-worker setup fails.
         });
     };
 
     if (document.readyState === "complete") register();
     else window.addEventListener("load", register, { once: true });
 
-    return () => {
-      window.removeEventListener("load", register);
-    };
+    return () => window.removeEventListener("load", register);
   }, []);
 
   return null;
