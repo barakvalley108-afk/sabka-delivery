@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
-import CustomerSessionGuard from "./components/customer-session-guard";
+import RemoveCustomerLogin from "./components/remove-customer-login";
 
 const LOCAL_CATALOG_KEYS = [
   "sabka-delivery-market-catalog-v1",
@@ -11,7 +11,6 @@ const LOCAL_CATALOG_KEYS = [
 
 export default function PwaRegister() {
   useLayoutEffect(() => {
-    // Run before page useEffect so stale catalog can never paint first.
     for (const key of LOCAL_CATALOG_KEYS) {
       window.localStorage.removeItem(key);
     }
@@ -71,5 +70,5 @@ export default function PwaRegister() {
     return () => window.removeEventListener("load", register);
   }, []);
 
-  return <CustomerSessionGuard />;
+  return <RemoveCustomerLogin />;
 }
