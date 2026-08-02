@@ -1,7 +1,7 @@
-const CACHE_NAME = "sabka-delivery-app-v7";
-const DATA_CACHE = "sabka-delivery-data-v2";
-const IMAGE_CACHE = "sabka-delivery-images-v2";
-const STATIC_CACHE = "sabka-delivery-static-v2";
+const CACHE_NAME = "sabka-delivery-app-v8";
+const DATA_CACHE = "sabka-delivery-data-v3";
+const IMAGE_CACHE = "sabka-delivery-images-v3";
+const STATIC_CACHE = "sabka-delivery-static-v3";
 
 const APP_SHELL = [
   "/offline.html",
@@ -23,15 +23,11 @@ function showSabkaNotification(payload) {
 function fetchWithTimeout(request, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  return fetch(request, { signal: controller.signal }).finally(() => {
-    clearTimeout(timer);
-  });
+  return fetch(request, { signal: controller.signal }).finally(() => clearTimeout(timer));
 }
 
 async function cacheSuccessfulResponse(cacheName, request, response) {
   if (!response || !response.ok || response.type === "opaque") return response;
-
   const cache = await caches.open(cacheName);
   await cache.put(request, response.clone());
   return response;
@@ -45,23 +41,20 @@ async function networkFirstWithFallback(request, cacheName, timeoutMs) {
     const cache = await caches.open(cacheName);
     const cached = await cache.match(request);
     if (cached) return cached;
-    throw new Error("Network unavailable and no cached response");
+    throw new Error("Network unavailable and no current-release cache");
   }
 }
 
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-
   const refresh = fetch(request)
     .then((response) => cacheSuccessfulResponse(cacheName, request, response))
     .catch(() => undefined);
-
   if (cached) {
     void refresh;
     return cached;
   }
-
   const response = await refresh;
   if (response) return response;
   throw new Error("Resource unavailable");
@@ -70,36 +63,21 @@ async function staleWhileRevalidate(request, cacheName) {
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      Promise.all(
-        APP_SHELL.map((url) =>
-          cache.add(new Request(url, { cache: "reload" })),
-        ),
-      ),
+      Promise.all(APP_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" })))),
     ),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  const allowedCaches = new Set([
-    CACHE_NAME,
-    DATA_CACHE,
-    IMAGE_CACHE,
-    STATIC_CACHE,
-  ]);
-
+  const allowedCaches = new Set([CACHE_NAME, DATA_CACHE, IMAGE_CACHE, STATIC_CACHE]);
   event.waitUntil(
     caches
       .keys()
       .then((keys) =>
         Promise.all(
           keys
-            .filter(
-              (key) =>
-                (key.startsWith("sabka-delivery-") ||
-                  key.startsWith("sabka-delivery-app-")) &&
-                !allowedCaches.has(key),
-            )
+            .filter((key) => key.startsWith("sabka-delivery-") && !allowedCaches.has(key))
             .map((key) => caches.delete(key)),
         ),
       )
@@ -110,37 +88,25 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request, { cache: "no-store" }).catch(() =>
-        caches.match("/offline.html"),
-      ),
-    );
+    event.respondWith(fetch(request, { cache: "no-store" }).catch(() => caches.match("/offline.html")));
     return;
   }
 
   if (url.pathname === "/api/market") {
     event.respondWith(
-      networkFirstWithFallback(request, DATA_CACHE, 1200).catch(() =>
-        Response.json(
-          { error: "Catalog abhi load nahi hua" },
-          { status: 503 },
-        ),
+      networkFirstWithFallback(request, DATA_CACHE, 1800).catch(() =>
+        Response.json({ error: "Catalog abhi load nahi hua" }, { status: 503 }),
       ),
     );
     return;
   }
 
   if (url.pathname === "/api/market-version") {
-    event.respondWith(
-      fetchWithTimeout(request, 1000).catch(
-        () => new Response("", { status: 503 }),
-      ),
-    );
+    event.respondWith(fetchWithTimeout(request, 1000).catch(() => new Response("", { status: 503 })));
     return;
   }
 
@@ -170,7 +136,6 @@ self.addEventListener("push", (event) => {
   } catch {
     if (event.data) payload.body = event.data.text();
   }
-
   event.waitUntil(showSabkaNotification(payload));
 });
 
@@ -186,22 +151,16 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL(
-    event.notification.data?.url || "/",
-    self.location.origin,
-  ).href;
-
+  const target = new URL(event.notification.data?.url || "/", self.location.origin).href;
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
-        for (const client of clients) {
-          if ("focus" in client) {
-            client.navigate(target);
-            return client.focus();
-          }
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.navigate(target);
+          return client.focus();
         }
-        return self.clients.openWindow(target);
-      }),
+      }
+      return self.clients.openWindow(target);
+    }),
   );
 });
