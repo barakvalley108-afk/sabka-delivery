@@ -21,6 +21,9 @@ fi
 echo "Removing runtime DB migrations..."
 node "${script_dir}/patch-runtime-db-init.mjs"
 
+echo "Reducing Worker polling load..."
+node "${script_dir}/patch-worker-load.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
