@@ -15,6 +15,7 @@ import CustomerUiFixes from "./customer-ui-fixes";
 import CheckoutEnhancer from "./checkout-enhancer";
 import GroceryModern from "./grocery-modern";
 import CustomerGuestMode from "./customer-guest-mode";
+import SilentStoreSwitch from "./silent-store-switch";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -159,6 +160,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <CheckoutEnhancer />
         <GroceryModern />
         <CustomerGuestMode />
+        <SilentStoreSwitch />
         {children}
       </body>
     </html>
