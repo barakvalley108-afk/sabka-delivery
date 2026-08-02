@@ -18,6 +18,9 @@ if [[ ! -x "${vinext}" ]]; then
   exit 69
 fi
 
+echo "Applying safe mixed-cart patch..."
+node "${script_dir}/patch-mixed-cart.mjs"
+
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
