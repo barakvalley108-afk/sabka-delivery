@@ -13,7 +13,6 @@ import CartFlightAnimation from "./components/cart-flight-animation";
 import CheckoutAddressSync from "./components/checkout-address-sync";
 import MobileCustomerNav from "./components/mobile-customer-nav";
 import PwaRegister from "./pwa-register";
-import SingleDeviceSessionGuard from "./components/single-device-session-guard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -159,7 +158,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PwaRegister />
-        <SingleDeviceSessionGuard />
         <CartFlightAnimation />
         <CheckoutAddressSync />
         {children}
