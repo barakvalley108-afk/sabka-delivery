@@ -6,10 +6,12 @@ import "./brand.css";
 import "./royal-food.css";
 import "./customer-ui-fixes.css";
 import "./checkout-enhancer.css";
+import "./grocery-modern.css";
 
 import PwaRegister from "./pwa-register";
 import CustomerUiFixes from "./customer-ui-fixes";
 import CheckoutEnhancer from "./checkout-enhancer";
+import GroceryModern from "./grocery-modern";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -237,6 +239,7 @@ export default function RootLayout({
         <PwaRegister />
         <CustomerUiFixes />
         <CheckoutEnhancer />
+        <GroceryModern />
         {children}
       </body>
     </html>
