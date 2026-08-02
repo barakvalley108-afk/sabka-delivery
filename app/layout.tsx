@@ -8,6 +8,7 @@ import "./customer-ui-fixes.css";
 import "./checkout-enhancer.css";
 import "./grocery-modern.css";
 import "./grocery-contrast-fix.css";
+import "./grocery-product-smooth.css";
 
 import PwaRegister from "./pwa-register";
 import CustomerUiFixes from "./customer-ui-fixes";
