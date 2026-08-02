@@ -21,6 +21,9 @@ fi
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
+echo "Applying fresh loading patch..."
+node "${script_dir}/patch-loading-flow.mjs"
+
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
