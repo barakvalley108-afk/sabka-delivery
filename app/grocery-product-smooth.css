@@ -1,0 +1,48 @@
+/* Grocery-only image fit and scrolling performance improvements. */
+.apna-app.grocery-modern .product-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 430px;
+  box-shadow: 0 4px 14px rgba(18, 53, 39, 0.08) !important;
+}
+
+.apna-app.grocery-modern .product-visual {
+  width: 100%;
+  aspect-ratio: 1 / 0.9 !important;
+  min-height: 150px !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-color: #f4f7f5 !important;
+  image-rendering: auto;
+}
+
+.apna-app.grocery-modern .product-grid,
+.apna-app.grocery-modern .category-row,
+.apna-app.grocery-modern .store-row {
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 680px) {
+  .apna-app.grocery-modern .product-visual {
+    min-height: 160px !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .apna-app.grocery-modern .product-card {
+    contain-intrinsic-size: 410px;
+  }
+
+  .apna-app.grocery-modern .mobile-nav,
+  .apna-app.grocery-modern .hero-points > span {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apna-app.grocery-modern .product-card,
+  .apna-app.grocery-modern .product-visual {
+    animation: none !important;
+    transition: none !important;
+  }
+}
