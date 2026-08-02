@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect } from "react";
+import CustomerSessionGuard from "./components/customer-session-guard";
 
 const LOCAL_CATALOG_KEYS = [
   "sabka-delivery-market-catalog-v1",
@@ -70,5 +71,5 @@ export default function PwaRegister() {
     return () => window.removeEventListener("load", register);
   }, []);
 
-  return null;
+  return <CustomerSessionGuard />;
 }
