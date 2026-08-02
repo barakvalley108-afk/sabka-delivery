@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.env.SITES_PROJECT_ROOT || process.cwd();
-const target = path.join(root, "app", "page.tsx");
-let source = fs.readFileSync(target, "utf8");
+const pageTarget = path.join(root, "app", "page.tsx");
+const layoutTarget = path.join(root, "app", "layout.tsx");
+let source = fs.readFileSync(pageTarget, "utf8");
 
 source = source.replace(
   'const [showCatalogLoader, setShowCatalogLoader] = useState(false);',
@@ -57,5 +58,14 @@ if (source.includes("fallbackTimer")) {
   throw new Error("Loading patch incomplete: stale catalog fallback still exists.");
 }
 
-fs.writeFileSync(target, source);
+fs.writeFileSync(pageTarget, source);
+
+let layout = fs.readFileSync(layoutTarget, "utf8");
+if (!layout.includes('import "./loading-performance.css";')) {
+  layout = layout.replace(
+    'import "./grocery-product-smooth.css";',
+    'import "./grocery-product-smooth.css";\nimport "./loading-performance.css";',
+  );
+}
+fs.writeFileSync(layoutTarget, layout);
 console.log("Fresh-catalog loading patch applied.");
