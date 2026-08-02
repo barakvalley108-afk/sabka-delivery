@@ -1,4 +1,4 @@
-/* Isolated customer UI fixes: cart visibility and Buy Now only. */
+/* Isolated customer UI fixes: cart visibility, Buy Now and add-to-cart feedback only. */
 .product-action-buttons {
   display: flex;
   align-items: stretch;
@@ -18,6 +18,89 @@
   font-size: 10px !important;
   font-weight: 950 !important;
   padding-inline: 10px !important;
+}
+
+.cart-flying-item {
+  --cart-fly-x: 0px;
+  --cart-fly-y: 0px;
+  position: fixed;
+  z-index: 9999;
+  width: 56px;
+  height: 56px;
+  border: 3px solid #f2c557;
+  border-radius: 50%;
+  background-color: #fff;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: 0 12px 30px #0006;
+  pointer-events: none;
+  animation: cart-item-fly 720ms cubic-bezier(.2,.75,.25,1) forwards;
+  will-change: transform, opacity;
+}
+
+.product-added-pulse {
+  animation: product-added-pulse 520ms ease-out;
+}
+
+.cart-added-blink {
+  position: relative;
+  animation: cart-added-bounce 650ms cubic-bezier(.2,.9,.3,1);
+}
+
+.cart-added-blink::after {
+  content: "+1";
+  position: absolute;
+  right: 4px;
+  top: 2px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e33b2f;
+  color: #fff;
+  box-shadow: 0 5px 14px #0004;
+  font-size: 11px;
+  font-weight: 950;
+  animation: cart-count-pop 650ms ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes cart-item-fly {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translate3d(calc(var(--cart-fly-x) * .48), calc(var(--cart-fly-y) * .28 - 70px), 0) scale(.82) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--cart-fly-x), var(--cart-fly-y), 0) scale(.18) rotate(18deg);
+  }
+}
+
+@keyframes cart-added-bounce {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  25% { transform: scale(1.14) translateY(-4px); filter: brightness(1.2); }
+  48% { transform: scale(.94) translateY(1px); }
+  72% { transform: scale(1.07) translateY(-2px); }
+}
+
+@keyframes cart-count-pop {
+  0% { opacity: 0; transform: translateY(5px) scale(.4); }
+  28% { opacity: 1; transform: translateY(-8px) scale(1.18); }
+  72% { opacity: 1; transform: translateY(-12px) scale(1); }
+  100% { opacity: 0; transform: translateY(-22px) scale(.8); }
+}
+
+@keyframes product-added-pulse {
+  0%, 100% { transform: scale(1); box-shadow: inherit; }
+  40% { transform: scale(.985); box-shadow: 0 0 0 4px #e5b84d55, 0 12px 30px #0002; }
 }
 
 /* Cart must always cover the sticky customer header and start at the viewport top. */
@@ -47,6 +130,13 @@
   top: 0 !important;
   z-index: 5 !important;
   background: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-flying-item { display: none; }
+  .product-added-pulse,
+  .cart-added-blink,
+  .cart-added-blink::after { animation: none !important; }
 }
 
 @media (max-width: 680px) {
