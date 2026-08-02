@@ -4,12 +4,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
 import "./royal-food.css";
-import "./mobile-auth-center.css";
 import "./retail-mart-products.css";
 import "./mobile-checkout-button-fix.css";
 import "./fast-catalog-loader.css";
 
-import AutomaticGroceryImage from "./components/automatic-grocery-image";
 import CartFlightAnimation from "./components/cart-flight-animation";
 import CheckoutAddressSync from "./components/checkout-address-sync";
 import MobileCustomerNav from "./components/mobile-customer-nav";
@@ -159,7 +157,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PwaRegister />
-        <AutomaticGroceryImage />
         <CartFlightAnimation />
         <CheckoutAddressSync />
         {children}
