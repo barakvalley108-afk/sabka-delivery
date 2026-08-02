@@ -21,6 +21,9 @@ fi
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
+echo "Applying multi-store checkout patch..."
+node "${script_dir}/patch-multistore-checkout.mjs"
+
 echo "Applying fresh loading patch..."
 node "${script_dir}/patch-loading-flow.mjs"
 
