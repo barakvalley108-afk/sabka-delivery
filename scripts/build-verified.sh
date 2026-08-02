@@ -33,6 +33,9 @@ node "${script_dir}/patch-loading-flow.mjs"
 echo "Applying SEO schema patch..."
 node "${script_dir}/patch-seo-schema.mjs"
 
+echo "Applying panel order alerts..."
+node "${script_dir}/patch-panel-order-alerts.mjs"
+
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
