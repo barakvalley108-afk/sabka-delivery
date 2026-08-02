@@ -1,0 +1,19 @@
+.checkout-form{display:grid;gap:16px;padding:18px 22px 30px;background:linear-gradient(180deg,#fff 0%,#fbfcf8 100%)}
+.checkout-form>button[type="button"]{justify-self:start;border:0;background:none;color:#587063;font-weight:850;padding:4px 0}
+.checkout-form>label{display:grid;gap:8px;margin:0;color:#253129;font-size:13px;font-weight:900}
+.checkout-form>label input,.checkout-form>label textarea{width:100%;border:1px solid #dfe5df;border-radius:16px;padding:15px 16px;background:#fff;box-shadow:0 5px 16px #1730240a;color:#172019;outline:none;transition:.2s}
+.checkout-form>label input:focus,.checkout-form>label textarea:focus{border-color:#2d8b48;box-shadow:0 0 0 4px #2d8b4818}
+.checkout-form>label textarea{min-height:94px;resize:vertical}
+.checkout-reward,.checkout-coupons,.rider-tip-box{border:1px solid #ead9a5;border-radius:20px;padding:18px;background:linear-gradient(145deg,#fff9dd,#fffdf5);box-shadow:0 8px 24px #7c5a1510}
+.checkout-coupons{border-color:#eadfd1;background:linear-gradient(145deg,#fffaf2,#fff)}
+.checkout-reward>strong,.checkout-coupons>strong{font-size:16px}
+.checkout-form fieldset{display:grid;gap:10px;margin:0;border:1px solid #dfe5df;border-radius:20px;padding:16px 18px;background:#fff;box-shadow:0 8px 24px #1730240a}
+.checkout-form fieldset legend{padding:0 8px;font-size:17px;font-weight:900}
+.checkout-form fieldset label{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:10px 12px;border-radius:14px;background:#f7f9f6;font-weight:850}
+.checkout-form fieldset input{width:22px;height:22px;accent-color:#25823d}
+.rider-tip-box{display:grid;gap:14px;border-color:#cfe4d3;background:linear-gradient(145deg,#effaf1,#fff)}
+.rider-tip-head{display:flex;align-items:center;gap:12px}.rider-tip-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;background:#dff2e3;font-size:25px}.rider-tip-head div{display:grid;gap:3px}.rider-tip-head strong{font-size:16px}.rider-tip-head small{color:#758078;font-size:11px}
+.rider-tip-options{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.rider-tip-option{min-height:44px;border:1px solid #cbd9ce;border-radius:13px;background:#fff;color:#314238;font-weight:900}.rider-tip-option.active{border-color:#25823d;background:#25823d;color:#fff;box-shadow:0 7px 18px #25823d35}.rider-tip-option:disabled{opacity:.45;cursor:not-allowed}
+.rider-tip-custom-wrap{display:grid!important;grid-template-columns:auto minmax(110px,150px);align-items:center;justify-content:space-between;gap:12px!important;margin:0!important}.rider-tip-custom{min-height:44px!important;padding:10px 13px!important;text-align:center;font-weight:900}.rider-tip-note{margin:0;color:#5d6b62;font-size:11px;font-weight:750}
+.checkout-total{border:1px solid #dbe8d8!important;border-radius:20px!important;padding:18px 20px!important;background:linear-gradient(135deg,#f1f8ec,#fff)!important;box-shadow:0 8px 24px #1730240c}.checkout-total span{display:grid;gap:3px;font-size:16px}.checkout-total b{font-size:27px!important;color:#173d27}.place-order{min-height:58px!important;border-radius:17px!important;background:linear-gradient(135deg,#299246,#197537)!important;box-shadow:0 12px 28px #1d7c3930!important;font-size:18px!important;letter-spacing:-.02em}
+@media(max-width:680px){.checkout-form{padding:15px 16px 28px;gap:14px}.rider-tip-options{grid-template-columns:repeat(2,1fr)}.rider-tip-custom-wrap{grid-template-columns:1fr}.rider-tip-custom{width:100%}.checkout-reward,.checkout-coupons,.rider-tip-box{padding:16px;border-radius:18px}}
