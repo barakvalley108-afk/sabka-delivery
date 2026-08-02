@@ -1,0 +1,60 @@
+/* Lightweight customer loading screen: no stale UI flash and minimal GPU work. */
+.catalog-loading-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 18px !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.catalog-loading-screen .catalog-loading-card {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 10px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.catalog-loading-screen .catalog-loading-card > img {
+  width: 38px !important;
+  height: 38px !important;
+  object-fit: contain !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.catalog-loading-screen .catalog-loading-line {
+  width: 72px !important;
+  height: 3px !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: #e7ece9 !important;
+}
+
+.catalog-loading-screen .catalog-loading-line::after {
+  content: "";
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: #087f5b;
+  animation: sabka-loading-slide .75s ease-in-out infinite alternate;
+}
+
+@keyframes sabka-loading-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(150%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-loading-screen .catalog-loading-line::after { animation: none; width: 100%; }
+}
