@@ -42,14 +42,16 @@ const replacement = `  async function placeOrder(event: FormEvent<HTMLFormElemen
       }
 
       if (!storeGroups.size) {
-        throw new Error("Cart items load nahi hue. Dobara try karo.");
+        throw new Error("Cart items load nahi hue. Cart band karke dobara kholo.");
       }
 
       const groupedOrders = Array.from(storeGroups.entries());
+      const isMultiStore = groupedOrders.length > 1;
       const placedOrders: Array<{ orderCode: string; total: number; rewardOffer?: { title?: string } | null }> = [];
 
       for (let index = 0; index < groupedOrders.length; index += 1) {
         const [storeId, groupedItems] = groupedOrders[index];
+        const storeName = stores.find((store) => store.id === storeId)?.name || \`Store \${storeId}\`;
         const response = await fetch("/api/market-orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,17 +61,31 @@ const replacement = `  async function placeOrder(event: FormEvent<HTMLFormElemen
             storeId,
             address: form.get("address"),
             paymentMethod: form.get("payment"),
-            couponCode: index === 0 ? activeCoupon : "",
-            rewardOfferId: index === 0 ? eligibleReward?.id || null : null,
+            couponCode: !isMultiStore && index === 0 ? activeCoupon : "",
+            rewardOfferId: !isMultiStore && index === 0 ? eligibleReward?.id || null : null,
             items: groupedItems,
           }),
         });
 
-        const data = await response.json();
-        if (!response.ok) {
+        const rawBody = await response.text();
+        let data: { error?: string; order?: { orderCode: string; total: number; rewardOffer?: { title?: string } | null } } = {};
+        try {
+          data = rawBody ? JSON.parse(rawBody) : {};
+        } catch {
+          data = {};
+        }
+
+        if (!response.ok || !data.order) {
+          const exactReason =
+            data.error ||
+            (response.status === 409
+              ? \`\${storeName} abhi order accept nahi kar raha\`
+              : response.status >= 500
+                ? \`\${storeName} server error. Dobara try karo\`
+                : rawBody.trim().slice(0, 160) || \`\${storeName} ka order place nahi hua\`);
           const partialMessage = placedOrders.length
-            ? \`\${placedOrders.length} store ka order place ho gaya, lekin ek order fail hua: \${data.error || "Order place nahi hua"}\`
-            : data.error || "Order place nahi hua";
+            ? \`\${placedOrders.length} store ka order place ho gaya, lekin \${storeName} fail hua: \${exactReason}\`
+            : \`\${storeName}: \${exactReason}\`;
           throw new Error(partialMessage);
         }
 
@@ -90,7 +106,9 @@ const replacement = `  async function placeOrder(event: FormEvent<HTMLFormElemen
       void playSuccessSound();
     } catch (error) {
       const failureMessage =
-        error instanceof Error ? error.message : "Order place nahi hua";
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "Order place nahi hua. Dobara try karo.";
 
       setOrderFailure(failureMessage);
       setCheckout("failed");
