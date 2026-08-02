@@ -27,6 +27,9 @@ node "${script_dir}/patch-multistore-checkout.mjs"
 echo "Applying fresh loading patch..."
 node "${script_dir}/patch-loading-flow.mjs"
 
+echo "Applying SEO schema patch..."
+node "${script_dir}/patch-seo-schema.mjs"
+
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
