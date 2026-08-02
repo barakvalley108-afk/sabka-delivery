@@ -1,7 +1,7 @@
-const CACHE_NAME = "sabka-delivery-app-v8";
-const DATA_CACHE = "sabka-delivery-data-v3";
-const IMAGE_CACHE = "sabka-delivery-images-v3";
-const STATIC_CACHE = "sabka-delivery-static-v3";
+const CACHE_NAME = "sabka-delivery-app-v9";
+const DATA_CACHE = "sabka-delivery-data-v4";
+const IMAGE_CACHE = "sabka-delivery-images-v4";
+const STATIC_CACHE = "sabka-delivery-static-v4";
 
 const APP_SHELL = [
   "/offline.html",
