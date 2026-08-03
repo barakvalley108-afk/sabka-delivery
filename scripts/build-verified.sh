@@ -30,6 +30,9 @@ node "${script_dir}/patch-admin-load.mjs"
 echo "Adding monthly sales metric..."
 node "${script_dir}/patch-monthly-sales.mjs"
 
+echo "Showing order item variants in panels..."
+node "${script_dir}/patch-order-variant-display.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
