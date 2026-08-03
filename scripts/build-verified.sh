@@ -24,6 +24,9 @@ node "${script_dir}/patch-runtime-db-init.mjs"
 echo "Reducing Worker polling load..."
 node "${script_dir}/patch-worker-load.mjs"
 
+echo "Reducing Super Admin payload and fixing Retry..."
+node "${script_dir}/patch-admin-load.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
