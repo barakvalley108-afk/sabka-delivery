@@ -27,6 +27,9 @@ node "${script_dir}/patch-worker-load.mjs"
 echo "Reducing Super Admin payload and fixing Retry..."
 node "${script_dir}/patch-admin-load.mjs"
 
+echo "Adding monthly sales metric..."
+node "${script_dir}/patch-monthly-sales.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
