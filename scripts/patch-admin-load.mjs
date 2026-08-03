@@ -34,13 +34,14 @@ patch("app/api/admin/control/route.ts", (source) => {
 
 patch("app/super-admin/admin-console.tsx", (source) => {
   let next = source;
+  const retryAction = 'setError("");payloadSignature.current="";loading.current=false;mutating.current=false;window.setTimeout(()=>void load(),100)';
   next = next.replace(
     '<button onClick={()=>void load()}>↻ Retry</button>',
-    '<button onClick={()=>{setError("");payloadSignature.current="";loading.current=false;void load()}}>↻ Retry</button>',
+    `<button onClick={()=>{${retryAction}}}>↻ Retry</button>`,
   );
   next = next.replace(
     'if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p></main>;',
-    'if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p>{error?<button onClick={()=>{setError("");payloadSignature.current="";loading.current=false;void load()}}>Retry now</button>:null}</main>;',
+    `if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p>{error?<button onClick={()=>{${retryAction}}}>Retry now</button>:null}</main>;`,
   );
   return next;
 });
