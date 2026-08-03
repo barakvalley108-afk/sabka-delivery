@@ -34,16 +34,38 @@ patch("app/api/admin/control/route.ts", (source) => {
 
 patch("app/super-admin/admin-console.tsx", (source) => {
   let next = source;
-  const retryAction = 'setError("");payloadSignature.current="";loading.current=false;mutating.current=false;window.setTimeout(()=>void load(),100)';
+
+  // Force every manual retry to bypass browser/CDN caches.
   next = next.replace(
-    '<button onClick={()=>void load()}>↻ Retry</button>',
-    `<button onClick={()=>{${retryAction}}}>↻ Retry</button>`,
+    'fetch("/api/admin/control",{cache:"no-store",signal:controller.signal})',
+    'fetch(`/api/admin/control?refresh=${Date.now()}`,{cache:"no-store",headers:{"Cache-Control":"no-cache"},signal:controller.signal})',
   );
+
+  // Add a visible retry state and a real retry handler.
   next = next.replace(
-    'if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p></main>;',
-    `if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p>{error?<button onClick={()=>{${retryAction}}}>Retry now</button>:null}</main>;`,
+    'const [data,setData]=useState<Data|null>(null),[tab,setTab]=useState<Tab>("Dashboard"),[error,setError]=useState(""),[success,setSuccess]=useState(""),[busy,setBusy]=useState(false),[alerts,setAlerts]=useState(false);',
+    'const [data,setData]=useState<Data|null>(null),[tab,setTab]=useState<Tab>("Dashboard"),[error,setError]=useState(""),[success,setSuccess]=useState(""),[busy,setBusy]=useState(false),[alerts,setAlerts]=useState(false),[retrying,setRetrying]=useState(false);',
   );
+
+  const loadEnd = 'useLiveRefresh(load,5000,{runWhenHidden:alerts});';
+  const retryFunction = 'async function retryNow(){if(retrying)return;setRetrying(true);setError("");payloadSignature.current="";mutating.current=false;loading.current=false;try{await load()}finally{setRetrying(false)}}\n ';
+  if (!next.includes('async function retryNow()')) {
+    next = next.replace(loadEnd, `${loadEnd}\n ${retryFunction}`);
+  }
+
+  // Replace any existing top Retry implementation, regardless of old patch shape.
+  next = next.replace(
+    /<button onClick=\{\(\)=>\{[^}]*payloadSignature\.current[^}]*\}\}>↻ Retry<\/button>|<button onClick=\{\(\)=>void load\(\)\}>↻ Retry<\/button>/,
+    '<button disabled={retrying} onClick={()=>void retryNow()}>{retrying?"Refreshing…":"↻ Retry"}</button>',
+  );
+
+  // Make the empty/loading screen retry use the same handler.
+  next = next.replace(
+    /if\(!data\)return <main className="panel-loading">[\s\S]*?<\/main>;/,
+    'if(!data)return <main className="panel-loading"><img src="/images/sabka-delivery-logo.png" alt=""/><h1>Control room load ho raha hai…</h1><p>{error}</p>{error?<button disabled={retrying} onClick={()=>void retryNow()}>{retrying?"Refreshing…":"Retry now"}</button>:null}</main>;',
+  );
+
   return next;
 });
 
-console.log("Admin API payload reduced and Retry repaired.");
+console.log("Admin API payload reduced and Retry now forces a fresh request.");
