@@ -36,6 +36,9 @@ node "${script_dir}/patch-order-variant-display.mjs"
 echo "Applying global delivery charge..."
 node "${script_dir}/patch-global-delivery-charge.mjs"
 
+echo "Loading customer enhancers only on homepage..."
+node "${script_dir}/patch-customer-enhancers.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
