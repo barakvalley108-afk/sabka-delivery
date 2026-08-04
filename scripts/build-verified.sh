@@ -33,6 +33,9 @@ node "${script_dir}/patch-monthly-sales.mjs"
 echo "Showing order item variants in panels..."
 node "${script_dir}/patch-order-variant-display.mjs"
 
+echo "Applying global delivery charge..."
+node "${script_dir}/patch-global-delivery-charge.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
