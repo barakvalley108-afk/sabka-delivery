@@ -10,22 +10,8 @@ import "./grocery-modern.css";
 import "./grocery-contrast-fix.css";
 import "./grocery-product-smooth.css";
 
-import PwaRegister from "./pwa-register";
-import CustomerUiFixes from "./customer-ui-fixes";
-import CheckoutEnhancer from "./checkout-enhancer";
-import GroceryModern from "./grocery-modern";
-import CustomerGuestMode from "./customer-guest-mode";
-import SilentStoreSwitch from "./silent-store-switch";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sabkadelivery.in"),
@@ -33,19 +19,8 @@ export const metadata: Metadata = {
     default: "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
     template: "%s | Sabka Delivery",
   },
-  description:
-    "Order food, grocery and electronics online from Sabka Delivery in Lala Bazar, Hailakandi, Assam. Fast, safe and reliable local delivery.",
-  keywords: [
-    "Sabka Delivery",
-    "Sabka Delivery Lala Bazar",
-    "food delivery Lala Bazar",
-    "grocery delivery Lala Bazar",
-    "electronics delivery Lala Bazar",
-    "online food order Lala Bazar",
-    "delivery service Hailakandi",
-    "food delivery Assam",
-    "grocery delivery Assam",
-  ],
+  description: "Order food, grocery and electronics online from Sabka Delivery in Lala Bazar, Hailakandi, Assam. Fast, safe and reliable local delivery.",
+  keywords: ["Sabka Delivery", "Sabka Delivery Lala Bazar", "food delivery Lala Bazar", "grocery delivery Lala Bazar", "electronics delivery Lala Bazar", "online food order Lala Bazar", "delivery service Hailakandi", "food delivery Assam", "grocery delivery Assam"],
   authors: [{ name: "Sabka Delivery", url: "https://sabkadelivery.in" }],
   creator: "Sabka Delivery",
   publisher: "Sabka Delivery",
@@ -64,18 +39,10 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Sabka Delivery | Food, Grocery & Electronics Delivery in Lala Bazar",
-    description:
-      "Order food, grocery and electronics online in Lala Bazar, Hailakandi. Fast, safe and reliable local delivery.",
+    description: "Order food, grocery and electronics online in Lala Bazar, Hailakandi. Fast, safe and reliable local delivery.",
     url: "https://sabkadelivery.in",
     siteName: "Sabka Delivery",
-    images: [
-      {
-        url: "/images/sabka-delivery-logo.png",
-        width: 512,
-        height: 512,
-        alt: "Sabka Delivery Logo",
-      },
-    ],
+    images: [{ url: "/images/sabka-delivery-logo.png", width: 512, height: 512, alt: "Sabka Delivery Logo" }],
     locale: "en_IN",
     type: "website",
   },
@@ -87,24 +54,9 @@ export const metadata: Metadata = {
   },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Sabka Delivery" },
   formatDetection: { telephone: true, address: true, email: true },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   category: "Food and Grocery Delivery",
-  other: {
-    "theme-color": "#ffffff",
-    "mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-capable": "yes",
-    "apple-mobile-web-app-status-bar-style": "default",
-  },
+  other: { "theme-color": "#ffffff", "mobile-web-app-capable": "yes", "apple-mobile-web-app-capable": "yes", "apple-mobile-web-app-status-bar-style": "default" },
 };
 
 const localBusinessJsonLd = {
@@ -116,19 +68,8 @@ const localBusinessJsonLd = {
   image: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
   description: "Food, grocery and electronics delivery service in Lala Bazar, Hailakandi, Assam.",
   areaServed: { "@type": "Place", name: "Lala Bazar, Hailakandi, Assam" },
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Lala Bazar",
-    addressRegion: "Assam",
-    addressCountry: "IN",
-  },
-  contactPoint: {
-    "@type": "ContactPoint",
-    telephone: "+91-8011767897",
-    contactType: "customer support",
-    areaServed: "IN",
-    availableLanguage: ["English", "Hindi", "Bengali"],
-  },
+  address: { "@type": "PostalAddress", addressLocality: "Lala Bazar", addressRegion: "Assam", addressCountry: "IN" },
+  contactPoint: { "@type": "ContactPoint", telephone: "+91-8011767897", contactType: "customer support", areaServed: "IN", availableLanguage: ["English", "Hindi", "Bengali"] },
   sameAs: ["https://sabkadelivery.in"],
 };
 
@@ -136,33 +77,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <head>
-        <script
-          id="clear-stale-market-catalog"
-          dangerouslySetInnerHTML={{
-            __html: 'try{localStorage.removeItem("sabka-delivery-market-catalog-v1")}catch(e){}',
-          }}
-        />
-        <style
-          id="critical-logo-size"
-          dangerouslySetInnerHTML={{
-            __html:
-              '.logo>span.brand-mark{display:block;width:52px;height:52px;flex:0 0 52px;overflow:hidden}.logo>span.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}@media(max-width:680px){.logo>span.brand-mark{width:40px;height:40px;flex-basis:40px}}',
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
-        />
+        <script id="clear-stale-market-catalog" dangerouslySetInnerHTML={{ __html: 'try{localStorage.removeItem("sabka-delivery-market-catalog-v1")}catch(e){}' }} />
+        <style id="critical-logo-size" dangerouslySetInnerHTML={{ __html: '.logo>span.brand-mark{display:block;width:52px;height:52px;flex:0 0 52px;overflow:hidden}.logo>span.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}@media(max-width:680px){.logo>span.brand-mark{width:40px;height:40px;flex-basis:40px}}' }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <PwaRegister />
-        <CustomerUiFixes />
-        <CheckoutEnhancer />
-        <GroceryModern />
-        <CustomerGuestMode />
-        <SilentStoreSwitch />
-        {children}
-      </body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>
   );
 }
