@@ -60,6 +60,9 @@ node "${script_dir}/patch-seo-schema.mjs"
 echo "Applying panel order alerts..."
 node "${script_dir}/patch-panel-order-alerts.mjs"
 
+echo "Enabling lightweight Super Admin bootstrap..."
+node "${script_dir}/patch-admin-bootstrap.mjs"
+
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
