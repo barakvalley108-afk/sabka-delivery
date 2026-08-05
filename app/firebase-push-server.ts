@@ -95,7 +95,7 @@ async function getAccessToken(account: ServiceAccount) {
 export async function sendPanelPush(message: PushMessage, audience: PushAudience = {}) {
   try {
     const account = await getServiceAccount();
-    if (!account) return;
+    if (!account) return { sent: 0, failed: 0, reason: "missing-service-account" };
     const db = await ensureControlTables();
     await db.prepare(`CREATE TABLE IF NOT EXISTS market_push_subscriptions (
       token TEXT PRIMARY KEY,
@@ -109,21 +109,26 @@ export async function sendPanelPush(message: PushMessage, audience: PushAudience
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`).run();
 
-    const conditions = ["is_active=1", "role='SUPER_ADMIN'"];
+    const targetParts = ["role='SUPER_ADMIN'"];
     const binds: number[] = [];
     if (audience.storeId) {
-      conditions.push("store_id=?");
+      targetParts.push("store_id=?");
       binds.push(audience.storeId);
     }
-    if (audience.includeRiders) conditions.push("role='RIDER' OR panel_type='DELIVERY'");
+    if (audience.includeRiders) targetParts.push("role='RIDER'", "panel_type='DELIVERY'");
 
     const rows = await db.prepare(
-      `SELECT token FROM market_push_subscriptions WHERE ${conditions.map((x) => `(${x})`).join(" OR ")} ORDER BY updated_at DESC LIMIT 50`,
+      `SELECT token FROM market_push_subscriptions
+       WHERE is_active=1 AND (${targetParts.join(" OR ")})
+       ORDER BY updated_at DESC LIMIT 50`,
     ).bind(...binds).all<{ token: string }>();
-    if (!rows.results.length) return;
+    if (!rows.results.length) return { sent: 0, failed: 0, reason: "no-active-subscriptions" };
 
     const accessToken = await getAccessToken(account);
     const endpoint = `https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`;
+    let sent = 0;
+    let failed = 0;
+
     await Promise.all(rows.results.map(async ({ token }) => {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -135,24 +140,44 @@ export async function sendPanelPush(message: PushMessage, audience: PushAudience
           message: {
             token,
             data: {
-              title: message.title,
-              body: message.body,
               url: message.url,
               tag: message.tag,
-              requireInteraction: "true",
             },
             webpush: {
               headers: { Urgency: "high", TTL: "86400" },
+              notification: {
+                title: message.title,
+                body: message.body,
+                icon: "/images/sabka-delivery-logo.png",
+                badge: "/images/sabka-delivery-logo.png",
+                tag: message.tag,
+                renotify: true,
+                requireInteraction: true,
+                vibrate: [300, 120, 300, 120, 600],
+                data: { url: message.url },
+              },
               fcm_options: { link: message.url },
             },
           },
         }),
       });
+
+      if (response.ok) {
+        sent += 1;
+        return;
+      }
+
+      failed += 1;
+      const errorText = await response.text().catch(() => "");
+      console.error("Firebase message rejected", response.status, errorText.slice(0, 500));
       if (response.status === 404 || response.status === 410) {
         await db.prepare("UPDATE market_push_subscriptions SET is_active=0 WHERE token=?").bind(token).run();
       }
     }));
+
+    return { sent, failed };
   } catch (error) {
     console.error("Firebase push send failed", error);
+    return { sent: 0, failed: 1, reason: "send-error" };
   }
 }
