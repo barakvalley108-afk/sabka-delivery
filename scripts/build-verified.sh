@@ -39,6 +39,9 @@ node "${script_dir}/patch-global-delivery-charge.mjs"
 echo "Loading customer enhancers only on homepage..."
 node "${script_dir}/patch-customer-enhancers.mjs"
 
+echo "Connecting Firebase push notifications..."
+node "${script_dir}/patch-firebase-push.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
