@@ -42,6 +42,9 @@ node "${script_dir}/patch-customer-enhancers.mjs"
 echo "Connecting Firebase push notifications..."
 node "${script_dir}/patch-firebase-push.mjs"
 
+echo "Allowing private coupons to verify at checkout..."
+node "${script_dir}/patch-private-coupons.mjs"
+
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
 
