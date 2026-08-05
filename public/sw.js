@@ -10,8 +10,9 @@ firebase.initializeApp({
   appId: "1:979418462252:web:7aeed3a4f5d9ba141c7989"
 });
 
-const messaging = firebase.messaging();
-const CACHE_NAME = "sabka-delivery-app-v5";
+firebase.messaging();
+
+const CACHE_NAME = "sabka-delivery-app-v6";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -27,20 +28,9 @@ function showSabkaNotification(payload) {
     tag: payload.tag || "sabka-delivery-update",
     renotify: true,
     requireInteraction: payload.requireInteraction !== false,
-    vibrate: [250, 120, 250, 120, 500]
+    vibrate: [300, 120, 300, 120, 600]
   });
 }
-
-messaging.onBackgroundMessage((payload) => {
-  const data = payload.data || {};
-  return showSabkaNotification({
-    title: data.title || payload.notification?.title || "Sabka Delivery",
-    body: data.body || payload.notification?.body || "You have a new update.",
-    url: data.url || "/",
-    tag: data.tag || "sabka-delivery-order",
-    requireInteraction: data.requireInteraction !== "false"
-  });
-});
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -83,17 +73,6 @@ self.addEventListener("fetch", (event) => {
         .catch(() => caches.match(request))
     );
   }
-});
-
-self.addEventListener("push", (event) => {
-  if (!event.data) return;
-  let payload = { title: "Sabka Delivery", body: "You have a new update." };
-  try {
-    payload = { ...payload, ...event.data.json() };
-  } catch {
-    payload.body = event.data.text();
-  }
-  event.waitUntil(showSabkaNotification(payload));
 });
 
 self.addEventListener("message", (event) => {
