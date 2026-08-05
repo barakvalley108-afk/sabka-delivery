@@ -1,4 +1,17 @@
-const CACHE_NAME = "sabka-delivery-app-v4";
+importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDbMNVCNRSIigghquZQ96OBrRrrFN131dU",
+  authDomain: "sabka-delivery.firebaseapp.com",
+  projectId: "sabka-delivery",
+  storageBucket: "sabka-delivery.firebasestorage.app",
+  messagingSenderId: "979418462252",
+  appId: "1:979418462252:web:7aeed3a4f5d9ba141c7989"
+});
+
+const messaging = firebase.messaging();
+const CACHE_NAME = "sabka-delivery-app-v5";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
@@ -12,84 +25,83 @@ function showSabkaNotification(payload) {
     badge: "/images/sabka-delivery-logo.png",
     data: { url: payload.url || "/" },
     tag: payload.tag || "sabka-delivery-update",
-    renotify: true
+    renotify: true,
+    requireInteraction: payload.requireInteraction !== false,
+    vibrate: [250, 120, 250, 120, 500]
   });
 }
+
+messaging.onBackgroundMessage((payload) => {
+  const data = payload.data || {};
+  return showSabkaNotification({
+    title: data.title || payload.notification?.title || "Sabka Delivery",
+    body: data.body || payload.notification?.body || "You have a new update.",
+    url: data.url || "/",
+    tag: data.tag || "sabka-delivery-order",
+    requireInteraction: data.requireInteraction !== "false"
+  });
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      Promise.all(
-        APP_SHELL.map((url) =>
-          cache.add(new Request(url, { cache: "reload" })),
-        ),
-      ),
-    ),
+      Promise.all(APP_SHELL.map((url) => cache.add(new Request(url, { cache: "reload" }))))
+    )
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter(
-              (key) => key.startsWith("sabka-delivery-app-") && key !== CACHE_NAME,
-            )
-            .map((key) => caches.delete(key)),
-        ),
-      )
-      .then(() => self.clients.claim()),
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith("sabka-delivery-app-") && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
-
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match("/offline.html"))
-    );
+    event.respondWith(fetch(request).catch(() => caches.match("/offline.html")));
     return;
   }
 
   if (url.pathname.startsWith("/images/") || url.pathname === "/manifest.webmanifest") {
     event.respondWith(
       fetch(request, { cache: "no-cache" })
-          .then((response) => {
-            if (response.ok) {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            }
-            return response;
-          })
-          .catch(() => caches.match(request)),
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
   }
 });
 
 self.addEventListener("push", (event) => {
+  if (!event.data) return;
   let payload = { title: "Sabka Delivery", body: "You have a new update." };
   try {
     payload = { ...payload, ...event.data.json() };
   } catch {
-    if (event.data) payload.body = event.data.text();
+    payload.body = event.data.text();
   }
-
-  event.waitUntil(
-    showSabkaNotification(payload)
-  );
+  event.waitUntil(showSabkaNotification(payload));
 });
 
 self.addEventListener("message", (event) => {
   const payload = event.data || {};
+  if (payload.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (payload.type !== "SABKA_NOTIFY") return;
   event.waitUntil(showSabkaNotification(payload));
 });
