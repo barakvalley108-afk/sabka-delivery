@@ -42,9 +42,28 @@ export async function GET() {
       `SELECT
          (SELECT count(*) FROM market_orders
            WHERE date(datetime(created_at,'+5 hours','+30 minutes'))=date(datetime('now','+5 hours','+30 minutes'))) totalOrders,
-         (SELECT coalesce(sum(total),0) FROM market_orders
+         (SELECT coalesce(sum(subtotal),0) FROM market_orders
            WHERE status='DELIVERED'
              AND date(datetime(created_at,'+5 hours','+30 minutes'))=date(datetime('now','+5 hours','+30 minutes'))) totalSales,
+         (SELECT coalesce(sum(delivery_fee),0) FROM market_orders
+           WHERE status='DELIVERED'
+             AND date(datetime(created_at,'+5 hours','+30 minutes'))=date(datetime('now','+5 hours','+30 minutes'))) deliveryCharges,
+         (SELECT coalesce(sum(subtotal),0) FROM market_orders
+           WHERE status='DELIVERED'
+             AND strftime('%Y-%m',datetime(created_at,'+5 hours','+30 minutes'))=strftime('%Y-%m',datetime('now','+5 hours','+30 minutes'))) monthlySales,
+         (SELECT coalesce(sum(delivery_fee),0) FROM market_orders
+           WHERE status='DELIVERED'
+             AND strftime('%Y-%m',datetime(created_at,'+5 hours','+30 minutes'))=strftime('%Y-%m',datetime('now','+5 hours','+30 minutes'))) monthlyDeliveryCharges,
+         (SELECT coalesce(sum(coalesce(a.tip,0)),0)
+            FROM market_delivery_assignments a
+            JOIN market_orders o ON o.order_code=a.order_code
+           WHERE a.status='DELIVERED' AND o.status='DELIVERED'
+             AND date(datetime(a.delivered_at,'+5 hours','+30 minutes'))=date(datetime('now','+5 hours','+30 minutes'))) todayTips,
+         (SELECT coalesce(sum(coalesce(a.tip,0)),0)
+            FROM market_delivery_assignments a
+            JOIN market_orders o ON o.order_code=a.order_code
+           WHERE a.status='DELIVERED' AND o.status='DELIVERED'
+             AND strftime('%Y-%m',datetime(a.delivered_at,'+5 hours','+30 minutes'))=strftime('%Y-%m',datetime('now','+5 hours','+30 minutes'))) monthlyTips,
          (SELECT count(*) FROM market_orders
            WHERE status NOT IN ('DELIVERED','CANCELLED')
              AND date(datetime(created_at,'+5 hours','+30 minutes'))=date(datetime('now','+5 hours','+30 minutes'))) activeOrders,
@@ -54,32 +73,44 @@ export async function GET() {
     ),
   ]);
 
-  return Response.json({
-    owner: session.displayName,
-    stores: [],
-    accounts: [],
-    riders: [],
-    payouts: [],
-    orders: orders.results,
-    orderItems: orderItems.results,
-    items: [],
-    notifications: notifications.results,
-    settings: Object.fromEntries(
-      settings.results.map((row) => [String(row.key), String(row.value)]),
-    ),
-    promotions: [],
-    offers: [],
-    content: [],
-    categories: [],
-    sections: [],
-    summary: summary.results[0] || {
-      totalOrders: 0,
-      totalSales: 0,
-      activeOrders: 0,
-      openStores: 0,
-      onlineRiders: 0,
-      activePanels: 0,
+  return Response.json(
+    {
+      owner: session.displayName,
+      stores: [],
+      accounts: [],
+      riders: [],
+      payouts: [],
+      orders: orders.results,
+      orderItems: orderItems.results,
+      items: [],
+      notifications: notifications.results,
+      settings: Object.fromEntries(
+        settings.results.map((row) => [String(row.key), String(row.value)]),
+      ),
+      promotions: [],
+      offers: [],
+      content: [],
+      categories: [],
+      sections: [],
+      summary: summary.results[0] || {
+        totalOrders: 0,
+        totalSales: 0,
+        deliveryCharges: 0,
+        monthlySales: 0,
+        monthlyDeliveryCharges: 0,
+        todayTips: 0,
+        monthlyTips: 0,
+        activeOrders: 0,
+        openStores: 0,
+        onlineRiders: 0,
+        activePanels: 0,
+      },
+      bootstrap: true,
     },
-    bootstrap: true,
-  });
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      },
+    },
+  );
 }
