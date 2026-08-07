@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from "karan.jpg";
 import FounderSchema from "@/components/founder/FounderSchema";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export default function FounderPage() {
   const currentYear = new Date().getFullYear();
   const march20 = new Date(currentYear, 2, 20);
 
-  let currentClass = 8;
+  let currentClass = 7;
 
   if (new Date() >= march20) {
     currentClass += currentYear - 2026 + 1;
