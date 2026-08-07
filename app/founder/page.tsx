@@ -1,10 +1,4 @@
-"<Image
-  src="/founder/karan.jpg"
-  width={220}
-  height={220}
-  alt="Karan Nath"
-  className="rounded-full mx-auto border-4 border-yellow-500"
-/>";
+import Image from "next/image";
 import FounderSchema from "@/components/founder/FounderSchema";
 
 export const metadata = {
