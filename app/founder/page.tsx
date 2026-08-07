@@ -1,4 +1,4 @@
-import Image from "<Image
+"<Image
   src="/founder/karan.jpg"
   width={220}
   height={220}
