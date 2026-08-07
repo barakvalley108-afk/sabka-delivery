@@ -1,4 +1,5 @@
 import Image from "next/image";
+import FounderSchema from "@/components/founder/FounderSchema";
 
 export const metadata = {
   title: "Karan Nath | Founder & CEO | Sabka Delivery",
@@ -20,10 +21,11 @@ export default function FounderPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
+      <FounderSchema />
+
       <div className="max-w-5xl mx-auto px-6 py-12">
 
         <div className="text-center">
-
           <Image
             src="/founder/karan.jpg"
             width={220}
@@ -43,7 +45,6 @@ export default function FounderPage() {
           <p className="text-yellow-300 text-lg mt-2">
             Sabka Delivery
           </p>
-
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mt-14">
