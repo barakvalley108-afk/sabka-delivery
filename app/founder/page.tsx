@@ -1,4 +1,4 @@
-import Image from "karan.jpg";
+import Image from "public/founder/karan.jpg";
 import FounderSchema from "@/components/founder/FounderSchema";
 
 export const metadata = {
