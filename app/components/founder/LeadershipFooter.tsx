@@ -7,7 +7,7 @@ export default function LeadershipFooter() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-yellow-400">
-            Leadership
+            Sabka Delivery
           </p>
           <h2 className="mt-2 text-3xl font-bold md:text-4xl">
             Owners & Founders of Sabka Delivery
@@ -18,7 +18,7 @@ export default function LeadershipFooter() {
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-3">
           <article className="overflow-hidden rounded-3xl border border-yellow-500/30 bg-zinc-950 shadow-2xl">
             <div className="flex flex-col items-center p-8 text-center">
               <img
@@ -60,6 +60,19 @@ export default function LeadershipFooter() {
               </div>
             </div>
           </article>
+
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
+            <h3 className="text-2xl font-bold text-yellow-400">Quick Links</h3>
+            <p className="mt-2 text-sm text-gray-400">Start with Food or Grocery delivery.</p>
+            <nav className="mt-6 flex flex-col gap-3" aria-label="Quick Links">
+              <a href="/food-delivery" className="rounded-xl border border-zinc-800 bg-black px-4 py-3 font-semibold transition hover:border-yellow-500 hover:text-yellow-400">
+                🍔 Food Delivery
+              </a>
+              <a href="/grocery-delivery" className="rounded-xl border border-zinc-800 bg-black px-4 py-3 font-semibold transition hover:border-yellow-500 hover:text-yellow-400">
+                🛒 Grocery Delivery
+              </a>
+            </nav>
+          </div>
         </div>
 
         <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 text-center">
