@@ -50,6 +50,45 @@ update("app/api/market-orders/route.ts", (source) =>
   ),
 );
 
+// Keep the Super Admin's rider earnings in sync with the delivery fee stored
+// on each delivered assignment instead of the old hard-coded ₹20 amount.
+update("app/api/admin/control/route.ts", (source) => {
+  let next = source.replace(
+    "coalesce((SELECT sum(20+coalesce(a.tip,0))",
+    "coalesce((SELECT sum(coalesce(a.delivery_fee,20)+coalesce(a.tip,0))",
+  );
+
+  const oldAssign = `    await db
+      .prepare(
+        \`INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp)
+         VALUES (?,?,'ASSIGNED',20,?)
+         ON CONFLICT(order_code) DO UPDATE SET rider_id=excluded.rider_id,status='ASSIGNED',delivery_fee=20,delivery_otp=excluded.delivery_otp\`,
+      )
+      .bind(orderCode, Number(body.riderId), otp)
+      .run();`;
+  const newAssign = `    const order = await db
+      .prepare("SELECT delivery_fee deliveryFee,status FROM market_orders WHERE order_code=?")
+      .bind(orderCode)
+      .first<{ deliveryFee: number; status: string }>();
+    if (!order)
+      return Response.json({ error: "Order nahi mila" }, { status: 404 });
+    if (!["CONFIRMED","PREPARING","PACKING","READY_FOR_PICKUP"].includes(order.status))
+      return Response.json({ error: "Order rider assignment ke liye ready nahi hai" }, { status: 409 });
+    const deliveryFee = Number.isFinite(Number(order.deliveryFee)) && Number(order.deliveryFee) >= 0
+      ? Number(order.deliveryFee)
+      : 20;
+    await db
+      .prepare(
+        \`INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp)
+         VALUES (?,?,'ASSIGNED',?,?)
+         ON CONFLICT(order_code) DO UPDATE SET rider_id=excluded.rider_id,status='ASSIGNED',delivery_fee=excluded.delivery_fee,delivery_otp=excluded.delivery_otp\`,
+      )
+      .bind(orderCode, Number(body.riderId), deliveryFee, otp)
+      .run();`;
+  if (next.includes(oldAssign)) next = next.replace(oldAssign, newAssign);
+  return next;
+});
+
 // Invalidate the old client catalog cache after this fix so a previously
 // cached ₹20 section value cannot survive the deployment.
 update("app/page.tsx", (source) =>
@@ -82,4 +121,4 @@ update("app/page.tsx", (source) => {
   return source.replace(staleBlock, fixedBlock);
 });
 
-console.log("Section-specific delivery charges now override the global fallback, and stale client fee data is invalidated safely.");
+console.log("Section-specific delivery charges now override the global fallback, stale client fee data is invalidated, and admin rider fees use the configured order fee.");
