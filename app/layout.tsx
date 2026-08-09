@@ -10,6 +10,7 @@ import "./grocery-modern.css";
 import "./grocery-contrast-fix.css";
 import "./grocery-product-smooth.css";
 import PushNotifications from "./push-notifications";
+import LeadershipFooter from "./components/founder/LeadershipFooter";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -28,13 +29,18 @@ export const metadata: Metadata = {
     "Sabka Delivery founder",
     "Karan Nath",
     "Karan Nath Sabka Delivery",
+    "Prem Kumar Nath",
+    "Prem Kumar Nath Sabka Delivery",
     "Sabka Delivery Lala Bazar",
     "food delivery Lala Bazar",
     "grocery delivery Lala Bazar",
     "electronics delivery Lala Bazar",
     "delivery service Hailakandi",
   ],
-  authors: [{ name: "Karan Nath", url: "https://sabkadelivery.in/founder" }],
+  authors: [
+    { name: "Karan Nath", url: "https://sabkadelivery.in/founder" },
+    { name: "Prem Kumar Nath", url: "https://sabkadelivery.in/about" },
+  ],
   creator: "Karan Nath",
   publisher: "Sabka Delivery",
   applicationName: "Sabka Delivery",
@@ -148,7 +154,19 @@ const organizationJsonLd = {
       jobTitle: "Founder and Owner",
       worksFor: { "@id": "https://sabkadelivery.in/#organization" },
       affiliation: { "@id": "https://sabkadelivery.in/#organization" },
+      image: "https://sabkadelivery.in/founder/karan.jpg",
       description: "Karan Nath is the founder and owner of Sabka Delivery.",
+    },
+    {
+      "@type": "Person",
+      "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+      name: "Prem Kumar Nath",
+      url: "https://sabkadelivery.in/about",
+      jobTitle: "Owner",
+      worksFor: { "@id": "https://sabkadelivery.in/#organization" },
+      affiliation: { "@id": "https://sabkadelivery.in/#organization" },
+      image: "https://sabkadelivery.in/founder/prem.png",
+      description: "Prem Kumar Nath is an owner of Sabka Delivery.",
     },
   ],
 };
@@ -180,6 +198,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PushNotifications />
         {children}
+        <LeadershipFooter />
       </body>
     </html>
   );
