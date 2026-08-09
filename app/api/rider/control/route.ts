@@ -54,8 +54,8 @@ export async function GET() {
       .bind(session.riderId),
     db
       .prepare(
-        `SELECT o.order_code orderCode,o.area,o.total,s.name storeName,20 deliveryFee,
-      a.tip,a.delivered_at deliveredAt FROM market_delivery_assignments a
+        `SELECT o.order_code orderCode,o.area,o.total,s.name storeName,
+      a.delivery_fee deliveryFee,a.tip,a.delivered_at deliveredAt FROM market_delivery_assignments a
       JOIN market_orders o ON o.order_code=a.order_code JOIN market_stores s ON s.id=o.store_id
       WHERE a.rider_id=? AND a.status='DELIVERED' ORDER BY a.delivered_at DESC LIMIT 80`,
       )
@@ -70,18 +70,18 @@ export async function GET() {
     db
       .prepare(
         `SELECT
-           coalesce((SELECT sum(20+coalesce(tip,0))
-                     FROM market_delivery_assignments
-                     WHERE rider_id=? AND status='DELIVERED'),0) grossEarnings,
-           coalesce((SELECT sum(amount) FROM market_payouts
-                     WHERE payee_type='RIDER' AND payee_id=?
-                       AND status IN ('PENDING','APPROVED','PAID')),0) withdrawn`,
+           coalesce((SELECT sum(coalesce(a.delivery_fee,20)+coalesce(a.tip,0))
+                     FROM market_delivery_assignments a
+                     WHERE a.rider_id=? AND a.status='DELIVERED'),0) grossEarnings,
+           coalesce((SELECT sum(p.amount) FROM market_payouts p
+                     WHERE p.payee_type='RIDER' AND p.payee_id=?
+                       AND p.status IN ('PENDING','APPROVED','PAID')),0) withdrawn`,
       )
       .bind(session.riderId, session.riderId),
     db
       .prepare(
         `SELECT count(*) todayOrders,
-                coalesce(sum(20+coalesce(a.tip,0)),0) todayEarnings,
+                coalesce(sum(coalesce(a.delivery_fee,20)+coalesce(a.tip,0)),0) todayEarnings,
                 coalesce(sum(CASE WHEN o.payment_method='COD' THEN o.total ELSE 0 END),0) todayCod
          FROM market_delivery_assignments a
          JOIN market_orders o ON o.order_code=a.order_code
@@ -210,20 +210,31 @@ export async function PATCH(request: Request) {
         { error: "Order kisi aur rider ko mil gaya" },
         { status: 409 },
       );
+    const order = await db
+      .prepare("SELECT delivery_fee deliveryFee,status FROM market_orders WHERE order_code=?")
+      .bind(orderCode)
+      .first<{ deliveryFee: number; status: string }>();
+    if (!order)
+      return Response.json({ error: "Order nahi mila" }, { status: 404 });
+    if (order.status !== "READY_FOR_PICKUP")
+      return Response.json({ error: "Order abhi pickup ke liye ready nahi hai" }, { status: 409 });
+    const deliveryFee = Number.isFinite(Number(order.deliveryFee)) && Number(order.deliveryFee) >= 0
+      ? Number(order.deliveryFee)
+      : 20;
     const otp = String(Math.floor(1000 + Math.random() * 9000));
     if (existing)
       await db
         .prepare(
-          "UPDATE market_delivery_assignments SET status='ACTIVE',accepted_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?",
+          "UPDATE market_delivery_assignments SET status='ACTIVE',delivery_fee=?,accepted_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?",
         )
-        .bind(orderCode, session.riderId)
+        .bind(deliveryFee, orderCode, session.riderId)
         .run();
     else
       await db
         .prepare(
-          "INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp) VALUES (?,?,'ACTIVE',20,?)",
+          "INSERT INTO market_delivery_assignments (order_code,rider_id,status,delivery_fee,delivery_otp) VALUES (?,?,'ACTIVE',?,?)",
         )
-        .bind(orderCode, session.riderId, otp)
+        .bind(orderCode, session.riderId, deliveryFee, otp)
         .run();
     await db.batch([
       db
@@ -247,21 +258,28 @@ export async function PATCH(request: Request) {
       otp = String(body.otp || "");
     const assignment = await db
       .prepare(
-        "SELECT delivery_otp deliveryOtp FROM market_delivery_assignments WHERE order_code=? AND rider_id=? AND status='ACTIVE'",
+        `SELECT a.delivery_otp deliveryOtp,a.delivery_fee deliveryFee,a.tip,
+                o.delivery_fee orderDeliveryFee
+         FROM market_delivery_assignments a
+         JOIN market_orders o ON o.order_code=a.order_code
+         WHERE a.order_code=? AND a.rider_id=? AND a.status='ACTIVE'`,
       )
       .bind(orderCode, session.riderId)
-      .first<{ deliveryOtp: string }>();
+      .first<{ deliveryOtp: string; deliveryFee: number; tip: number; orderDeliveryFee: number }>();
     if (!assignment || assignment.deliveryOtp !== otp)
       return Response.json(
         { error: "Customer delivery OTP galat hai" },
         { status: 409 },
       );
+    const deliveryFee = Number.isFinite(Number(assignment.orderDeliveryFee)) && Number(assignment.orderDeliveryFee) >= 0
+      ? Number(assignment.orderDeliveryFee)
+      : Number(assignment.deliveryFee || 20);
     await db.batch([
       db
         .prepare(
-          "UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=20,delivered_at=CURRENT_TIMESTAMP WHERE order_code=?",
+          "UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?",
         )
-        .bind(orderCode),
+        .bind(deliveryFee, orderCode, session.riderId),
       db
         .prepare(
           "UPDATE market_orders SET status='DELIVERED' WHERE order_code=?",
@@ -280,32 +298,32 @@ export async function PATCH(request: Request) {
       db
         .prepare(
           `UPDATE market_riders
-           SET weekly_payout=weekly_payout+20+
-                 coalesce((SELECT tip FROM market_delivery_assignments WHERE order_code=?),0),
+           SET weekly_payout=weekly_payout+
+                 ?+coalesce((SELECT tip FROM market_delivery_assignments WHERE order_code=?),0),
                cod_collection=cod_collection+
                  coalesce((SELECT CASE WHEN payment_method='COD' THEN total ELSE 0 END
                            FROM market_orders WHERE order_code=?),0),
                updated_at=CURRENT_TIMESTAMP
            WHERE id=?`,
         )
-        .bind(orderCode, orderCode, session.riderId),
+        .bind(deliveryFee, orderCode, orderCode, session.riderId),
       db
         .prepare(
           `INSERT INTO market_wallet_transactions
            (rider_id,type,amount,balance_after,order_code,note)
            VALUES (
              ?,'DELIVERY_EARNING',
-             20+coalesce((SELECT tip FROM market_delivery_assignments WHERE order_code=?),0),
-             coalesce((SELECT sum(20+coalesce(tip,0))
-                       FROM market_delivery_assignments
-                       WHERE rider_id=? AND status='DELIVERED'),0)-
+             ?+coalesce((SELECT tip FROM market_delivery_assignments WHERE order_code=?),0),
+             coalesce((SELECT sum(coalesce(a.delivery_fee,20)+coalesce(a.tip,0))
+                       FROM market_delivery_assignments a
+                       WHERE a.rider_id=? AND a.status='DELIVERED'),0)-
              coalesce((SELECT sum(amount) FROM market_payouts
                        WHERE payee_type='RIDER' AND payee_id=?
                          AND status IN ('PENDING','APPROVED','PAID')),0),
              ?,'Delivery completed'
            )`,
         )
-        .bind(session.riderId, orderCode, session.riderId, session.riderId, orderCode),
+        .bind(session.riderId, deliveryFee, orderCode, session.riderId, session.riderId, orderCode),
       db
         .prepare(
           "INSERT INTO market_admin_notifications (type,title,message,order_code) VALUES ('DELIVERED','Order delivered',?,?)",
@@ -340,7 +358,7 @@ export async function PATCH(request: Request) {
     const wallet = await db
       .prepare(
         `SELECT r.upi_id upiId,
-           coalesce((SELECT sum(20+coalesce(a.tip,0))
+           coalesce((SELECT sum(coalesce(a.delivery_fee,20)+coalesce(a.tip,0))
                      FROM market_delivery_assignments a
                      WHERE a.rider_id=r.id AND a.status='DELIVERED'),0)-
            coalesce((SELECT sum(p.amount) FROM market_payouts p
