@@ -1,14 +1,16 @@
 export default function LeadershipFooter() {
   return (
     <>
-      {/* Desktop-only top About Us link. Hidden on mobile so mobile UI and bottom navigation stay unchanged. */}
-      <a
-        href="/about"
-        className="fixed right-6 top-[78px] z-[90] hidden items-center rounded-xl border border-yellow-500/50 bg-black/95 px-4 py-2 text-sm font-bold text-yellow-400 shadow-xl backdrop-blur-md transition hover:border-yellow-400 hover:bg-zinc-900 hover:text-yellow-300 md:inline-flex"
-        aria-label="About Us"
-      >
-        About Us
-      </a>
+      {/* Desktop-only About Us shortcut. Mobile UI and bottom navigation remain untouched. */}
+      <div className="fixed inset-x-0 top-[68px] z-[9999] hidden justify-end px-6 pointer-events-none md:flex">
+        <a
+          href="/about"
+          className="pointer-events-auto inline-flex items-center rounded-xl border border-yellow-500/60 bg-black px-5 py-2 text-sm font-bold text-yellow-400 shadow-2xl transition hover:border-yellow-300 hover:bg-zinc-900 hover:text-yellow-300"
+          aria-label="About Us"
+        >
+          About Us
+        </a>
+      </div>
 
       <section
         id="leadership"
