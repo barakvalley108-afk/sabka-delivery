@@ -1,35 +1,33 @@
 export const metadata = {
-  title: "About Sabka Delivery | Karan Nath & Prem Kumar Nath",
+  title: "About Sabka Delivery | Prem Kumar Nath & Karan Nath",
   description:
-    "Learn about Sabka Delivery and its two equal owners and founders, Karan Nath and Prem Kumar Nath.",
+    "Learn about Sabka Delivery, owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
   keywords: [
     "Sabka Delivery",
     "Karan Nath",
     "Prem Kumar Nath",
     "Sabka Delivery owner",
-    "Sabka Delivery owners",
     "Sabka Delivery founder",
     "Sabka Delivery founders",
-    "Sabka Delivery CEO",
   ],
 };
 
 const leaders = [
   {
-    name: "Karan Nath",
-    role: "Owner • Founder & CEO",
-    image: "/founder/karan.jpg",
-    alt: "Karan Nath, Owner, Founder and CEO of Sabka Delivery",
+    name: "Prem Kumar Nath",
+    role: "Owner • Founder",
+    image: "/founder/prem.png",
+    alt: "Prem Kumar Nath, Owner and Founder of Sabka Delivery",
     description:
-      "Karan Nath is an equal Owner, Founder and CEO of Sabka Delivery. He co-founded the platform with Prem Kumar Nath to build a reliable, customer-first hyperlocal delivery service.",
+      "Prem Kumar Nath is the owner and founder of Sabka Delivery. He co-founded the platform with Karan Nath.",
   },
   {
-    name: "Prem Kumar Nath",
-    role: "Owner • Founder & CEO",
-    image: "/founder/prem.png",
-    alt: "Prem Kumar Nath, Owner, Founder and CEO of Sabka Delivery",
+    name: "Karan Nath",
+    role: "Founder",
+    image: "/founder/karan.jpg",
+    alt: "Karan Nath, Founder of Sabka Delivery",
     description:
-      "Prem Kumar Nath is an equal Owner, Founder and CEO of Sabka Delivery. He co-founded the platform with Karan Nath and works alongside him on the growth and development of the company.",
+      "Karan Nath is a founder of Sabka Delivery. He co-founded the platform with Prem Kumar Nath.",
   },
 ];
 
@@ -37,22 +35,35 @@ export default function AboutPage() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": "https://sabkadelivery.in/#organization",
     name: "Sabka Delivery",
     url: "https://sabkadelivery.in",
     description:
-      "A hyperlocal delivery platform for food, grocery and daily essentials, co-founded and owned equally by Karan Nath and Prem Kumar Nath.",
+      "A hyperlocal delivery platform owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
+    owner: {
+      "@type": "Person",
+      "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+      name: "Prem Kumar Nath",
+      jobTitle: "Owner and Founder",
+      url: "https://sabkadelivery.in/about",
+      image: "https://sabkadelivery.in/founder/prem.png",
+    },
     founder: [
       {
         "@type": "Person",
-        name: "Karan Nath",
-        jobTitle: "Owner, Founder & CEO",
-        image: "https://sabkadelivery.in/founder/karan.jpg",
+        "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+        name: "Prem Kumar Nath",
+        jobTitle: "Owner and Founder",
+        url: "https://sabkadelivery.in/about",
+        image: "https://sabkadelivery.in/founder/prem.png",
       },
       {
         "@type": "Person",
-        name: "Prem Kumar Nath",
-        jobTitle: "Owner, Founder & CEO",
-        image: "https://sabkadelivery.in/founder/prem.png",
+        "@id": "https://sabkadelivery.in/#karan-nath",
+        name: "Karan Nath",
+        jobTitle: "Founder",
+        url: "https://sabkadelivery.in/founder",
+        image: "https://sabkadelivery.in/founder/karan.jpg",
       },
     ],
   };
@@ -78,9 +89,8 @@ export default function AboutPage() {
             affordable for everyone.
           </p>
           <p className="mt-4 max-w-3xl mx-auto text-gray-300 text-lg leading-8">
-            Sabka Delivery was co-founded and is equally owned by Karan Nath
-            and Prem Kumar Nath. Both founders are part of the company&apos;s
-            core leadership.
+            Sabka Delivery was founded by Prem Kumar Nath and Karan Nath.
+            The company is owned by Prem Kumar Nath.
           </p>
         </section>
 
@@ -90,11 +100,11 @@ export default function AboutPage() {
               Our Leadership
             </p>
             <h2 className="text-3xl md:text-4xl font-bold mt-2">
-              Owners & Founders
+              Owner & Founders
             </h2>
             <p className="mt-3 text-gray-400">
-              Karan Nath and Prem Kumar Nath are equal owners and co-founders
-              of Sabka Delivery. There is no primary or secondary owner.
+              Prem Kumar Nath is the owner of Sabka Delivery. Prem Kumar Nath
+              and Karan Nath are the founders of Sabka Delivery.
             </p>
           </div>
 
