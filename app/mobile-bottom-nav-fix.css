@@ -1,0 +1,63 @@
+/* Mobile bottom navigation: keep every customer section visible on narrow screens. */
+@media (max-width: 680px) {
+  body .mobile-nav,
+  body .royal-food-app .mobile-nav,
+  body .grocery-light-app .mobile-nav,
+  body .electronics-theme-app .mobile-nav {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 72px !important;
+    min-height: 72px !important;
+    padding: 4px 6px !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-auto-flow: column !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    z-index: 100 !important;
+  }
+
+  body .mobile-nav > button,
+  body .royal-food-app .mobile-nav > button,
+  body .grocery-light-app .mobile-nav > button,
+  body .electronics-theme-app .mobile-nav > button {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    margin: 0 !important;
+    padding: 4px 2px !important;
+    place-items: center !important;
+    align-content: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  body .mobile-nav > button span,
+  body .mobile-nav > button small {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  body .mobile-nav > button small {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+}
