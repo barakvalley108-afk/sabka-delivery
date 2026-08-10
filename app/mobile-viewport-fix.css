@@ -1,0 +1,92 @@
+/* Full-width mobile viewport guard for the customer experience. */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 760px) {
+  html,
+  body {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .apna-app,
+  .royal-food-app,
+  .grocery-light-app,
+  .electronics-theme-app {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .royal-food-app > *,
+  .grocery-light-app > *,
+  .electronics-theme-app > * {
+    max-width: 100%;
+  }
+
+  .royal-food-app .app-header,
+  .royal-food-app .hero,
+  .royal-food-app .main-content,
+  .royal-food-app .offers-section,
+  .royal-food-app .promise,
+  .royal-food-app > footer,
+  .grocery-light-app .app-header,
+  .grocery-light-app .hero,
+  .grocery-light-app .main-content,
+  .grocery-light-app .offers-section,
+  .grocery-light-app .promise,
+  .grocery-light-app > footer,
+  .electronics-theme-app .app-header,
+  .electronics-theme-app .hero,
+  .electronics-theme-app .main-content,
+  .electronics-theme-app .offers-section,
+  .electronics-theme-app .promise,
+  .electronics-theme-app > footer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .royal-food-app .hero.food {
+    grid-template-columns: 1fr;
+  }
+
+  .royal-food-app .product-grid,
+  .grocery-light-app .product-grid,
+  .electronics-theme-app .product-grid {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .royal-food-app .product-card,
+  .grocery-light-app .product-card,
+  .electronics-theme-app .product-card {
+    min-width: 0;
+  }
+
+  .royal-food-app img,
+  .grocery-light-app img,
+  .electronics-theme-app img {
+    max-width: 100%;
+  }
+
+  .royal-food-app .mobile-nav,
+  .grocery-light-app .mobile-nav,
+  .electronics-theme-app .mobile-nav {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+}
