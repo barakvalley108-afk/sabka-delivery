@@ -1,32 +1,32 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Karan Nath | Founder | Sabka Delivery",
+  title: "Owner & Founders | Sabka Delivery",
   description:
-    "Official profile of Karan Nath, Founder of Sabka Delivery.",
-
+    "Official leadership information for Sabka Delivery: Owner Prem Kumar Nath; Founders Prem Kumar Nath and Karan Nath.",
   keywords: [
-    "Karan Nath",
     "Sabka Delivery",
-    "Founder",
+    "Sabka Delivery owner",
+    "Sabka Delivery founders",
+    "Prem Kumar Nath",
+    "Karan Nath",
+    "Owner Prem Kumar Nath",
+    "Founders Prem Kumar Nath Karan Nath",
     "Lala Bazar",
     "Hailakandi",
     "Assam",
   ],
-
   authors: [
-    {
-      name: "Karan Nath",
-    },
+    { name: "Prem Kumar Nath" },
+    { name: "Karan Nath" },
   ],
-
   creator: "Sabka Delivery",
-
+  publisher: "Sabka Delivery",
   openGraph: {
-    title: "Karan Nath | Founder",
+    title: "Owner & Founders | Sabka Delivery",
     description:
-      "Founder of Sabka Delivery",
-    images: ["/founder/karan.jpg"],
+      "Sabka Delivery is owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
+    images: ["/founder/prem.png", "/founder/karan.jpg"],
   },
 };
 
