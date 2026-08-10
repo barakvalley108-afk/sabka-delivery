@@ -9,6 +9,7 @@ import "./checkout-enhancer.css";
 import "./grocery-modern.css";
 import "./grocery-contrast-fix.css";
 import "./grocery-product-smooth.css";
+import "./mobile-bottom-nav-fix.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 
