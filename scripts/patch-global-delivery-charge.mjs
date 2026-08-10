@@ -100,19 +100,21 @@ update("app/page.tsx", (source) =>
 
 // Keep the mobile UI exactly as-is, but make the delivery fee/minimum-order
 // state update when the same catalog is reused after switching Food/Grocery.
+// Use a unique local name so this build-time patch cannot collide with the
+// page's existing activeSection declaration.
 update("app/page.tsx", (source) => {
   const staleBlock = `      const signature = JSON.stringify(data);
       if (signature === marketSignature.current) return;
       marketSignature.current = signature;
       setStores(data.stores || []);`;
   const fixedBlock = `      const signature = JSON.stringify(data);
-      const activeSection = (data.sections || []).find(
+      const sectionConfig = (data.sections || []).find(
         (section: { key: string; deliveryCharge?: number; minOrder?: number }) =>
           section.key === mode,
       );
       if (signature === marketSignature.current) {
-        setDeliveryFee(Number(activeSection?.deliveryCharge ?? data.deliveryFee ?? 20));
-        setMinimumOrder(Number(activeSection?.minOrder || 0));
+        setDeliveryFee(Number(sectionConfig?.deliveryCharge ?? data.deliveryFee ?? 20));
+        setMinimumOrder(Number(sectionConfig?.minOrder || 0));
         return;
       }
       marketSignature.current = signature;
