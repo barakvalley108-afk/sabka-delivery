@@ -118,3 +118,89 @@ const organizationJsonLd = {
       "@type": ["Organization", "DeliveryService"],
       "@id": "https://sabkadelivery.in/#organization",
       name: "Sabka Delivery",
+      legalName: "Sabka Delivery",
+      url: "https://sabkadelivery.in/",
+      logo: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
+      image: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
+      description:
+        "Food, grocery and electronics delivery service in Lala Bazar, Hailakandi, Assam.",
+      founder: { "@id": "https://sabkadelivery.in/#karan-nath" },
+      foundingLocation: {
+        "@type": "Place",
+        name: "Lala Bazar, Hailakandi, Assam",
+      },
+      areaServed: {
+        "@type": "Place",
+        name: "Lala Bazar, Hailakandi, Assam",
+      },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Lala Bazar",
+        addressRegion: "Assam",
+        addressCountry: "IN",
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+91-8011767897",
+        contactType: "customer support",
+        areaServed: "IN",
+        availableLanguage: ["English", "Hindi", "Bengali"],
+      },
+    },
+    {
+      "@type": "Person",
+      "@id": "https://sabkadelivery.in/#karan-nath",
+      name: "Karan Nath",
+      url: "https://sabkadelivery.in/founder",
+      jobTitle: "Founder and Owner",
+      worksFor: { "@id": "https://sabkadelivery.in/#organization" },
+      affiliation: { "@id": "https://sabkadelivery.in/#organization" },
+      image: "https://sabkadelivery.in/founder/karan.jpg",
+      description: "Karan Nath is the founder and owner of Sabka Delivery.",
+    },
+    {
+      "@type": "Person",
+      "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+      name: "Prem Kumar Nath",
+      url: "https://sabkadelivery.in/about",
+      jobTitle: "Owner",
+      worksFor: { "@id": "https://sabkadelivery.in/#organization" },
+      affiliation: { "@id": "https://sabkadelivery.in/#organization" },
+      image: "https://sabkadelivery.in/founder/prem.png",
+      description: "Prem Kumar Nath is an owner of Sabka Delivery.",
+    },
+  ],
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <head>
+        <script
+          id="clear-stale-market-catalog"
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{localStorage.removeItem("sabka-delivery-market-catalog-v1")}catch(e){}',
+          }}
+        />
+        <style
+          id="critical-logo-size"
+          dangerouslySetInnerHTML={{
+            __html:
+              ".logo>span.brand-mark{display:block;width:52px;height:52px;flex:0 0 52px;overflow:hidden}.logo>span.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}@media(max-width:680px){.logo>span.brand-mark{width:40px;height:40px;flex-basis:40px}}",
+          }}
+        />
+        <script
+          id="sabka-delivery-organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <PushNotifications />
+        {children}
+        <LeadershipFooter />
+      </body>
+    </html>
+  );
+}
