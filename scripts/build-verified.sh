@@ -20,49 +20,36 @@ fi
 
 echo "Removing runtime DB migrations..."
 node "${script_dir}/patch-runtime-db-init.mjs"
-
 echo "Reducing Worker polling load..."
 node "${script_dir}/patch-worker-load.mjs"
-
 echo "Reducing Super Admin payload and fixing Retry..."
 node "${script_dir}/patch-admin-load.mjs"
-
 echo "Adding monthly sales metric..."
 node "${script_dir}/patch-monthly-sales.mjs"
-
 echo "Showing order item variants in panels..."
 node "${script_dir}/patch-order-variant-display.mjs"
-
-echo "Applying global delivery charge..."
-node "${script_dir}/patch-global-delivery-charge.mjs"
-
+# Delivery-charge logic is already committed in the application source.
+# Do not rewrite app/page.tsx during builds; build-time source mutation caused
+# duplicate declarations in Cloudflare's client build.
+echo "Skipping legacy global delivery-charge source rewrite (already committed)."
 echo "Loading customer enhancers only on homepage..."
 node "${script_dir}/patch-customer-enhancers.mjs"
-
 echo "Connecting Firebase push notifications..."
 node "${script_dir}/patch-firebase-push.mjs"
-
 echo "Allowing private coupons to verify at checkout..."
 node "${script_dir}/patch-private-coupons.mjs"
-
 echo "Applying safe mixed-cart patch..."
 node "${script_dir}/patch-mixed-cart.mjs"
-
 echo "Applying multi-store checkout patch..."
 node "${script_dir}/patch-multistore-checkout.mjs"
-
 echo "Applying fresh loading patch..."
 node "${script_dir}/patch-loading-flow.mjs"
-
 echo "Applying SEO schema patch..."
 node "${script_dir}/patch-seo-schema.mjs"
-
 echo "Applying panel order alerts..."
 node "${script_dir}/patch-panel-order-alerts.mjs"
-
 echo "Enabling lightweight Super Admin bootstrap..."
 node "${script_dir}/patch-admin-bootstrap.mjs"
-
 echo "Running bounded vinext build..."
 timeout \
   --signal=TERM \
