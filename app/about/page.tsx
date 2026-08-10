@@ -1,12 +1,13 @@
 export const metadata = {
   title: "About Sabka Delivery | Prem Kumar Nath & Karan Nath",
   description:
-    "Learn about Sabka Delivery, owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
+    "Learn about Sabka Delivery, owned by Karan Nath and Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
   keywords: [
     "Sabka Delivery",
     "Karan Nath",
     "Prem Kumar Nath",
     "Sabka Delivery owner",
+    "Sabka Delivery owners",
     "Sabka Delivery founder",
     "Sabka Delivery founders",
   ],
@@ -23,7 +24,7 @@ const leaders = [
   },
   {
     name: "Karan Nath",
-    role: "Founder",
+    role: "Owner • Founder",
     image: "/founder/karan.jpg",
     alt: "Karan Nath, Founder of Sabka Delivery",
     description:
@@ -61,7 +62,7 @@ export default function AboutPage() {
         "@type": "Person",
         "@id": "https://sabkadelivery.in/#karan-nath",
         name: "Karan Nath",
-        jobTitle: "Founder",
+        jobTitle: "Onwer and Founder",
         url: "https://sabkadelivery.in/founder",
         image: "https://sabkadelivery.in/founder/karan.jpg",
       },
