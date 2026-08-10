@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s | Sabka Delivery",
   },
   description:
-    "Sabka Delivery is a local food, grocery and electronics delivery service in Lala Bazar, Hailakandi, Assam, founded by Karan Nath.",
+    "Sabka Delivery is a local food, grocery and delivery service in Lala Bazar, Hailakandi, Assam. Owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
   keywords: [
     "Sabka Delivery",
     "Sabka Delivery owner",
@@ -45,10 +45,10 @@ export const metadata: Metadata = {
     "delivery service Hailakandi",
   ],
   authors: [
-    { name: "Karan Nath", url: "https://sabkadelivery.in/founder" },
     { name: "Prem Kumar Nath", url: "https://sabkadelivery.in/about" },
+    { name: "Karan Nath", url: "https://sabkadelivery.in/founder" },
   ],
-  creator: "Karan Nath",
+  creator: "Sabka Delivery",
   publisher: "Sabka Delivery",
   applicationName: "Sabka Delivery",
   alternates: { canonical: "/" },
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Sabka Delivery",
     description:
-      "Food, grocery and electronics delivery in Lala Bazar, founded by Karan Nath.",
+      "Sabka Delivery — owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
     url: "https://sabkadelivery.in",
     siteName: "Sabka Delivery",
     images: [
@@ -83,7 +83,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Sabka Delivery",
-    description: "Local delivery service in Lala Bazar, founded by Karan Nath.",
+    description:
+      "Sabka Delivery is owned by Prem Kumar Nath and founded by Prem Kumar Nath and Karan Nath.",
     images: ["/images/sabka-delivery-logo.png"],
   },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Sabka Delivery" },
@@ -129,8 +130,18 @@ const organizationJsonLd = {
       logo: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
       image: "https://sabkadelivery.in/images/sabka-delivery-logo.png",
       description:
-        "Food, grocery and electronics delivery service in Lala Bazar, Hailakandi, Assam.",
-      founder: { "@id": "https://sabkadelivery.in/#karan-nath" },
+        "Sabka Delivery is a local food, grocery and delivery service in Lala Bazar, Hailakandi, Assam. The owner is Prem Kumar Nath, and the founders are Prem Kumar Nath and Karan Nath.",
+      owner: {
+        "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+      },
+      founder: [
+        {
+          "@id": "https://sabkadelivery.in/#prem-kumar-nath",
+        },
+        {
+          "@id": "https://sabkadelivery.in/#karan-nath",
+        },
+      ],
       foundingLocation: {
         "@type": "Place",
         name: "Lala Bazar, Hailakandi, Assam",
@@ -158,22 +169,24 @@ const organizationJsonLd = {
       "@id": "https://sabkadelivery.in/#karan-nath",
       name: "Karan Nath",
       url: "https://sabkadelivery.in/founder",
-      jobTitle: "Founder and Owner",
+      jobTitle: "Founder",
       worksFor: { "@id": "https://sabkadelivery.in/#organization" },
       affiliation: { "@id": "https://sabkadelivery.in/#organization" },
       image: "https://sabkadelivery.in/founder/karan.jpg",
-      description: "Karan Nath is the founder and owner of Sabka Delivery.",
+      description:
+        "Karan Nath is a founder of Sabka Delivery. He co-founded Sabka Delivery with Prem Kumar Nath.",
     },
     {
       "@type": "Person",
       "@id": "https://sabkadelivery.in/#prem-kumar-nath",
       name: "Prem Kumar Nath",
       url: "https://sabkadelivery.in/about",
-      jobTitle: "Owner",
+      jobTitle: "Owner and Founder",
       worksFor: { "@id": "https://sabkadelivery.in/#organization" },
       affiliation: { "@id": "https://sabkadelivery.in/#organization" },
       image: "https://sabkadelivery.in/founder/prem.png",
-      description: "Prem Kumar Nath is an owner of Sabka Delivery.",
+      description:
+        "Prem Kumar Nath is the owner and founder of Sabka Delivery. He co-founded Sabka Delivery with Karan Nath.",
     },
   ],
 };
