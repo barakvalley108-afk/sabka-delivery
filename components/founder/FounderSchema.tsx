@@ -2,11 +2,15 @@ export default function FounderSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Person",
+    "@id": "https://sabkadelivery.in/#karan-nath",
     name: "Karan Nath",
-    jobTitle: "Founder & CEO",
+    jobTitle: "Founder",
+    description:
+      "Karan Nath is a founder of Sabka Delivery. He co-founded the company with Prem Kumar Nath.",
     image: "https://sabkadelivery.in/founder/karan.jpg",
     worksFor: {
       "@type": "Organization",
+      "@id": "https://sabkadelivery.in/#organization",
       name: "Sabka Delivery",
     },
     alumniOf: {

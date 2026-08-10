@@ -22,7 +22,7 @@ export default function LeadershipFooter() {
               Sabka Delivery
             </p>
             <h2 className="mt-2 text-3xl font-bold md:text-4xl">
-              Owners & Founders of Sabka Delivery
+              Owner & Founders of Sabka Delivery
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-gray-400">
               The people behind Sabka Delivery, building a faster, smarter and
@@ -34,19 +34,19 @@ export default function LeadershipFooter() {
             <article className="overflow-hidden rounded-3xl border border-yellow-500/30 bg-zinc-950 shadow-2xl">
               <div className="flex flex-col items-center p-8 text-center">
                 <img
-                  src="/founder/karan.jpg"
-                  alt="Karan Nath - Founder and CEO of Sabka Delivery"
+                  src="/founder/prem.png"
+                  alt="Prem Kumar Nath - Owner and Founder of Sabka Delivery"
                   className="h-40 w-40 rounded-full border-4 border-yellow-500 object-cover shadow-xl"
                   loading="lazy"
                 />
                 <p className="mt-6 text-sm font-bold uppercase tracking-widest text-yellow-400">
-                  Founder & CEO
+                  Owner & Founder
                 </p>
-                <h3 className="mt-2 text-3xl font-bold">Karan Nath</h3>
+                <h3 className="mt-2 text-3xl font-bold">Prem Kumar Nath</h3>
                 <div className="mt-5 space-y-2 text-sm leading-6 text-gray-300">
                   <p><strong className="text-white">Company:</strong> Sabka Delivery</p>
-                  <p><strong className="text-white">School:</strong> Primrose English Medium Senior Secondary School, Lala</p>
-                  <p><strong className="text-white">Class:</strong> Class 8</p>
+                  <p><strong className="text-white">School:</strong> Lala H.S. & M.P. School</p>
+                  <p><strong className="text-white">Class:</strong> Class 11</p>
                   <p><strong className="text-white">Location:</strong> Lala Bazar, Hailakandi, Assam, India</p>
                 </div>
               </div>
@@ -55,19 +55,19 @@ export default function LeadershipFooter() {
             <article className="overflow-hidden rounded-3xl border border-yellow-500/30 bg-zinc-950 shadow-2xl">
               <div className="flex flex-col items-center p-8 text-center">
                 <img
-                  src="/founder/prem.png"
-                  alt="Prem Kumar Nath - Owner of Sabka Delivery"
+                  src="/founder/karan.jpg"
+                  alt="Karan Nath - Founder of Sabka Delivery"
                   className="h-40 w-40 rounded-full border-4 border-yellow-500 object-cover shadow-xl"
                   loading="lazy"
                 />
                 <p className="mt-6 text-sm font-bold uppercase tracking-widest text-yellow-400">
-                  Owner
+                  Founder
                 </p>
-                <h3 className="mt-2 text-3xl font-bold">Prem Kumar Nath</h3>
+                <h3 className="mt-2 text-3xl font-bold">Karan Nath</h3>
                 <div className="mt-5 space-y-2 text-sm leading-6 text-gray-300">
                   <p><strong className="text-white">Company:</strong> Sabka Delivery</p>
-                  <p><strong className="text-white">School:</strong> Lala H.S. & M.P. School</p>
-                  <p><strong className="text-white">Class:</strong> Class 11</p>
+                  <p><strong className="text-white">School:</strong> Primrose English Medium Senior Secondary School, Lala</p>
+                  <p><strong className="text-white">Class:</strong> Class 8</p>
                   <p><strong className="text-white">Location:</strong> Lala Bazar, Hailakandi, Assam, India</p>
                 </div>
               </div>
