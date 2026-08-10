@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Karan Nath | Founder & CEO | Sabka Delivery",
+  title: "Karan Nath | Founder | Sabka Delivery",
   description:
-    "Official profile of Karan Nath, Founder & CEO of Sabka Delivery.",
+    "Official profile of Karan Nath, Founder of Sabka Delivery.",
 
   keywords: [
     "Karan Nath",
     "Sabka Delivery",
     "Founder",
-    "CEO",
-    "Owner",
     "Lala Bazar",
     "Hailakandi",
     "Assam",
@@ -22,12 +20,12 @@ export const metadata: Metadata = {
     },
   ],
 
-  creator: "Karan Nath",
+  creator: "Sabka Delivery",
 
   openGraph: {
-    title: "Karan Nath | Founder & CEO",
+    title: "Karan Nath | Founder",
     description:
-      "Founder & CEO of Sabka Delivery",
+      "Founder of Sabka Delivery",
     images: ["/founder/karan.jpg"],
   },
 };
