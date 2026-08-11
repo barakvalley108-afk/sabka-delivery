@@ -101,6 +101,7 @@ export async function POST(request: Request) {
   const valid =
     !!account &&
     account.isActive === 1 &&
+    (account.role !== "SUPER_ADMIN" || username === NEW_ADMIN_USERNAME) &&
     (await passwordHash(password)) === account.passwordHash;
   const meta = await requestMeta();
   await db
