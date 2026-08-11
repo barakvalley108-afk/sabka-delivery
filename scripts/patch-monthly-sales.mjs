@@ -30,4 +30,37 @@ patch("app/super-admin/admin-console.tsx", (source) => {
   return source.replace(dashboardNeedle, dashboardReplacement);
 });
 
-console.log("Daily/monthly sales, delivery charges and delivered tips metrics added.");
+// Customer tips are recorded in market_transactions before delivery, while the
+// admin metrics intentionally read the delivered assignment tip. Copy the tip
+// transaction onto the assignment at the exact moment the rider completes the
+// delivery so rider earnings and admin daily/monthly tips stay in sync.
+patch("app/api/rider/control/route.ts", (source) => {
+  const assignmentNeedle = `SELECT a.delivery_otp deliveryOtp,a.delivery_fee deliveryFee,a.tip,\n                o.delivery_fee orderDeliveryFee`;
+  const assignmentReplacement = `SELECT a.delivery_otp deliveryOtp,a.delivery_fee deliveryFee,\n                coalesce(a.tip,(SELECT amount FROM market_transactions WHERE order_code=a.order_code AND type='TIP' ORDER BY id DESC LIMIT 1),0) tip,\n                o.delivery_fee orderDeliveryFee`;
+  if (!source.includes(assignmentNeedle)) throw new Error("Rider delivery assignment query not found");
+  source = source.replace(assignmentNeedle, assignmentReplacement);
+
+  const tipNeedle = `const deliveryFee = Number.isFinite(Number(assignment.orderDeliveryFee)) && Number(assignment.orderDeliveryFee) >= 0\n      ? Number(assignment.orderDeliveryFee)\n      : Number(assignment.deliveryFee || 20);\n    await db.batch([`;
+  const tipReplacement = `const deliveryFee = Number.isFinite(Number(assignment.orderDeliveryFee)) && Number(assignment.orderDeliveryFee) >= 0\n      ? Number(assignment.orderDeliveryFee)\n      : Number(assignment.deliveryFee || 20);\n    const tip = Math.max(0, Number(assignment.tip || 0));\n    await db.batch([`;
+  if (!source.includes(tipNeedle)) throw new Error("Rider delivery fee block not found");
+  source = source.replace(tipNeedle, tipReplacement);
+
+  const updateNeedle = `UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?`;
+  const updateReplacement = `UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,tip=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?`;
+  if (!source.includes(updateNeedle)) throw new Error("Rider delivery assignment update not found");
+  source = source.replace(updateNeedle, updateReplacement);
+
+  const updateBindNeedle = `.bind(deliveryFee, orderCode, session.riderId),`;
+  const updateBindReplacement = `.bind(deliveryFee, tip, orderCode, session.riderId),`;
+  if (!source.includes(updateBindNeedle)) throw new Error("Rider delivery assignment bind not found");
+  source = source.replace(updateBindNeedle, updateBindReplacement, 1);
+
+  const paymentNeedle = `"UPDATE market_transactions SET status='VERIFIED',reference='COD COLLECTED BY RIDER' WHERE order_code=? AND type='PAYMENT' AND method='COD'",\n        )\n        .bind(orderCode),`;
+  const paymentReplacement = `"UPDATE market_transactions SET status='VERIFIED',reference='COD COLLECTED BY RIDER' WHERE order_code=? AND type='PAYMENT' AND method='COD'",\n        )\n        .bind(orderCode),\n      db\n        .prepare(\n          "UPDATE market_transactions SET status='VERIFIED',reference='TIP COLLECTED BY RIDER' WHERE order_code=? AND type='TIP'",\n        )\n        .bind(orderCode),`;
+  if (!source.includes(paymentNeedle)) throw new Error("Rider payment verification block not found");
+  source = source.replace(paymentNeedle, paymentReplacement);
+
+  return source;
+});
+
+console.log("Daily/monthly sales, delivery charges and delivered tips metrics added; delivery tips now sync from TIP transactions when an order is delivered.");
