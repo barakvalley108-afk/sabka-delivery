@@ -1,0 +1,178 @@
+/* Sabka Delivery — premium marketplace UX layer. Kept separate so the existing catalog logic remains untouched. */
+:root {
+  --sd-red: #c91718;
+  --sd-red-dark: #9f1014;
+  --sd-gold: #f6b91a;
+  --sd-cream: #fffaf0;
+  --sd-ink: #241814;
+  --sd-muted: #756a63;
+  --sd-line: #eadfce;
+  --sd-card: #ffffff;
+  --sd-shadow: 0 10px 30px rgba(55, 25, 10, 0.08);
+}
+
+html { background: var(--sd-cream); }
+body { overflow-x: hidden; }
+.apna-app { color: var(--sd-ink); }
+
+/* Premium desktop shell */
+.app-header {
+  backdrop-filter: blur(14px);
+  background: rgba(255, 253, 247, 0.94);
+  border-bottom-color: var(--sd-line);
+}
+.logo > b { color: var(--sd-red); }
+.location-pill,
+.top-search { box-shadow: 0 5px 18px rgba(55, 25, 10, 0.05); }
+.header-cart { box-shadow: 0 8px 18px rgba(159, 16, 20, 0.18) !important; }
+
+.mode-bar {
+  position: sticky;
+  top: 78px;
+  z-index: 25;
+  border-bottom: 1px solid var(--sd-line);
+  box-shadow: 0 4px 18px rgba(55, 25, 10, 0.04);
+}
+
+.hero {
+  box-shadow: var(--sd-shadow);
+}
+.hero-search:focus-within {
+  border-color: var(--sd-gold);
+  box-shadow: 0 0 0 4px rgba(246, 185, 26, 0.14), var(--sd-shadow);
+}
+
+.category-row button,
+.store-card,
+.product-card,
+.promise > div,
+.offer-grid article,
+.reward-grid article {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.category-row button:hover,
+.store-card:hover,
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(55, 25, 10, 0.12);
+}
+.product-card { box-shadow: 0 7px 22px rgba(55, 25, 10, 0.08); }
+.product-visual { background-color: #f7f1e7; }
+.price-row b { color: var(--sd-red); }
+.price-row button {
+  border: 0;
+  background: linear-gradient(135deg, #ffd45c, #e5a818);
+  color: #2c1b05;
+  box-shadow: 0 6px 14px rgba(193, 139, 18, .22);
+}
+
+/* Do not introduce or expose customer login/signup UI. Checkout remains guest-first. */
+.overlay:has(.login-modal) { display: none !important; }
+.login-modal { display: none !important; }
+
+/* Mobile: true app-like full-width layout */
+@media (max-width: 680px) {
+  .apna-app { width: 100%; max-width: 100%; padding-bottom: 82px; }
+  .app-header {
+    position: sticky;
+    top: 0;
+    height: 62px;
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .app-header nav { gap: 5px; }
+  .location-pill { max-width: 105px; overflow: hidden; }
+  .location-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .mode-bar {
+    position: relative;
+    top: auto;
+    padding: 8px 10px;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mode-bar::-webkit-scrollbar { display: none; }
+  .mode-bar > button:not(.veg-switch) { min-width: 132px; flex: 0 0 auto; }
+
+  .hero {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .hero > div:first-child { padding: 26px 16px 18px; }
+  .hero h1 { font-size: clamp(36px, 11vw, 46px); }
+  .hero-art { min-height: 220px; }
+
+  .main-content { width: 100%; padding: 22px 12px 34px; }
+  .category-row { padding-bottom: 18px; }
+  .store-row { padding-bottom: 18px; }
+
+  /* Two-column food/grocery catalog like modern delivery apps. */
+  .product-grid {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .product-card { min-width: 0; border-radius: 14px; }
+  .product-visual { height: 132px; }
+  .product-info { padding: 10px; }
+  .product-info h3 { font-size: 13px; line-height: 1.2; min-height: 31px; }
+  .product-info p { display: none; }
+  .product-info select,
+  .variant-label { min-height: 40px; font-size: 11px; }
+  .price-row { display: grid; gap: 8px; }
+  .price-row button { width: 100%; min-height: 40px; }
+
+  .offers-section { padding: 20px 12px 28px; }
+  .reward-grid,
+  .offer-grid { grid-template-columns: 1fr; gap: 10px; }
+  .reward-grid article,
+  .offer-grid article { min-height: 120px; padding: 15px; border-radius: 14px; }
+
+  /* Five persistent destinations: Cart, Food, Grocery, Electronics, History. */
+  .mobile-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 76px;
+    min-height: 76px !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0;
+    padding: 7px 4px calc(7px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(234, 223, 206, .95);
+    background: rgba(255, 253, 247, .97);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -8px 28px rgba(55, 25, 10, .12);
+  }
+  .mobile-nav button {
+    min-width: 0 !important;
+    min-height: 60px !important;
+    border-radius: 12px;
+    color: #7a6d64;
+    font-size: 21px;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+  .mobile-nav button.active {
+    color: var(--sd-red);
+    background: #fff0df;
+  }
+  .mobile-nav button:active { transform: scale(.95); }
+  .mobile-nav small { font-size: 9px !important; font-weight: 900 !important; }
+
+  .customer-fabs { right: 10px; bottom: 88px; gap: 7px; }
+  .install-app-fab { padding: 10px 13px; font-size: 11px; }
+  .whatsapp-fab { font-size: 11px !important; }
+
+  .toast { left: 10px; right: 10px; bottom: 88px; }
+  .cart-drawer { max-height: 92vh; border-radius: 20px 20px 0 0; }
+}
+
+@media (max-width: 380px) {
+  .product-grid { gap: 8px; }
+  .product-visual { height: 118px; }
+  .product-info h3 { font-size: 12px; }
+  .mobile-nav small { font-size: 8px !important; }
+}
