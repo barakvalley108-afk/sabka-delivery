@@ -45,15 +45,10 @@ patch("app/api/rider/control/route.ts", (source) => {
   if (!source.includes(tipNeedle)) throw new Error("Rider delivery fee block not found");
   source = source.replace(tipNeedle, tipReplacement);
 
-  const updateNeedle = `UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?`;
-  const updateReplacement = `UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,tip=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?`;
-  if (!source.includes(updateNeedle)) throw new Error("Rider delivery assignment update not found");
-  source = source.replace(updateNeedle, updateReplacement);
-
-  const updateBindNeedle = `.bind(deliveryFee, orderCode, session.riderId),`;
-  const updateBindReplacement = `.bind(deliveryFee, tip, orderCode, session.riderId),`;
-  if (!source.includes(updateBindNeedle)) throw new Error("Rider delivery assignment bind not found");
-  source = source.replace(updateBindNeedle, updateBindReplacement, 1);
+  const updateBlockNeedle = `db\n        .prepare(\n          "UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?",\n        )\n        .bind(deliveryFee, orderCode, session.riderId),`;
+  const updateBlockReplacement = `db\n        .prepare(\n          "UPDATE market_delivery_assignments SET status='DELIVERED',delivery_fee=?,tip=?,delivered_at=CURRENT_TIMESTAMP WHERE order_code=? AND rider_id=?",\n        )\n        .bind(deliveryFee, tip, orderCode, session.riderId),`;
+  if (!source.includes(updateBlockNeedle)) throw new Error("Rider delivery assignment update block not found");
+  source = source.replace(updateBlockNeedle, updateBlockReplacement);
 
   const paymentNeedle = `"UPDATE market_transactions SET status='VERIFIED',reference='COD COLLECTED BY RIDER' WHERE order_code=? AND type='PAYMENT' AND method='COD'",\n        )\n        .bind(orderCode),`;
   const paymentReplacement = `"UPDATE market_transactions SET status='VERIFIED',reference='COD COLLECTED BY RIDER' WHERE order_code=? AND type='PAYMENT' AND method='COD'",\n        )\n        .bind(orderCode),\n      db\n        .prepare(\n          "UPDATE market_transactions SET status='VERIFIED',reference='TIP COLLECTED BY RIDER' WHERE order_code=? AND type='TIP'",\n        )\n        .bind(orderCode),`;
