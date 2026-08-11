@@ -10,6 +10,7 @@ import "./grocery-modern.css";
 import "./grocery-contrast-fix.css";
 import "./grocery-product-smooth.css";
 import "./mobile-viewport-fix.css";
+import "./marketplace-pro.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 
