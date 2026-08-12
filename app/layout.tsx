@@ -27,7 +27,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sabkadelivery.in"),
-  title: { default: "Sabka Delivery", template: "%s | Sabka Delivery" },
+  title: {
+    default: "Sabka Delivery | Food & Grocery Delivery in Lala Bazar",
+    template: "%s | Sabka Delivery",
+  },
   description:
     "Sabka Delivery is a local food, grocery and delivery service in Lala Bazar, Hailakandi, Assam. Owned by Karan Nath and Prem Kumar Nath, founded by Karan Nath and Prem Kumar Nath, and led by CEOs Karan Nath and Prem Kumar Nath.",
   keywords: [
@@ -68,7 +71,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/images/sabka-delivery-logo.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "Sabka Delivery",
+    title: "Sabka Delivery | Food & Grocery Delivery in Lala Bazar",
     description:
       "Sabka Delivery — owned by Karan Nath and Prem Kumar Nath, founded by Karan Nath and Prem Kumar Nath, and led by CEOs Karan Nath and Prem Kumar Nath.",
     url: "https://sabkadelivery.in",
@@ -79,7 +82,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sabka Delivery",
+    title: "Sabka Delivery | Food & Grocery Delivery in Lala Bazar",
     description:
       "Sabka Delivery is a local food, grocery and delivery service in Lala Bazar, Hailakandi, Assam.",
     images: ["/images/sabka-delivery-logo.png"],
@@ -108,7 +111,8 @@ const organizationJsonLd = {
       "@id": "https://sabkadelivery.in/#website",
       url: "https://sabkadelivery.in/",
       name: "Sabka Delivery",
-      alternateName: ["SabkaDelivery", "Sabka Delivery Lala Bazar"],
+      alternateName: "SabkaDelivery",
+      description: "Sabka Delivery — Food & Grocery Delivery in Lala Bazar, Hailakandi, Assam.",
       publisher: { "@id": "https://sabkadelivery.in/#organization" },
       inLanguage: "en-IN",
     },
@@ -174,6 +178,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <head>
+        <meta property="og:site_name" content="Sabka Delivery" />
         <script id="clear-stale-market-catalog" dangerouslySetInnerHTML={{ __html: 'try{localStorage.removeItem("sabka-delivery-market-catalog-v1")}catch(e){}' }} />
         <style id="critical-logo-size" dangerouslySetInnerHTML={{ __html: ".logo>span.brand-mark{display:block;width:52px;height:52px;flex:0 0 52px;overflow:hidden}.logo>span.brand-mark img{display:block;width:100%;height:100%;object-fit:cover}@media(max-width:680px){.logo>span.brand-mark{width:40px;height:40px;flex-basis:40px}}" }} />
         <script id="sabka-delivery-organization-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }} />
