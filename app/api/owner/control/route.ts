@@ -11,6 +11,12 @@ async function ownerSession() {
   return session && isOwnerUsername(session.username) ? session : null;
 }
 
+export async function GET() {
+  const session = await ownerSession();
+  if (!session) return Response.json({ error: "Owner access required" }, { status: 403 });
+  return Response.json({ ok: true, owner: session.username });
+}
+
 export async function POST(request: Request) {
   const session = await ownerSession();
   if (!session) return Response.json({ error: "Owner access required" }, { status: 403 });
@@ -24,21 +30,16 @@ export async function POST(request: Request) {
     const password = String(body.password || "");
     if (!isSuperAdminUsername(username) || password.length < 8)
       return Response.json({ error: "Valid Super Admin aur 8+ character password required" }, { status: 400 });
-    if (username === session.username && password.length < 8)
-      return Response.json({ error: "Owner password validation failed" }, { status: 400 });
     await db
       .prepare("UPDATE market_panel_accounts SET password_hash=?,is_active=1 WHERE username=? AND role='SUPER_ADMIN'")
       .bind(await passwordHash(password), username)
       .run();
-    await db
-      .prepare("DELETE FROM market_panel_sessions WHERE username=?")
-      .bind(username)
-      .run();
+    await db.prepare("DELETE FROM market_panel_sessions WHERE username=?").bind(username).run();
     await db
       .prepare("INSERT INTO market_admin_activity (username,action,target,details) VALUES (?,?,?,?)")
       .bind(session.username, "OWNER_PASSWORD_CHANGE", username, "Super Admin password changed by owner")
       .run();
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, requiresLogin: username === session.username });
   }
 
   if (action === "setSuperAdminActive") {
@@ -52,8 +53,7 @@ export async function POST(request: Request) {
       .prepare("UPDATE market_panel_accounts SET is_active=? WHERE username=? AND role='SUPER_ADMIN'")
       .bind(isActive, username)
       .run();
-    if (!isActive)
-      await db.prepare("DELETE FROM market_panel_sessions WHERE username=?").bind(username).run();
+    if (!isActive) await db.prepare("DELETE FROM market_panel_sessions WHERE username=?").bind(username).run();
     await db
       .prepare("INSERT INTO market_admin_activity (username,action,target,details) VALUES (?,?,?,?)")
       .bind(session.username, "OWNER_ACCOUNT_STATUS", username, isActive ? "Super Admin enabled" : "Super Admin disabled")
