@@ -2,7 +2,8 @@ import { cookies, headers } from "next/headers";
 import { ensureControlTables } from "../db/control-store";
 
 export const PANEL_COOKIE = "sabka_panel_session";
-const ONLY_SUPER_ADMIN_USERNAME = "dhoni1981";
+export const OWNER_USERNAME = "dhoni1981";
+export const SUPER_ADMIN_USERNAMES = [OWNER_USERNAME, "koron2013"] as const;
 export type PanelRole = "SUPER_ADMIN" | "RESTAURANT" | "RIDER" | "STAFF";
 export type PanelType =
   | "SUPER_ADMIN"
@@ -20,6 +21,11 @@ export type PanelSession = {
   riderId: number | null;
   permissions: string[];
 };
+
+export const isSuperAdminUsername = (username: string) =>
+  (SUPER_ADMIN_USERNAMES as readonly string[]).includes(username);
+
+export const isOwnerUsername = (username: string) => username === OWNER_USERNAME;
 
 export const panelCookie = (role: PanelRole) =>
   role === "SUPER_ADMIN"
@@ -79,7 +85,7 @@ export async function getPanelSession(
     if (
       row &&
       (!expectedRole || row.role === expectedRole) &&
-      (row.role !== "SUPER_ADMIN" || row.username === ONLY_SUPER_ADMIN_USERNAME)
+      (row.role !== "SUPER_ADMIN" || isSuperAdminUsername(row.username))
     )
       return {
         ...row,
