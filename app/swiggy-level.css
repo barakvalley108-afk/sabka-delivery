@@ -1,4 +1,4 @@
-/* Sabka Delivery — premium marketplace UX layer. Kept separate so the existing catalog logic remains untouched. */
+/* Sabka Delivery — premium marketplace UX layer. */
 :root {
   --sd-red: #c91718;
   --sd-red-dark: #9f1014;
@@ -15,28 +15,81 @@ html { background: var(--sd-cream); }
 body { overflow-x: hidden; }
 .apna-app { color: var(--sd-ink); }
 
-/* Desktop: keep the header clean and make the cart a prominent action. */
-.app-header {
-  backdrop-filter: blur(14px);
-  background: rgba(255, 253, 247, 0.96);
-  border-bottom-color: var(--sd-line);
-  min-height: 74px;
+/* Desktop header: stable spacing + clearly visible cart action. */
+@media (min-width: 681px) {
+  .app-header {
+    min-height: 74px;
+    padding-left: clamp(18px, 3vw, 42px);
+    padding-right: clamp(18px, 3vw, 42px);
+    gap: 14px;
+    backdrop-filter: blur(14px);
+    background: rgba(255, 253, 247, 0.97);
+    border-bottom: 1px solid var(--sd-line);
+  }
+  .app-header nav { gap: 10px; }
+  .header-cart {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-width: 118px;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: 0 8px 18px rgba(159, 16, 20, 0.18) !important;
+  }
+
+  /* If the existing header cart is unavailable in a desktop layout, expose the
+     already-wired first mobile destination as a compact top-right Cart action. */
+  .mobile-nav {
+    position: fixed !important;
+    top: 14px !important;
+    right: clamp(18px, 3vw, 42px) !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: auto !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    display: flex !important;
+    z-index: 120 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  .mobile-nav button {
+    display: none !important;
+  }
+  .mobile-nav button:first-child {
+    display: inline-flex !important;
+    min-width: 104px !important;
+    min-height: 46px !important;
+    padding: 0 16px !important;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid rgba(201, 23, 24, .18);
+    border-radius: 13px;
+    background: #fff;
+    color: var(--sd-red);
+    box-shadow: 0 8px 22px rgba(55, 25, 10, .10);
+    font-weight: 900;
+  }
+  .mobile-nav small { font-size: 11px !important; font-weight: 900 !important; }
+
+  .main-content {
+    width: min(1400px, calc(100% - 48px));
+    margin-inline: auto;
+  }
+  .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .store-row { gap: 16px; }
 }
+
 .logo > b { color: var(--sd-red); }
 .location-pill,
 .top-search { box-shadow: 0 5px 18px rgba(55, 25, 10, 0.05); }
-.header-cart {
-  display: inline-flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  min-width: 118px;
-  min-height: 46px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  box-shadow: 0 8px 18px rgba(159, 16, 20, 0.18) !important;
-}
-
+.header-cart { border-radius: 13px; }
 .mode-bar {
   position: sticky;
   top: 74px;
@@ -44,13 +97,11 @@ body { overflow-x: hidden; }
   border-bottom: 1px solid var(--sd-line);
   box-shadow: 0 4px 18px rgba(55, 25, 10, 0.04);
 }
-
 .hero { box-shadow: var(--sd-shadow); }
 .hero-search:focus-within {
   border-color: var(--sd-gold);
   box-shadow: 0 0 0 4px rgba(246, 185, 26, 0.14), var(--sd-shadow);
 }
-
 .category-row button,
 .store-card,
 .product-card,
@@ -75,12 +126,11 @@ body { overflow-x: hidden; }
   box-shadow: 0 6px 14px rgba(193, 139, 18, .22);
 }
 
-/* Guest-first customer experience: no customer login/signup UI. */
+/* Customer stays guest-first. Never expose customer login/signup UI. */
 .overlay:has(.login-modal) { display: none !important; }
 .login-modal { display: none !important; }
 .customer-guest-mode [data-customer-auth-hidden="true"] { display: none !important; }
 
-/* Premium marketplace polish. */
 .hero,
 .store-card,
 .product-card,
@@ -108,7 +158,7 @@ body { overflow-x: hidden; }
 .product-info p { line-height: 1.55; }
 .cart-drawer { box-shadow: 0 -18px 60px rgba(36, 24, 20, .18); }
 
-/* Mobile: preserve the app-like UI and prevent the bottom bar from covering content. */
+/* Mobile UI is intentionally kept separate and unchanged in structure. */
 @media (max-width: 680px) {
   .apna-app { width: 100%; max-width: 100%; padding-bottom: 92px; }
   .app-header {
@@ -121,6 +171,7 @@ body { overflow-x: hidden; }
   }
   .app-header nav { gap: 5px; }
   .header-cart {
+    display: inline-flex !important;
     min-width: 42px;
     width: 42px;
     min-height: 42px;
@@ -131,7 +182,6 @@ body { overflow-x: hidden; }
   .header-cart span::after { content: "🛒"; font-size: 19px; }
   .location-pill { max-width: 105px; overflow: hidden; }
   .location-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
   .mode-bar {
     position: relative;
     top: auto;
@@ -142,26 +192,14 @@ body { overflow-x: hidden; }
   }
   .mode-bar::-webkit-scrollbar { display: none; }
   .mode-bar > button:not(.veg-switch) { min-width: 132px; flex: 0 0 auto; }
-
-  .hero {
-    width: 100%;
-    margin: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
+  .hero { width: 100%; margin: 0; border-radius: 0; box-shadow: none; }
   .hero > div:first-child { padding: 26px 16px 18px; }
   .hero h1 { font-size: clamp(36px, 11vw, 46px); }
   .hero-art { min-height: 220px; }
-
   .main-content { width: 100%; padding: 22px 12px 34px; }
   .category-row { padding-bottom: 18px; }
   .store-row { padding-bottom: 18px; }
-
-  .product-grid {
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
+  .product-grid { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .product-card { min-width: 0; border-radius: 14px; }
   .product-visual { height: 132px; }
   .product-info { padding: 10px; }
@@ -171,17 +209,18 @@ body { overflow-x: hidden; }
   .variant-label { min-height: 40px; font-size: 11px; }
   .price-row { display: grid; gap: 8px; }
   .price-row button { width: 100%; min-height: 40px; }
-
   .offers-section { padding: 20px 12px 28px; }
   .reward-grid,
   .offer-grid { grid-template-columns: 1fr; gap: 10px; }
   .reward-grid article,
   .offer-grid article { min-height: 120px; padding: 15px; border-radius: 14px; }
-
   .mobile-nav {
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: 100% !important;
     height: 76px;
     min-height: 76px !important;
     display: grid !important;
@@ -194,6 +233,7 @@ body { overflow-x: hidden; }
     box-shadow: 0 -8px 28px rgba(55, 25, 10, .12);
   }
   .mobile-nav button {
+    display: inline-flex !important;
     min-width: 0 !important;
     min-height: 60px !important;
     border-radius: 12px;
@@ -204,7 +244,6 @@ body { overflow-x: hidden; }
   .mobile-nav button.active { color: var(--sd-red); background: #fff0df; }
   .mobile-nav button:active { transform: scale(.95); }
   .mobile-nav small { font-size: 9px !important; font-weight: 900 !important; }
-
   .customer-fabs { right: 10px; bottom: 88px; gap: 7px; }
   .install-app-fab { padding: 10px 13px; font-size: 11px; }
   .whatsapp-fab { font-size: 11px !important; }
