@@ -4,29 +4,40 @@
   background: #050606;
   color: #f5d58a;
   border-top: 1px solid #654c22;
-  padding: 18px 24px;
+  padding: 14px 20px;
 }
 .site-global-footer-inner {
   width: min(1400px, 100%);
   margin: 0 auto;
+  min-height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 18px;
   white-space: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
 }
 .site-global-footer-inner::-webkit-scrollbar { display: none; }
 .site-global-footer-inner span { color: #fff; }
-.site-global-footer-inner a { color: #f5d58a; text-decoration: underline; text-underline-offset: 3px; }
+.site-global-footer-inner a {
+  color: #f5d58a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Hide the old home-page footer so About Us / duplicate footer blocks cannot appear. */
 .apna-app > footer { display: none !important; }
+
+/* Install CTA is intentionally removed from both desktop and mobile. */
 .install-app-button,
 .install-app-fab,
 .royal-food-app .install-app-button,
 .royal-food-app .install-app-fab { display: none !important; }
+
+/* WhatsApp support button. */
 .customer-fabs .whatsapp-fab,
 .whatsapp-fab {
   min-width: 132px;
@@ -44,37 +55,82 @@
   text-decoration: none !important;
 }
 .customer-fabs { gap: 8px; }
+
+/* Desktop marketplace stays full width. */
 @media (min-width: 681px) {
   .royal-food-app .hero,
-  .apna-app > .hero { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
-  .royal-food-app .main-content { width: 100% !important; max-width: none !important; margin-inline: 0 !important; }
+  .apna-app > .hero {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .royal-food-app .main-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
 }
-.owner-security-shortcut {
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  z-index: 200;
-}
-.owner-security-shortcut a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #d82330;
-  color: #fff;
-  text-decoration: none;
-  font: 800 11px Arial,sans-serif;
-  box-shadow: 0 10px 28px #0004;
-}
-@media (max-width: 760px) {
-  .owner-security-shortcut { right: 10px; bottom: 78px; }
-  .owner-security-shortcut a { font-size: 9px; min-height: 38px; padding: 8px 11px; }
-}
+
+/* Mobile bottom navigation: use flex so 4/5 destinations never get squashed by a hard-coded 5-column grid. */
 @media (max-width: 680px) {
   .site-global-footer { padding: 12px 10px; }
-  .site-global-footer-inner { justify-content: flex-start; gap: 14px; font-size: 9px; }
-  .customer-fabs .whatsapp-fab,
-  .whatsapp-fab { min-width: 145px; min-height: 48px; padding: 12px 22px !important; font-size: 13px !important; }
+  .site-global-footer-inner {
+    justify-content: center;
+    gap: 12px;
+    font-size: 9px;
+    white-space: normal;
+    line-height: 1.35;
+    flex-wrap: wrap;
+    text-align: center;
+  }
+
+  .mobile-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom)) !important;
+    gap: 2px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .mobile-nav button {
+    flex: 1 1 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    display: grid !important;
+    justify-items: center !important;
+    align-content: center !important;
+    gap: 2px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+  .mobile-nav button > span {
+    line-height: 1 !important;
+  }
+  .mobile-nav button > small {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
   .customer-fabs { right: 10px; bottom: 88px; }
+  .customer-fabs .whatsapp-fab,
+  .whatsapp-fab {
+    min-width: 145px;
+    min-height: 48px;
+    padding: 12px 22px !important;
+    font-size: 13px !important;
+  }
 }
