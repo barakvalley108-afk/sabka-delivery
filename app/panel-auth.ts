@@ -103,7 +103,9 @@ export async function requestMeta() {
   };
 }
 
-export function panelRoute(session: Pick<PanelSession, "role" | "panelType" | "username">) {
+export function panelRoute(
+  session: Pick<PanelSession, "role" | "panelType" | "username">,
+) {
   if (session.role === "SUPER_ADMIN") {
     return isOwnerUsername(session.username) ? "/owner-panel" : "/super-admin";
   }
