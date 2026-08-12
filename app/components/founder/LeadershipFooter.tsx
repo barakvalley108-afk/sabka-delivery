@@ -17,9 +17,6 @@ export default function LeadershipFooter() {
             WhatsApp Support · 6000830383
           </a>
         </p>
-        <a href="/about" className="font-semibold text-zinc-900 underline-offset-4 hover:underline" aria-label="About Us">
-          About us
-        </a>
       </div>
     </footer>
   );
