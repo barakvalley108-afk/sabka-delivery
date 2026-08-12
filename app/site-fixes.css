@@ -1,0 +1,58 @@
+/* Final customer UI fixes */
+.site-global-footer {
+  width: 100%;
+  background: #050606;
+  color: #f5d58a;
+  border-top: 1px solid #654c22;
+  padding: 18px 24px;
+}
+.site-global-footer-inner {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+.site-global-footer-inner::-webkit-scrollbar { display: none; }
+.site-global-footer-inner span { color: #fff; }
+.site-global-footer-inner a { color: #f5d58a; text-decoration: underline; text-underline-offset: 3px; }
+.apna-app > footer { display: none !important; }
+.install-app-button,
+.install-app-fab,
+.royal-food-app .install-app-button,
+.royal-food-app .install-app-fab { display: none !important; }
+.customer-fabs .whatsapp-fab,
+.whatsapp-fab {
+  min-width: 132px;
+  min-height: 46px;
+  padding: 12px 20px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px !important;
+  background: #20b858 !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  box-shadow: 0 10px 28px #0005;
+  text-decoration: none !important;
+}
+.customer-fabs { gap: 8px; }
+@media (min-width: 681px) {
+  .royal-food-app .hero,
+  .apna-app > .hero { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
+  .royal-food-app .main-content { width: 100% !important; max-width: none !important; margin-inline: 0 !important; }
+}
+@media (max-width: 680px) {
+  .site-global-footer { padding: 12px 10px; }
+  .site-global-footer-inner { justify-content: flex-start; gap: 14px; font-size: 9px; }
+  .customer-fabs .whatsapp-fab,
+  .whatsapp-fab { min-width: 145px; min-height: 48px; padding: 12px 22px !important; font-size: 13px !important; }
+  .customer-fabs { right: 10px; bottom: 88px; }
+}
