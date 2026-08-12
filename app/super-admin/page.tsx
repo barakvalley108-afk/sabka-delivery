@@ -10,5 +10,12 @@ import "../panel-enhancements.css";
 export const dynamic = "force-static";
 
 export default function SuperAdminPage() {
-  return <AdminConsole owner="SABKA DELIVERY Owner" />;
+  return (
+    <>
+      <div className="owner-security-shortcut">
+        <a href="/super-admin/security">🔐 Owner Security · Change Admin Password</a>
+      </div>
+      <AdminConsole owner="SABKA DELIVERY Owner" />
+    </>
+  );
 }
