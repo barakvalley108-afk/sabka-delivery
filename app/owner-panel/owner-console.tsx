@@ -35,6 +35,11 @@ export default function OwnerConsole({ owner }: { owner: string }) {
 
   const load = useCallback(async () => {
     try {
+      const ownerCheck = await fetch("/api/owner/control", { cache: "no-store" });
+      if (!ownerCheck.ok) {
+        window.location.href = "/panel-login";
+        return;
+      }
       const response = await fetch("/api/admin/control", { cache: "no-store" });
       if (response.status === 401 || response.status === 403) {
         window.location.href = "/panel-login";
