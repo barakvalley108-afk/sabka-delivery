@@ -103,8 +103,10 @@ export async function requestMeta() {
   };
 }
 
-export function panelRoute(session: Pick<PanelSession, "role" | "panelType">) {
-  if (session.role === "SUPER_ADMIN") return "/super-admin";
+export function panelRoute(session: Pick<PanelSession, "role" | "panelType" | "username">) {
+  if (session.role === "SUPER_ADMIN") {
+    return isOwnerUsername(session.username) ? "/owner-panel" : "/super-admin";
+  }
   if (session.role === "RIDER" || session.panelType === "DELIVERY")
     return "/rider-panel";
   if (session.panelType === "ELECTRONICS") return "/electronics-panel";
