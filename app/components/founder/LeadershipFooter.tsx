@@ -3,6 +3,7 @@ export default function LeadershipFooter() {
     <footer className="site-global-footer">
       <div className="site-global-footer-inner">
         <span>Lala Bazar ka apna Food + Grocery delivery platform.</span>
+        <a href="/about">About Us</a>
         <a href="/privacy">Privacy Policy</a>
         <a href="/terms">Terms</a>
         <a
