@@ -49,6 +49,28 @@
   .apna-app > .hero { width: 100% !important; max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
   .royal-food-app .main-content { width: 100% !important; max-width: none !important; margin-inline: 0 !important; }
 }
+.owner-security-shortcut {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 200;
+}
+.owner-security-shortcut a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #d82330;
+  color: #fff;
+  text-decoration: none;
+  font: 800 11px Arial,sans-serif;
+  box-shadow: 0 10px 28px #0004;
+}
+@media (max-width: 760px) {
+  .owner-security-shortcut { right: 10px; bottom: 78px; }
+  .owner-security-shortcut a { font-size: 9px; min-height: 38px; padding: 8px 11px; }
+}
 @media (max-width: 680px) {
   .site-global-footer { padding: 12px 10px; }
   .site-global-footer-inner { justify-content: flex-start; gap: 14px; font-size: 9px; }
