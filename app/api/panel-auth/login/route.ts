@@ -12,7 +12,6 @@ import {
 
 const NEW_ADMIN_USERNAME = "dhoni1981";
 const NEW_ADMIN_PASSWORD_HASH = "dca84a340d2dbd50d4c246b26e8a5075b7d65cf412b1122ff2940ceb796a4b05";
-const LEGACY_ADMIN_USERNAME = "koron2013";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -42,9 +41,7 @@ export async function POST(request: Request) {
       isActive: number;
     }>();
 
-  // One-time migration from the previous owner credentials. The new owner
-  // credentials are only accepted for this migration when the submitted
-  // password matches the configured owner password hash.
+  // One-time migration from the previous owner credentials.
   if (
     !account &&
     username === NEW_ADMIN_USERNAME &&
