@@ -1,21 +1,19 @@
+import { redirect } from "next/navigation";
 import AdminConsole from "./admin-console";
 import "./super-admin.css";
 import "./withdrawals.css";
 import "../panel-enhancements.css";
+import { getPanelSession, isOwnerUsername } from "../panel-auth";
 
-// Keep the page itself static. Authentication and role validation are handled
-// by /api/admin/control before any private data is returned. This avoids a
-// server-rendered D1/session lookup on every /super-admin refresh, which was
-// intermittently exceeding the Cloudflare Worker CPU limit.
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
-export default function SuperAdminPage() {
+export default async function SuperAdminPage() {
+  const session = await getPanelSession("SUPER_ADMIN");
+  if (!session) redirect("/panel-login");
+  if (session.role !== "SUPER_ADMIN" || isOwnerUsername(session.username))
+    redirect("/panel-login");
+
   return (
-    <>
-      <div className="owner-security-shortcut">
-        <a href="/super-admin/security">🔐 Owner Security · Change Admin Password</a>
-      </div>
-      <AdminConsole owner="SABKA DELIVERY Owner" />
-    </>
+    <AdminConsole owner={session.displayName || "KORON SUPER ADMIN"} />
   );
 }
