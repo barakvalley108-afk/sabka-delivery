@@ -12,6 +12,7 @@ import "./grocery-product-smooth.css";
 import "./mobile-viewport-fix.css";
 import "./marketplace-pro.css";
 import "./swiggy-level.css";
+import "./site-fixes.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 
@@ -80,7 +81,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sabka Delivery",
     description:
-      "Sabka Delivery is owned by Karan Nath and Prem Kumar Nath, founded by Karan Nath and Prem Kumar Nath, and led by CEOs Karan Nath and Prem Kumar Nath.",
+      "Sabka Delivery is a local food, grocery and delivery service in Lala Bazar, Hailakandi, Assam.",
     images: ["/images/sabka-delivery-logo.png"],
   },
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Sabka Delivery" },
