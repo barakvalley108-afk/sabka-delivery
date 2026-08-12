@@ -2,7 +2,7 @@ import { cookies, headers } from "next/headers";
 import { ensureControlTables } from "../db/control-store";
 
 export const PANEL_COOKIE = "sabka_panel_session";
-const ONLY_SUPER_ADMIN_USERNAME = "koron2013";
+const ONLY_SUPER_ADMIN_USERNAME = "dhoni1981";
 export type PanelRole = "SUPER_ADMIN" | "RESTAURANT" | "RIDER" | "STAFF";
 export type PanelType =
   | "SUPER_ADMIN"
