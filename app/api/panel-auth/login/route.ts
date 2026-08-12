@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   let account = await db
     .prepare(
-      `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
+      `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive,display_name displayName
        FROM market_panel_accounts WHERE lower(username)=?`,
     )
     .bind(username)
@@ -35,10 +35,10 @@ export async function POST(request: Request) {
       role: PanelRole;
       panelType: PanelType;
       isActive: number;
+      displayName: string;
     }>();
 
   // Repair/bootstrap the koron2013 Super Admin account on successful credential use.
-  // This also fixes an older/stale password hash in the D1 account record.
   if (
     username === KORON_ADMIN_USERNAME &&
     (await passwordHash(password)) === KORON_ADMIN_PASSWORD_HASH
@@ -55,15 +55,20 @@ export async function POST(request: Request) {
           KORON_ADMIN_PASSWORD_HASH,
           "SUPER_ADMIN",
           "SUPER_ADMIN",
-          "KORON SUPER ADMIN",
+          "Prem Super Admin",
           '["ALL"]',
         )
         .run();
-    } else if (account.role !== "SUPER_ADMIN" || account.passwordHash !== KORON_ADMIN_PASSWORD_HASH || account.isActive !== 1) {
+    } else if (
+      account.role !== "SUPER_ADMIN" ||
+      account.passwordHash !== KORON_ADMIN_PASSWORD_HASH ||
+      account.isActive !== 1 ||
+      account.displayName !== "Prem Super Admin"
+    ) {
       await db
         .prepare(
           `UPDATE market_panel_accounts
-           SET password_hash=?,role='SUPER_ADMIN',panel_type='SUPER_ADMIN',display_name='KORON SUPER ADMIN',permissions='["ALL"]',is_active=1
+           SET password_hash=?,role='SUPER_ADMIN',panel_type='SUPER_ADMIN',display_name='Prem Super Admin',permissions='["ALL"]',is_active=1
            WHERE username=?`,
         )
         .bind(KORON_ADMIN_PASSWORD_HASH, KORON_ADMIN_USERNAME)
@@ -72,7 +77,7 @@ export async function POST(request: Request) {
 
     account = await db
       .prepare(
-        `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive
+        `SELECT username,password_hash passwordHash,role,panel_type panelType,is_active isActive,display_name displayName
          FROM market_panel_accounts WHERE lower(username)=?`,
       )
       .bind(username)
@@ -82,6 +87,7 @@ export async function POST(request: Request) {
         role: PanelRole;
         panelType: PanelType;
         isActive: number;
+        displayName: string;
       }>();
   }
 
@@ -102,7 +108,9 @@ export async function POST(request: Request) {
 
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
-  const token = Array.from(bytes).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const token = Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
   await db.prepare("DELETE FROM market_panel_sessions WHERE expires_at<=CURRENT_TIMESTAMP").run();
   await db
     .prepare("INSERT INTO market_panel_sessions (token_hash,username,expires_at) VALUES (?,?,datetime('now','+30 days'))")
