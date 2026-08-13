@@ -12,6 +12,10 @@ function romanHindi(name: string, description: string, category: string, storeNa
   return `${base} Ye ${storeName || "selected store"} se available hai. Lala Bazar mein fast delivery ke liye.`;
 }
 
+function detectNonVeg(name: string, description: string, category: string) {
+  return /\b(egg|eggs|anda|chicken|mutton|fish|prawn|prawns|seafood|meat|keema|bacon|ham|sausage|salami|tuna)\b/i.test(`${name} ${description} ${category}`);
+}
+
 export default function ProductQuickView() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "", isVeg: false });
@@ -29,7 +33,8 @@ export default function ProductQuickView() {
       const storeName = card.querySelector(".product-info > small")?.textContent?.trim() || "";
       const visual = card.querySelector(".product-visual") as HTMLElement | null;
       const image = visual?.style.backgroundImage?.replace(/^url\([\"']?/, "").replace(/[\"']?\)$/, "") || "";
-      const isVeg = !!card.querySelector(".product-visual .veg");
+      const detectedNonVeg = detectNonVeg(name, description, category);
+      const isVeg = !detectedNonVeg && !!card.querySelector(".product-visual .veg");
 
       setData({ name, description, image, price, category, storeName, isVeg });
       setOpen(true);
@@ -61,13 +66,14 @@ export default function ProductQuickView() {
   const categoryLower = data.category.toLowerCase();
   const isGrocery = categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable");
   const isDrink = /drink|beverage|juice|soda|fizz|shake|lassi|cold|water/i.test(`${data.name} ${data.category} ${data.description}`);
+  const isNonVeg = detectNonVeg(data.name, data.description, data.category) || !data.isVeg;
   const warningText = isGrocery
     ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
     : isDrink
       ? "Drink preparation mein ingredients, syrup, sugar ya flavouring use ho sakti hai. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
-      : data.isVeg
-        ? "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
-        : "Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
+      : isNonVeg
+        ? "Ye non-veg item hai. Isme egg, chicken, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
+        : "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
 
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
