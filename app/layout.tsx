@@ -14,6 +14,7 @@ import "./marketplace-pro.css";
 import "./swiggy-level.css";
 import "./site-fixes.css";
 import "./animation-enhancer.css";
+import "./banner-carousel.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 
