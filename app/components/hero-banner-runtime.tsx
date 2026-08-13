@@ -15,26 +15,31 @@ export default function HeroBannerRuntime() {
         const response = await fetch("/api/banners", { cache: "no-store" });
         if (!response.ok) throw new Error("Banner API failed");
         const data = await response.json();
-        const banners = Array.isArray(data?.banners)
-          ? data.banners.filter(
-              (value: unknown): value is string =>
-                typeof value === "string" && value.trim().length > 0,
-            ).slice(0, 10)
-          : [];
-        if (!active || !banners.length) return;
+        const clean = (values: unknown) =>
+          Array.isArray(values)
+            ? values
+                .filter((value: unknown): value is string => typeof value === "string" && value.trim().length > 0)
+                .slice(0, 5)
+            : [];
+        const foodBanners = clean(data?.foodBanners);
+        const groceryBanners = clean(data?.groceryBanners);
+        if (!active || (!foodBanners.length && !groceryBanners.length)) return;
 
         const mount = () => {
           if (!active || mounted) return true;
-          const hero = document.querySelector<HTMLElement>(".hero.food .hero-art");
+          const hero = document.querySelector<HTMLElement>(".hero.food .hero-art, .hero.grocery .hero-art");
           if (!hero) return false;
 
+          const isGrocery = hero.closest(".hero.grocery") !== null;
+          const banners = (isGrocery ? groceryBanners : foodBanners).slice(0, 5);
+          if (!banners.length) return false;
           mounted = true;
           hero.classList.add("hero-banner-carousel-mounted");
-          const oldBadge = hero.querySelector<HTMLElement>(".lala-badge");
 
+          const oldBadge = hero.querySelector<HTMLElement>(".lala-badge");
           const viewport = document.createElement("div");
           viewport.className = "hero-banner-viewport";
-          viewport.setAttribute("aria-label", "Sabka Delivery banners");
+          viewport.setAttribute("aria-label", `${isGrocery ? "Grocery" : "Food"} banners`);
 
           const track = document.createElement("div");
           track.className = "hero-banner-track";
@@ -45,10 +50,9 @@ export default function HeroBannerRuntime() {
             slide.className = "hero-banner-slide";
             slide.style.width = `${100 / banners.length}%`;
             slide.setAttribute("aria-hidden", index === 0 ? "false" : "true");
-
             const image = document.createElement("img");
             image.src = src;
-            image.alt = `Sabka Delivery banner ${index + 1}`;
+            image.alt = `Sabka Delivery ${isGrocery ? "grocery" : "food"} banner ${index + 1}`;
             image.loading = index === 0 ? "eager" : "lazy";
             image.decoding = "async";
             slide.appendChild(image);
@@ -62,7 +66,7 @@ export default function HeroBannerRuntime() {
           const dots = document.createElement("div");
           dots.className = "hero-banner-dots";
           dots.setAttribute("role", "tablist");
-          dots.setAttribute("aria-label", "Banner navigation");
+          dots.setAttribute("aria-label", `${isGrocery ? "Grocery" : "Food"} banner navigation`);
           const dotButtons: HTMLButtonElement[] = [];
           let index = 0;
 
@@ -93,7 +97,7 @@ export default function HeroBannerRuntime() {
             const dot = document.createElement("button");
             dot.type = "button";
             dot.setAttribute("role", "tab");
-            dot.setAttribute("aria-label", `Show banner ${dotIndex + 1}`);
+            dot.setAttribute("aria-label", `Show ${isGrocery ? "grocery" : "food"} banner ${dotIndex + 1}`);
             dot.addEventListener("click", () => {
               index = dotIndex;
               update();
@@ -102,14 +106,12 @@ export default function HeroBannerRuntime() {
             dots.appendChild(dot);
             dotButtons.push(dot);
           });
-
           hero.appendChild(dots);
 
           let touchStartX = 0;
           let touchStartY = 0;
           let touchMoved = false;
           let wheelLock = false;
-
           const onTouchStart = (event: TouchEvent) => {
             const touch = event.touches[0];
             if (!touch) return;
@@ -151,7 +153,6 @@ export default function HeroBannerRuntime() {
           hero.addEventListener("touchmove", onTouchMove, { passive: true });
           hero.addEventListener("touchend", onTouchEnd, { passive: true });
           hero.addEventListener("wheel", onWheel, { passive: true });
-
           update();
           restart();
           return true;
