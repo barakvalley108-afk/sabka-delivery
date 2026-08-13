@@ -1,0 +1,61 @@
+/* Premium rotating hero banner carousel: 10 visual banners, one after another. */
+.hero.food .hero-art {
+  background-color: #fff8eb !important;
+  background-size: cover !important;
+  background-position: center !important;
+  animation: sabkaFoodBanner 30s steps(1, end) infinite;
+  isolation: isolate;
+}
+
+.hero.food .hero-art::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,194,28,.13));
+  pointer-events: none;
+}
+
+.hero.food .hero-art > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes sabkaFoodBanner {
+  0%, 9.99% { background-image: url('/images/hero-food-collage.png') !important; }
+  10%, 19.99% { background-image: url('/images/hero-food.png') !important; }
+  20%, 29.99% { background-image: url('/images/biryani-card.png') !important; }
+  30%, 39.99% { background-image: url('/images/curry-card.png') !important; }
+  40%, 49.99% { background-image: url('/images/grocery-staples.png') !important; }
+  50%, 59.99% { background-image: url('/images/grocery-vegetables.png') !important; }
+  60%, 69.99% { background-image: url('/images/grocery-daily-needs.png') !important; }
+  70%, 79.99% { background-image: url('/images/electronics-hero.webp') !important; }
+  80%, 89.99% { background-image: url('/images/sabka-delivery-logo.png') !important; background-size: contain !important; background-repeat: no-repeat !important; background-color: #fffaf0 !important; }
+  90%, 100% { background-image: url('/images/hero-food-collage.png') !important; }
+}
+
+.hero.food .hero-art .lala-badge {
+  animation: bannerBadgeFloat 2.8s ease-in-out infinite;
+}
+
+@keyframes bannerBadgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero.food .hero-art,
+  .hero.food .hero-art .lala-badge {
+    animation: none !important;
+  }
+  .hero.food .hero-art {
+    background-image: url('/images/hero-food-collage.png') !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero.food .hero-art {
+    min-height: 260px;
+    animation-duration: 26s;
+  }
+}
