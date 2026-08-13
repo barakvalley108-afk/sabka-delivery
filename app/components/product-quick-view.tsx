@@ -65,14 +65,14 @@ export default function ProductQuickView() {
 
   const text = romanHindi(data.name, data.description, data.category, data.storeName);
   const categoryLower = data.category.toLowerCase();
-  const isGrocery = categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable");
   const isDrink = /drink|beverage|juice|soda|fizz|shake|lassi|cold|water/i.test(`${data.name} ${data.category} ${data.description}`);
+  const isGrocery = !isDrink && (categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable"));
   const foodType = data.isNonVeg ? "NON-VEG" : data.isVeg ? "VEG" : isDrink ? "ORGANIC DRINK" : "FOOD";
 
-  const warningText = isGrocery
-    ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
-    : isDrink
-      ? ""
+  const warningText = isDrink
+    ? ""
+    : isGrocery
+      ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
       : data.isNonVeg
         ? "Ye non-veg item hai. Isme egg, chicken, fish, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
         : data.isVeg
