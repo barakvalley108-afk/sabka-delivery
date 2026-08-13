@@ -15,7 +15,7 @@ function romanHindi(name: string, description: string, category: string, storeNa
 export default function ProductQuickView() {
   const [open, setOpen] = useState(false);
   const [angle, setAngle] = useState(0);
-  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "" });
+  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "", isVeg: false });
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -29,7 +29,8 @@ export default function ProductQuickView() {
       const storeName = card.querySelector(".product-info > small")?.textContent?.trim() || "";
       const visual = card.querySelector(".product-visual") as HTMLElement | null;
       const image = visual?.style.backgroundImage?.replace(/^url\([\"']?/, "").replace(/[\"']?\)$/, "") || "";
-      setData({ name: title, description, image, price, category, storeName });
+      const isVeg = !!card.querySelector(".product-visual .veg");
+      setData({ name: title, description, image, price, category, storeName, isVeg });
       setAngle(0);
       setOpen(true);
     };
@@ -61,6 +62,10 @@ export default function ProductQuickView() {
   if (!open) return null;
   const text = romanHindi(data.name, data.description, data.category, data.storeName);
   const angleLabels = ["Front", "Left angle", "Right angle"];
+  const warningText = data.isVeg
+    ? "Ye veg item hai. Preparation ke time onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
+    : "Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
+
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
       <article className="product-quick-view" onClick={(e) => e.stopPropagation()}>
@@ -85,7 +90,7 @@ export default function ProductQuickView() {
           <h2 className="product-quick-title-animate">{data.name}</h2>
           <div className="product-quick-price product-quick-price-animate">{data.price}</div>
           <p className="product-quick-description-animate">{text}</p>
-          <div className="product-quick-warning"><strong>⚠️ Warning</strong><span>Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Wrong preference ke case mein return/refund available nahi ho sakta.</span></div>
+          <div className="product-quick-warning"><strong>⚠️ Warning</strong><span>{warningText}</span></div>
           <div className="product-quick-actions">
             <button className="product-quick-add" onClick={() => addToCart(true)}>BUY NOW</button>
             <button className="product-quick-cart" onClick={() => addToCart(false)}>ADD TO CART</button>
