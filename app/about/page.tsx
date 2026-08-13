@@ -2,36 +2,12 @@ export const metadata = {
   title: "About Sabka Delivery | Karan Nath & Prem Kumar Nath",
   description:
     "Official leadership information for Sabka Delivery: Owners Karan Nath and Prem Kumar Nath; Founders Karan Nath and Prem Kumar Nath; CEOs Karan Nath and Prem Kumar Nath.",
-  keywords: [
-    "Sabka Delivery",
-    "Karan Nath",
-    "Prem Kumar Nath",
-    "Sabka Delivery owner",
-    "Sabka Delivery owners",
-    "Sabka Delivery founder",
-    "Sabka Delivery founders",
-    "Sabka Delivery CEO",
-    "Sabka Delivery CEOs",
-  ],
+  keywords: ["Sabka Delivery", "Karan Nath", "Prem Kumar Nath", "Sabka Delivery owner", "Sabka Delivery founders", "Sabka Delivery CEO"],
 };
 
 const leaders = [
-  {
-    name: "Karan Nath",
-    role: "Owner • Founder • CEO",
-    image: "/founder/karan.jpg",
-    alt: "Karan Nath, Owner, Founder and CEO of Sabka Delivery",
-    description:
-      "Karan Nath is an owner, founder and CEO of Sabka Delivery alongside Prem Kumar Nath.",
-  },
-  {
-    name: "Prem Kumar Nath",
-    role: "Owner • Founder • CEO",
-    image: "/founder/prem.png",
-    alt: "Prem Kumar Nath, Owner, Founder and CEO of Sabka Delivery",
-    description:
-      "Prem Kumar Nath is an owner, founder and CEO of Sabka Delivery alongside Karan Nath.",
-  },
+  { name: "Karan Nath", role: "Owner • Founder • CEO", image: "/founder/karan.jpg", alt: "Karan Nath, Owner, Founder and CEO of Sabka Delivery", description: "Karan Nath is an owner, founder and CEO of Sabka Delivery alongside Prem Kumar Nath." },
+  { name: "Prem Kumar Nath", role: "Owner • Founder • CEO", image: "/founder/prem.png", alt: "Prem Kumar Nath, Owner, Founder and CEO of Sabka Delivery", description: "Prem Kumar Nath is an owner, founder and CEO of Sabka Delivery alongside Karan Nath." },
 ];
 
 export default function AboutPage() {
@@ -41,29 +17,12 @@ export default function AboutPage() {
     "@id": "https://sabkadelivery.in/#organization",
     name: "Sabka Delivery",
     url: "https://sabkadelivery.in",
-    description:
-      "A hyperlocal delivery platform owned, founded and led by Karan Nath and Prem Kumar Nath.",
+    description: "A hyperlocal delivery platform owned, founded and led by Karan Nath and Prem Kumar Nath.",
     telephone: "+91-6000830383",
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        telephone: "+91-6000830383",
-        contactType: "customer support",
-        areaServed: "IN",
-        availableLanguage: ["English", "Hindi", "Bengali"],
-      },
-    ],
+    contactPoint: [{ "@type": "ContactPoint", telephone: "+91-6000830383", contactType: "customer support", areaServed: "IN", availableLanguage: ["English", "Hindi", "Bengali"] }],
     owner: [
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#karan-nath", name: "Karan Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/founder", image: "https://sabkadelivery.in/founder/karan.jpg" },
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#prem-kumar-nath", name: "Prem Kumar Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/about", image: "https://sabkadelivery.in/founder/prem.png" },
-    ],
-    founder: [
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#karan-nath", name: "Karan Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/founder", image: "https://sabkadelivery.in/founder/karan.jpg" },
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#prem-kumar-nath", name: "Prem Kumar Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/about", image: "https://sabkadelivery.in/founder/prem.png" },
-    ],
-    ceo: [
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#karan-nath", name: "Karan Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/founder", image: "https://sabkadelivery.in/founder/karan.jpg" },
-      { "@type": "Person", "@id": "https://sabkadelivery.in/#prem-kumar-nath", name: "Prem Kumar Nath", jobTitle: "Owner, Founder and CEO", url: "https://sabkadelivery.in/about", image: "https://sabkadelivery.in/founder/prem.png" },
+      { "@type": "Person", name: "Karan Nath", jobTitle: "Owner, Founder and CEO" },
+      { "@type": "Person", name: "Prem Kumar Nath", jobTitle: "Owner, Founder and CEO" },
     ],
   };
 
@@ -74,19 +33,13 @@ export default function AboutPage() {
         <section className="text-center">
           <p className="text-yellow-400 font-semibold tracking-widest uppercase">Sabka Delivery</p>
           <h1 className="text-4xl md:text-6xl font-bold mt-3 text-yellow-400">About Us</h1>
-          <p className="mt-6 max-w-3xl mx-auto text-gray-300 text-lg leading-8">
-            Sabka Delivery is a hyperlocal delivery platform created to make food, grocery and daily essentials delivery faster, smarter and affordable for everyone.
-          </p>
-          <p className="mt-4 max-w-3xl mx-auto text-gray-300 text-lg leading-8">
-            <strong>Karan Nath and Prem Kumar Nath</strong> are the owners, founders and CEOs of Sabka Delivery.
-          </p>
+          <p className="mt-6 max-w-3xl mx-auto text-gray-300 text-lg leading-8">Sabka Delivery is a hyperlocal delivery platform created to make food, grocery and daily essentials delivery faster, smarter and affordable for everyone.</p>
+          <p className="mt-4 max-w-3xl mx-auto text-gray-300 text-lg leading-8"><strong>Karan Nath and Prem Kumar Nath</strong> are the owners, founders and CEOs of Sabka Delivery.</p>
         </section>
         <section className="mt-16">
           <p className="text-yellow-400 font-semibold uppercase tracking-wider">Our Leadership</p>
           <h2 className="text-3xl md:text-4xl font-bold mt-2">Owners, Founders & CEOs</h2>
-          <p className="mt-3 text-gray-400">
-            Karan Nath and Prem Kumar Nath are the owners, founders and CEOs of Sabka Delivery.
-          </p>
+          <p className="mt-3 text-gray-400">Karan Nath and Prem Kumar Nath are the owners, founders and CEOs of Sabka Delivery.</p>
           <div className="grid md:grid-cols-2 gap-8 mt-8">
             {leaders.map((leader) => (
               <article key={leader.name} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-7 shadow-2xl">
@@ -104,38 +57,21 @@ export default function AboutPage() {
         </section>
         <section className="mt-12 bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
           <h2 className="text-3xl font-bold text-yellow-400">Customer Support & Business Contact</h2>
-          <p className="mt-4 text-gray-300 text-lg leading-8">
-            Customer support, order help, delivery queries and business enquiries ke liye humse contact karein.
-          </p>
+          <p className="mt-4 text-gray-300 text-lg leading-8">Customer support, order help, delivery queries and business enquiries ke liye humse contact karein.</p>
           <div className="mt-6 rounded-2xl border border-green-500/30 bg-green-500/10 p-5">
             <p className="text-green-400 font-bold text-lg">💬 Official WhatsApp Support Number</p>
             <p className="mt-1 text-white text-2xl font-extrabold">6000830383</p>
             <p className="mt-1 text-gray-300">Customer Support • Order Help • Delivery Queries • Business Enquiries</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <a href="https://wa.me/916000830383" target="_blank" rel="noreferrer" className="inline-flex items-center rounded-2xl bg-green-500 px-6 py-4 text-lg font-bold text-white hover:scale-[1.02] transition-transform">
-                💬 Click to Chat on WhatsApp
-              </a>
-              <a href="tel:+916000830383" className="inline-flex items-center rounded-2xl border border-yellow-500 px-6 py-4 text-lg font-bold text-yellow-400 hover:bg-yellow-400 hover:text-black transition-colors">
-                📞 Call 6000830383
-              </a>
-            </div>
+            <a href="https://wa.me/916000830383" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center rounded-2xl bg-green-500 px-6 py-4 text-lg font-bold text-white hover:scale-[1.02] transition-transform">💬 Click to Chat on WhatsApp</a>
           </div>
         </section>
         <section className="mt-12 bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
           <h2 className="text-3xl font-bold text-yellow-400">Our Story</h2>
-          <p className="mt-5 text-gray-300 text-lg leading-8">
-            Sabka Delivery was created by Karan Nath and Prem Kumar Nath with a simple goal: make local delivery convenient, dependable and accessible. The platform brings local customers and businesses together through modern technology and a customer-first approach.
-          </p>
+          <p className="mt-5 text-gray-300 text-lg leading-8">Sabka Delivery was created by Karan Nath and Prem Kumar Nath with a simple goal: make local delivery convenient, dependable and accessible. The platform brings local customers and businesses together through modern technology and a customer-first approach.</p>
         </section>
         <section className="grid md:grid-cols-2 gap-8 mt-8">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-            <h2 className="text-3xl font-bold text-yellow-400">Mission</h2>
-            <p className="mt-4 text-gray-300 leading-8">To make local delivery faster, smarter and affordable for everyone.</p>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-            <h2 className="text-3xl font-bold text-yellow-400">Vision</h2>
-            <p className="mt-4 text-gray-300 leading-8">To become one of India&apos;s most trusted hyperlocal delivery companies.</p>
-          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8"><h2 className="text-3xl font-bold text-yellow-400">Mission</h2><p className="mt-4 text-gray-300 leading-8">To make local delivery faster, smarter and affordable for everyone.</p></div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8"><h2 className="text-3xl font-bold text-yellow-400">Vision</h2><p className="mt-4 text-gray-300 leading-8">To become one of India&apos;s most trusted hyperlocal delivery companies.</p></div>
         </section>
       </div>
     </main>
