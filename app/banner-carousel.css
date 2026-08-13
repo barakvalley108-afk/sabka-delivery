@@ -1,14 +1,8 @@
 .hero.food .hero-art {
   position: relative;
-  background: #fff8eb !important;
+  background-color: #fff8eb !important;
   isolation: isolate;
   overflow: hidden;
-}
-
-/* Disable the old steps/background-image carousel. */
-.hero.food .hero-art:not(.hero-banner-carousel-mounted) {
-  background-image: none !important;
-  animation: none !important;
 }
 
 .hero.food .hero-art.hero-banner-carousel-mounted {
@@ -25,7 +19,6 @@
 
 .hero-banner-track {
   display: flex;
-  width: 1000%;
   height: 100%;
   transform: translate3d(0, 0, 0);
   transition: transform 850ms cubic-bezier(.22,.61,.36,1);
@@ -34,9 +27,8 @@
 
 .hero-banner-slide {
   position: relative;
-  width: 10%;
   height: 100%;
-  flex: 0 0 10%;
+  flex: 0 0 auto;
   overflow: hidden;
 }
 
@@ -62,7 +54,7 @@
   position: absolute;
   left: 50%;
   bottom: 18px;
-  z-index: 5;
+  z-index: 7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -93,7 +85,7 @@
 
 .hero.food .hero-art .lala-badge {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   animation: bannerBadgeFloat 2.8s ease-in-out infinite;
 }
 
@@ -103,7 +95,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero.food .hero-art,
   .hero.food .hero-art .lala-badge {
     animation: none !important;
   }
