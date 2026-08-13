@@ -1,0 +1,26 @@
+button, a, [role="button"], input[type="button"], input[type="submit"] {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-click-ripple {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255,255,255,.72) 0%, rgba(255,194,28,.38) 38%, rgba(255,255,255,0) 72%);
+  transform: translate(-50%, -50%) scale(0);
+  animation: premium-click-ripple .52s cubic-bezier(.2,.75,.2,1) forwards;
+  z-index: 20;
+}
+
+@keyframes premium-click-ripple {
+  0% { opacity: .95; transform: translate(-50%, -50%) scale(.2); }
+  45% { opacity: .72; transform: translate(-50%, -50%) scale(7); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(11); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-click-ripple { display: none; }
+}
