@@ -1,0 +1,50 @@
+/* Sabka Delivery premium motion layer: energetic but restrained. */
+@media (prefers-reduced-motion: no-preference) {
+  .apna-app .app-header { animation: sdSlideDown .55s cubic-bezier(.2,.8,.2,1) both; }
+  .apna-app .hero { animation: sdHeroIn .8s cubic-bezier(.2,.8,.2,1) both; }
+  .apna-app .hero-art { animation: sdFloat 6s ease-in-out infinite; }
+  .apna-app .section-title,
+  .apna-app .category-row,
+  .apna-app .store-row,
+  .apna-app .product-grid,
+  .apna-app .offers-section,
+  .apna-app .promise,
+  .apna-app footer { animation: sdFadeUp .65s cubic-bezier(.2,.8,.2,1) both; }
+  .apna-app .product-card,
+  .apna-app .store-card,
+  .apna-app .category-row button,
+  .apna-app .offer-grid article,
+  .apna-app .reward-grid article,
+  .apna-app .promise > div { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+  .apna-app .product-card:hover,
+  .apna-app .store-card:hover,
+  .apna-app .category-row button:hover,
+  .apna-app .offer-grid article:hover,
+  .apna-app .reward-grid article:hover,
+  .apna-app .promise > div:hover { transform: translateY(-5px); box-shadow: 0 16px 32px rgba(39,65,43,.12); }
+  .apna-app .hero-search,
+  .apna-app .cart-drawer,
+  .apna-app .checkout-form,
+  .apna-app .history-modal,
+  .apna-app .support-modal { animation: sdSoftIn .35s ease both; }
+  .apna-app .place-order,
+  .apna-app .checkout-button { transition: transform .18s ease, box-shadow .18s ease; }
+  .apna-app .place-order:hover:not(:disabled),
+  .apna-app .checkout-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,.12); }
+  .apna-app .coupon-applied { animation: sdPop .35s ease both; }
+}
+
+@keyframes sdSlideDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sdHeroIn { from { opacity: 0; transform: translateY(22px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes sdFadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes sdSoftIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes sdPop { 0% { opacity: 0; transform: scale(.94); } 70% { transform: scale(1.03); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes sdFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(.5deg); } }
+
+/* Coupon controls: clearer success/error states and better checkout affordance. */
+.coupon-applied { display:block; margin-top:8px; padding:9px 11px; border-radius:10px; background:#eaf8e8; color:#19683a; font-weight:900; }
+.coupon-warning { display:block; margin-top:8px; padding:9px 11px; border-radius:10px; background:#fff6df; color:#8a5a00; font-weight:800; }
+.coupon-invalid { display:block; margin-top:8px; padding:9px 11px; border-radius:10px; background:#fff0f0; color:#b42318; font-weight:800; }
+.manual-coupon input { text-transform: uppercase; }
+.manual-coupon button { transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease; }
+.manual-coupon button:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(0,0,0,.10); }
