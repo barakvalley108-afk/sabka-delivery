@@ -1,40 +1,99 @@
-/* Premium rotating hero banner carousel: 10 visual banners, one after another. */
 .hero.food .hero-art {
-  background-color: #fff8eb !important;
-  background-size: cover !important;
-  background-position: center !important;
-  animation: sabkaFoodBanner 30s steps(1, end) infinite;
+  position: relative;
+  background: #fff8eb !important;
   isolation: isolate;
+  overflow: hidden;
 }
 
-.hero.food .hero-art::before {
+/* Disable the old steps/background-image carousel. */
+.hero.food .hero-art:not(.hero-banner-carousel-mounted) {
+  background-image: none !important;
+  animation: none !important;
+}
+
+.hero.food .hero-art.hero-banner-carousel-mounted {
+  background-image: none !important;
+  animation: none !important;
+}
+
+.hero-banner-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.hero-banner-track {
+  display: flex;
+  width: 1000%;
+  height: 100%;
+  transform: translate3d(0, 0, 0);
+  transition: transform 850ms cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+}
+
+.hero-banner-slide {
+  position: relative;
+  width: 10%;
+  height: 100%;
+  flex: 0 0 10%;
+  overflow: hidden;
+}
+
+.hero-banner-slide::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,194,28,.13));
+  background: linear-gradient(135deg, rgba(255,255,255,.02), rgba(255,194,28,.12));
   pointer-events: none;
 }
 
-.hero.food .hero-art > * {
-  position: relative;
-  z-index: 1;
+.hero-banner-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-@keyframes sabkaFoodBanner {
-  0%, 9.99% { background-image: url('/images/hero-food-collage.png') !important; }
-  10%, 19.99% { background-image: url('/images/hero-food.png') !important; }
-  20%, 29.99% { background-image: url('/images/biryani-card.png') !important; }
-  30%, 39.99% { background-image: url('/images/curry-card.png') !important; }
-  40%, 49.99% { background-image: url('/images/grocery-staples.png') !important; }
-  50%, 59.99% { background-image: url('/images/grocery-vegetables.png') !important; }
-  60%, 69.99% { background-image: url('/images/grocery-daily-needs.png') !important; }
-  70%, 79.99% { background-image: url('/images/electronics-hero.webp') !important; }
-  80%, 89.99% { background-image: url('/images/sabka-delivery-logo.png') !important; background-size: contain !important; background-repeat: no-repeat !important; background-color: #fffaf0 !important; }
-  90%, 100% { background-image: url('/images/hero-food-collage.png') !important; }
+.hero-banner-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 8px 22px rgba(22,35,28,.12);
+  transform: translateX(-50%);
+  backdrop-filter: blur(10px);
+}
+
+.hero-banner-dots button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(23,48,36,.24);
+  transition: width 220ms ease, transform 220ms ease, background 220ms ease;
+}
+
+.hero-banner-dots button.active {
+  width: 20px;
+  background: #e9502e;
+  transform: scaleY(1.05);
 }
 
 .hero.food .hero-art .lala-badge {
+  position: absolute;
+  z-index: 6;
   animation: bannerBadgeFloat 2.8s ease-in-out infinite;
 }
 
@@ -48,14 +107,33 @@
   .hero.food .hero-art .lala-badge {
     animation: none !important;
   }
-  .hero.food .hero-art {
-    background-image: url('/images/hero-food-collage.png') !important;
+
+  .hero-banner-track {
+    transition: none !important;
   }
 }
 
 @media (max-width: 680px) {
   .hero.food .hero-art {
     min-height: 260px;
-    animation-duration: 26s;
+  }
+
+  .hero-banner-track {
+    transition-duration: 650ms;
+  }
+
+  .hero-banner-dots {
+    bottom: 12px;
+    gap: 5px;
+    padding: 6px 8px;
+  }
+
+  .hero-banner-dots button {
+    width: 5px;
+    height: 5px;
+  }
+
+  .hero-banner-dots button.active {
+    width: 16px;
   }
 }
