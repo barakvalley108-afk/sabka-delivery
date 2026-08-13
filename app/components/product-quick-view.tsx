@@ -13,12 +13,12 @@ function romanHindi(name: string, description: string, category: string, storeNa
 }
 
 function detectNonVeg(name: string, description: string, category: string) {
-  return /\b(egg|eggs|anda|chicken|mutton|fish|prawn|prawns|seafood|meat|keema|bacon|ham|sausage|salami|tuna)\b/i.test(`${name} ${description} ${category}`);
+  return /\b(egg|eggs|anda|andaa|chicken|mutton|fish|prawn|prawns|seafood|meat|keema|bacon|ham|sausage|salami|tuna|pork|beef)\b/i.test(`${name} ${description} ${category}`);
 }
 
 export default function ProductQuickView() {
   const [open, setOpen] = useState(false);
-  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "", isVeg: false });
+  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "", isVeg: false, isNonVeg: false });
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -34,9 +34,10 @@ export default function ProductQuickView() {
       const visual = card.querySelector(".product-visual") as HTMLElement | null;
       const image = visual?.style.backgroundImage?.replace(/^url\([\"']?/, "").replace(/[\"']?\)$/, "") || "";
       const detectedNonVeg = detectNonVeg(name, description, category);
-      const isVeg = !detectedNonVeg && !!card.querySelector(".product-visual .veg");
+      const markedVeg = !!card.querySelector(".product-visual .veg");
+      const markedNonVeg = !!card.querySelector(".product-visual .nonveg, .product-visual .non-veg") || detectedNonVeg;
 
-      setData({ name, description, image, price, category, storeName, isVeg });
+      setData({ name, description, image, price, category, storeName, isVeg: markedVeg && !markedNonVeg, isNonVeg: markedNonVeg });
       setOpen(true);
     };
 
@@ -66,14 +67,16 @@ export default function ProductQuickView() {
   const categoryLower = data.category.toLowerCase();
   const isGrocery = categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable");
   const isDrink = /drink|beverage|juice|soda|fizz|shake|lassi|cold|water/i.test(`${data.name} ${data.category} ${data.description}`);
-  const isNonVeg = detectNonVeg(data.name, data.description, data.category) || !data.isVeg;
+  const foodType = data.isNonVeg ? "NON-VEG" : data.isVeg ? "VEG" : "FOOD";
   const warningText = isGrocery
     ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
     : isDrink
       ? "Drink preparation mein ingredients, syrup, sugar ya flavouring use ho sakti hai. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
-      : isNonVeg
-        ? "Ye non-veg item hai. Isme egg, chicken, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
-        : "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
+      : data.isNonVeg
+        ? "Ye non-veg item hai. Isme egg, chicken, fish, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
+        : data.isVeg
+          ? "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Agar aap strict vegetarian hain to order se pehle restaurant se confirm kar lena."
+          : "Ingredients aur preparation restaurant se confirm kar lena, khaaskar agar allergy ya special dietary preference ho.";
 
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
@@ -88,6 +91,9 @@ export default function ProductQuickView() {
         </div>
         <div className="product-quick-content">
           <small>SABKA DELIVERY · PREMIUM PICK</small>
+          <div className={`product-food-type product-food-type-${data.isNonVeg ? "nonveg" : data.isVeg ? "veg" : "food"}`}>
+            {foodType}
+          </div>
           <h2 className="product-quick-title-animate">{data.name}</h2>
           <div className="product-quick-price product-quick-price-animate">{data.price}</div>
           <div className="product-quick-store">
@@ -95,8 +101,8 @@ export default function ProductQuickView() {
             <strong>{data.storeName || "Store name unavailable"}</strong>
           </div>
           <p className="product-quick-description-animate">{text}</p>
-          <div className="product-quick-warning">
-            <strong>⚠️ Warning</strong>
+          <div className={`product-quick-warning product-quick-warning-${data.isNonVeg ? "nonveg" : data.isVeg ? "veg" : "general"}`}>
+            <strong>⚠️ {data.isNonVeg ? "NON-VEG WARNING" : data.isVeg ? "VEG WARNING" : "WARNING"}</strong>
             <span>{warningText}</span>
           </div>
           <div className="product-quick-actions">
