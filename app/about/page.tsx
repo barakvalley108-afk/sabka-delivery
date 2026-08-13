@@ -107,12 +107,19 @@ export default function AboutPage() {
           <p className="mt-4 text-gray-300 text-lg leading-8">
             Customer support, order help, delivery queries and business enquiries ke liye humse contact karein.
           </p>
-          <a href="tel:+916000830383" className="mt-6 inline-flex items-center rounded-2xl bg-yellow-400 px-6 py-4 text-lg font-bold text-black hover:scale-[1.02] transition-transform">
-            📞 Support / Helpline: 6000830383
-          </a>
-          <a href="https://wa.me/916000830383" target="_blank" rel="noreferrer" className="mt-4 ml-0 md:ml-4 inline-flex items-center rounded-2xl border border-yellow-500 px-6 py-4 text-lg font-bold text-yellow-400 hover:bg-yellow-400 hover:text-black transition-colors">
-            WhatsApp Support
-          </a>
+          <div className="mt-6 rounded-2xl border border-green-500/30 bg-green-500/10 p-5">
+            <p className="text-green-400 font-bold text-lg">💬 Official WhatsApp Support Number</p>
+            <p className="mt-1 text-white text-2xl font-extrabold">6000830383</p>
+            <p className="mt-1 text-gray-300">Customer Support • Order Help • Delivery Queries • Business Enquiries</p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <a href="https://wa.me/916000830383" target="_blank" rel="noreferrer" className="inline-flex items-center rounded-2xl bg-green-500 px-6 py-4 text-lg font-bold text-white hover:scale-[1.02] transition-transform">
+                💬 Click to Chat on WhatsApp
+              </a>
+              <a href="tel:+916000830383" className="inline-flex items-center rounded-2xl border border-yellow-500 px-6 py-4 text-lg font-bold text-yellow-400 hover:bg-yellow-400 hover:text-black transition-colors">
+                📞 Call 6000830383
+              </a>
+            </div>
+          </div>
         </section>
         <section className="mt-12 bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
           <h2 className="text-3xl font-bold text-yellow-400">Our Story</h2>
