@@ -16,9 +16,11 @@ import "./site-fixes.css";
 import "./animation-enhancer.css";
 import "./banner-carousel.css";
 import "./banner-manager.css";
+import "./click-feedback.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 import HeroBannerRuntime from "./components/hero-banner-runtime";
+import ClickFeedback from "./components/click-feedback";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -186,6 +188,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PushNotifications />
         <HeroBannerRuntime />
+        <ClickFeedback />
         {children}
         <LeadershipFooter />
       </body>
