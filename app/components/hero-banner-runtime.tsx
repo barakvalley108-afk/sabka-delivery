@@ -16,20 +16,16 @@ export default function HeroBannerRuntime() {
         if (!response.ok) throw new Error("Banner API failed");
         const data = await response.json();
         const banners = Array.isArray(data?.banners)
-          ? data.banners
-              .filter(
-                (value: unknown): value is string =>
-                  typeof value === "string" && value.trim().length > 0,
-              )
-              .slice(0, 10)
+          ? data.banners.filter(
+              (value: unknown): value is string =>
+                typeof value === "string" && value.trim().length > 0,
+            ).slice(0, 10)
           : [];
         if (!active || !banners.length) return;
 
         const mount = () => {
           if (!active || mounted) return true;
-          const hero = document.querySelector<HTMLElement>(
-            ".hero.food .hero-art",
-          );
+          const hero = document.querySelector<HTMLElement>(".hero.food .hero-art");
           if (!hero) return false;
 
           mounted = true;
@@ -71,17 +67,16 @@ export default function HeroBannerRuntime() {
           let index = 0;
 
           const update = () => {
-            track.style.transform = `translate3d(-${index * (100 / banners.length)}%,0,0)`;
+            const offset = index * (100 / banners.length);
+            track.style.transform = `translate3d(-${offset}%,0,0)`;
             dotButtons.forEach((dot, dotIndex) => {
               const selected = dotIndex === index;
               dot.classList.toggle("active", selected);
               dot.setAttribute("aria-selected", selected ? "true" : "false");
             });
-            track
-              .querySelectorAll<HTMLElement>(".hero-banner-slide")
-              .forEach((slide, slideIndex) => {
-                slide.setAttribute("aria-hidden", slideIndex === index ? "false" : "true");
-              });
+            track.querySelectorAll<HTMLElement>(".hero-banner-slide").forEach((slide, slideIndex) => {
+              slide.setAttribute("aria-hidden", slideIndex === index ? "false" : "true");
+            });
           };
 
           const next = () => {
@@ -91,7 +86,7 @@ export default function HeroBannerRuntime() {
 
           const restart = () => {
             window.clearInterval(timer);
-            timer = window.setInterval(next, 4000);
+            timer = window.setInterval(next, 2500);
           };
 
           banners.forEach((_, dotIndex) => {
@@ -109,19 +104,59 @@ export default function HeroBannerRuntime() {
           });
 
           hero.appendChild(dots);
+
+          let touchStartX = 0;
+          let touchStartY = 0;
+          let touchMoved = false;
+          let wheelLock = false;
+
+          const onTouchStart = (event: TouchEvent) => {
+            const touch = event.touches[0];
+            if (!touch) return;
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            window.clearInterval(timer);
+          };
+          const onTouchMove = (event: TouchEvent) => {
+            const touch = event.touches[0];
+            if (!touch) return;
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) touchMoved = true;
+          };
+          const onTouchEnd = (event: TouchEvent) => {
+            if (touchMoved) {
+              const touch = event.changedTouches[0];
+              const dx = touch ? touch.clientX - touchStartX : 0;
+              if (Math.abs(dx) > 35) {
+                index = (dx < 0 ? index + 1 : index - 1 + banners.length) % banners.length;
+                update();
+              }
+            }
+            restart();
+          };
+          const onWheel = (event: WheelEvent) => {
+            if (wheelLock || Math.abs(event.deltaX) < 20) return;
+            wheelLock = true;
+            index = (event.deltaX > 0 ? index + 1 : index - 1 + banners.length) % banners.length;
+            update();
+            restart();
+            window.setTimeout(() => { wheelLock = false; }, 500);
+          };
+
           hero.addEventListener("mouseenter", () => window.clearInterval(timer));
           hero.addEventListener("mouseleave", restart);
-          hero.addEventListener("touchstart", () => window.clearInterval(timer), { passive: true });
-          hero.addEventListener("touchend", restart, { passive: true });
+          hero.addEventListener("touchstart", onTouchStart, { passive: true });
+          hero.addEventListener("touchmove", onTouchMove, { passive: true });
+          hero.addEventListener("touchend", onTouchEnd, { passive: true });
+          hero.addEventListener("wheel", onWheel, { passive: true });
 
           update();
           restart();
           return true;
         };
 
-        // The runtime lives in the root layout, so its effect can run before
-        // the customer homepage hero has committed. Watch for the hero instead
-        // of giving up on the first query.
         if (!mount()) {
           observer = new MutationObserver(() => {
             if (mount()) {
@@ -138,7 +173,7 @@ export default function HeroBannerRuntime() {
           }, 3000);
         }
       } catch {
-        // Existing homepage hero remains the fallback if banners cannot load.
+        // Keep original hero as fallback.
       }
     };
 
