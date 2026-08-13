@@ -1,11 +1,13 @@
-.hero.food .hero-art {
+.hero.food .hero-art,
+.hero.grocery .hero-art {
   position: relative;
   background-color: #fff8eb !important;
   isolation: isolate;
   overflow: hidden;
 }
 
-.hero.food .hero-art.hero-banner-carousel-mounted {
+.hero.food .hero-art.hero-banner-carousel-mounted,
+.hero.grocery .hero-art.hero-banner-carousel-mounted {
   background-image: none !important;
   animation: none !important;
 }
@@ -83,7 +85,8 @@
   transform: scaleY(1.05);
 }
 
-.hero.food .hero-art .lala-badge {
+.hero.food .hero-art .lala-badge,
+.hero.grocery .hero-art .lala-badge {
   position: absolute;
   z-index: 8;
   animation: bannerBadgeFloat 2.8s ease-in-out infinite;
@@ -95,7 +98,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero.food .hero-art .lala-badge {
+  .hero.food .hero-art .lala-badge,
+  .hero.grocery .hero-art .lala-badge {
     animation: none !important;
   }
 
@@ -105,7 +109,8 @@
 }
 
 @media (max-width: 680px) {
-  .hero.food .hero-art {
+  .hero.food .hero-art,
+  .hero.grocery .hero-art {
     min-height: 260px;
   }
 
