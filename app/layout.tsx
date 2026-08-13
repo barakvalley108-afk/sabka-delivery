@@ -15,8 +15,10 @@ import "./swiggy-level.css";
 import "./site-fixes.css";
 import "./animation-enhancer.css";
 import "./banner-carousel.css";
+import "./banner-manager.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
+import HeroBannerRuntime from "./components/hero-banner-runtime";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -183,6 +185,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PushNotifications />
+        <HeroBannerRuntime />
         {children}
         <LeadershipFooter />
       </body>
