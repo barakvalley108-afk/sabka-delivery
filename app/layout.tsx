@@ -18,6 +18,7 @@ import "./banner-carousel.css";
 import "./banner-manager.css";
 import "./click-feedback.css";
 import "./product-quick-view.css";
+import "./product-quick-view-stability.css";
 import PushNotifications from "./push-notifications";
 import LeadershipFooter from "./components/founder/LeadershipFooter";
 import HeroBannerRuntime from "./components/hero-banner-runtime";
