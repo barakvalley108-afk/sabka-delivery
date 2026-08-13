@@ -2,20 +2,20 @@
 
 import { useEffect, useState } from "react";
 
-function romanHindi(name: string, description: string, category: string, restaurant: string) {
+function romanHindi(name: string, description: string, category: string, storeName: string) {
   const clean = description.trim();
-  const base = clean && !/^[.\s]*$/.test(clean)
+  const base = clean && !/^[.\s]*$/g.test(clean)
     ? `${name} ek tasty aur fresh option hai. ${clean}`
     : category.toLowerCase().includes("grocery") || category.toLowerCase().includes("staple") || category.toLowerCase().includes("vegetable")
       ? `${name} daily use ke liye ek accha grocery item hai. Fresh stock ke saath Lala Bazar mein fast delivery milti hai.`
       : `${name} ek popular food choice hai, fresh taste aur quality ke saath.`;
-  return `${base} Ye item ${restaurant || "local store"} se hai aur Lala Bazar mein delivery ke liye available hai.`;
+  return `${base} Ye ${storeName || "selected store"} se available hai. Lala Bazar mein fast delivery ke liye.`;
 }
 
 export default function ProductQuickView() {
   const [open, setOpen] = useState(false);
   const [angle, setAngle] = useState(0);
-  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", restaurant: "" });
+  const [data, setData] = useState({ name: "", description: "", image: "", price: "", category: "", storeName: "" });
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
@@ -26,10 +26,10 @@ export default function ProductQuickView() {
       const description = card.querySelector("p")?.textContent?.trim() || "";
       const price = card.querySelector(".price-row b")?.textContent?.trim() || "";
       const category = card.querySelector(".variant-label")?.textContent?.trim() || "food";
-      const restaurant = card.querySelector(".product-info > small")?.textContent?.trim() || "";
+      const storeName = card.querySelector(".product-info > small")?.textContent?.trim() || "";
       const visual = card.querySelector(".product-visual") as HTMLElement | null;
       const image = visual?.style.backgroundImage?.replace(/^url\([\"']?/, "").replace(/[\"']?\)$/, "") || "";
-      setData({ name: title, description, image, price, category, restaurant });
+      setData({ name: title, description, image, price, category, storeName });
       setAngle(0);
       setOpen(true);
     };
@@ -39,7 +39,7 @@ export default function ProductQuickView() {
 
   useEffect(() => {
     if (!open) return;
-    const timer = window.setInterval(() => setAngle((value) => (value + 1) % 3), 1800);
+    const timer = window.setInterval(() => setAngle((value) => (value + 1) % 3), 2500);
     return () => window.clearInterval(timer);
   }, [open]);
 
@@ -59,7 +59,7 @@ export default function ProductQuickView() {
   }
 
   if (!open) return null;
-  const text = romanHindi(data.name, data.description, data.category, data.restaurant);
+  const text = romanHindi(data.name, data.description, data.category, data.storeName);
   const angleLabels = ["Front", "Left angle", "Right angle"];
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
@@ -68,15 +68,8 @@ export default function ProductQuickView() {
         <div className="product-quick-gallery">
           <div className="product-quick-gallery-row" role="tablist" aria-label="Product angles">
             {[0, 1, 2].map((index) => (
-              <button
-                key={index}
-                type="button"
-                className={`product-angle-card angle-${index} ${angle === index ? "active" : ""}`}
-                onClick={() => setAngle(index)}
-                aria-selected={angle === index}
-                role="tab"
-              >
-                <span className="product-angle-image" style={data.image ? { backgroundImage: `url(${data.image})`, transform: `rotateY(${(index - 1) * 10}deg) rotateX(${index === 1 ? -2 : 2}deg) scale(${angle === index ? 1.06 : 1})` } : undefined} />
+              <button key={index} type="button" className={`product-angle-card angle-${index} ${angle === index ? "active" : ""}`} onClick={() => setAngle(index)} aria-selected={angle === index} role="tab">
+                <span className="product-angle-image" style={data.image ? { backgroundImage: `url(${data.image})` } : undefined} />
                 <small>{angleLabels[index]}</small>
               </button>
             ))}
@@ -88,13 +81,11 @@ export default function ProductQuickView() {
           </div>
         </div>
         <div className="product-quick-content">
-          <small>SABKA DELIVERY · {data.restaurant || "LOCAL STORE"}</small>
-          <h2 key={`${data.name}-${angle}`} className="product-quick-title-animate">{data.name}</h2>
-          <div key={`${data.price}-${angle}`} className="product-quick-price product-quick-price-animate">{data.price}</div>
-          <p key={`${data.description}-${angle}`} className="product-quick-description-animate">{text}</p>
-          <div className="product-quick-warning">
-            ⚠️ <strong>Important:</strong> Is item mein onion / sauce / seasoning ho sakta hai. Order karne se pehle restaurant se confirm kar lena. Food preference ke liye special request ho to checkout se pehle zaroor batao. Wrong preference ke case mein return/refund available nahi ho sakta.
-          </div>
+          <small>SABKA DELIVERY · PREMIUM PICK</small>
+          <h2 className="product-quick-title-animate">{data.name}</h2>
+          <div className="product-quick-price product-quick-price-animate">{data.price}</div>
+          <p className="product-quick-description-animate">{text}</p>
+          <div className="product-quick-warning"><strong>⚠️ Warning</strong><span>Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Wrong preference ke case mein return/refund available nahi ho sakta.</span></div>
           <div className="product-quick-actions">
             <button className="product-quick-add" onClick={() => addToCart(true)}>BUY NOW</button>
             <button className="product-quick-cart" onClick={() => addToCart(false)}>ADD TO CART</button>
