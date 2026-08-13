@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-function romanHindi(name: string, description: string, category: string) {
+function romanHindi(name: string, description: string, category: string, storeName: string) {
   const clean = description.trim();
-  if (clean && !/^[.\s]*$/g.test(clean)) return `${name} ek tasty aur fresh option hai. ${clean}`;
-  const cat = category.toLowerCase();
-  if (cat.includes("grocery") || cat.includes("staple") || cat.includes("vegetable")) {
-    return `${name} daily use ke liye ek accha grocery item hai. Fresh stock ke saath Lala Bazar mein fast delivery milti hai.`;
-  }
-  return `${name} ek popular food choice hai, fresh taste aur quality ke saath.`;
+  const base = clean && !/^[.\s]*$/g.test(clean)
+    ? `${name} ek tasty aur fresh option hai. ${clean}`
+    : category.toLowerCase().includes("grocery") || category.toLowerCase().includes("staple") || category.toLowerCase().includes("vegetable")
+      ? `${name} daily use ke liye ek accha grocery item hai. Fresh stock ke saath Lala Bazar mein fast delivery milti hai.`
+      : `${name} ek popular food choice hai, fresh taste aur quality ke saath.`;
+  return `${base} Ye ${storeName || "selected store"} se available hai. Lala Bazar mein fast delivery ke liye.`;
 }
 
 export default function ProductQuickView() {
@@ -45,6 +45,7 @@ export default function ProductQuickView() {
     const add = match?.querySelector<HTMLButtonElement>(".price-row button:not(:disabled)");
     add?.click();
     setOpen(false);
+
     if (andOpenCart) {
       window.setTimeout(() => {
         const cartButton = document.querySelector<HTMLButtonElement>("button[aria-label^='Cart mein']") ||
@@ -56,25 +57,35 @@ export default function ProductQuickView() {
 
   if (!open) return null;
 
-  const text = romanHindi(data.name, data.description, data.category);
-  const isGrocery = ["grocery", "staple", "vegetable"].some((word) => data.category.toLowerCase().includes(word));
-  const warningText = data.isVeg
-    ? "Ye veg item hai. Preparation ke time onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
-    : "Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
+  const text = romanHindi(data.name, data.description, data.category, data.storeName);
+  const categoryLower = data.category.toLowerCase();
+  const isGrocery = categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable");
+  const isDrink = /drink|beverage|juice|soda|fizz|shake|lassi|cold|water/i.test(`${data.name} ${data.category} ${data.description}`);
+  const warningText = isGrocery
+    ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
+    : isDrink
+      ? "Drink preparation mein ingredients, syrup, sugar ya flavouring use ho sakti hai. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
+      : data.isVeg
+        ? "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta."
+        : "Is item mein onion, sauce ya seasoning ho sakta hai. Order se pehle restaurant se confirm kar lena. Preference mismatch hone par return/refund available nahi ho sakta.";
 
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
       <article className="product-quick-view single-product-view" onClick={(e) => e.stopPropagation()}>
         <button className="product-quick-close" onClick={() => setOpen(false)} aria-label="Close">×</button>
         <div className="single-product-image-wrap">
-          <div className="single-product-image" style={data.image ? { backgroundImage: `url(${data.image})` } : undefined} aria-label={`${data.name} product image`} />
+          <div
+            className="single-product-image"
+            style={data.image ? { backgroundImage: `url(${data.image})` } : undefined}
+            aria-label={`${data.name} product image`}
+          />
         </div>
         <div className="product-quick-content">
           <small>SABKA DELIVERY · PREMIUM PICK</small>
           <h2 className="product-quick-title-animate">{data.name}</h2>
           <div className="product-quick-price product-quick-price-animate">{data.price}</div>
           <div className="product-quick-store">
-            <span>{isGrocery ? "Grocery Store" : "Restaurant"}</span>
+            <span>{isGrocery ? "Grocery store" : "Restaurant"}</span>
             <strong>{data.storeName || "Store name unavailable"}</strong>
           </div>
           <p className="product-quick-description-animate">{text}</p>
