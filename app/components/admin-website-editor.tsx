@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import ImagePicker from "./image-picker";
+import BannerManager from "./banner-manager";
 
 export type WebsiteContentBlock = {
   key: string;
@@ -104,6 +105,8 @@ export default function AdminWebsiteEditor({
         </label>
         <button disabled={busy}>Apply website theme</button>
       </form>
+
+      <BannerManager />
 
       <div className="website-editor-head">
         <div>
