@@ -1,9 +1,9 @@
 import { ensureControlTables } from "../../../../db/control-store";
-import { getPanelSession } from "../../../panel-auth";
+import { getPanelSession, isOwnerUsername } from "../../../panel-auth";
 
 async function requireAdmin() {
   const session = await getPanelSession("SUPER_ADMIN");
-  return session?.role === "SUPER_ADMIN" ? session : null;
+  return session && (session.role === "SUPER_ADMIN" || isOwnerUsername(session.username)) ? session : null;
 }
 
 async function ensureSlabTable(db: Awaited<ReturnType<typeof ensureControlTables>>) {
