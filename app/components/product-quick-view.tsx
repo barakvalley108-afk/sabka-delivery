@@ -69,40 +69,27 @@ export default function ProductQuickView() {
   const isGrocery = !isDrink && (categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable"));
   const foodType = data.isNonVeg ? "NON-VEG" : data.isVeg ? "VEG" : isDrink ? "ORGANIC DRINK" : "FOOD";
 
-  const warningText = isDrink
-    ? ""
-    : isGrocery
-      ? "Grocery item hai. Product details aur ingredients pack par check kar lena. Preference ya quality issue ho to order se pehle store se confirm kar lena."
-      : data.isNonVeg
-        ? "Ye non-veg item hai. Isme egg, chicken, fish, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
-        : data.isVeg
-          ? "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Agar aap strict vegetarian hain to order se pehle restaurant se confirm kar lena."
-          : "Ingredients aur preparation restaurant se confirm kar lena, khaaskar agar allergy ya special dietary preference ho.";
+  const warningText = data.isNonVeg
+    ? "Ye non-veg item hai. Isme egg, chicken, fish, meat ya other non-veg ingredients ho sakte hain. Allergy ya special preference ho to order se pehle restaurant se confirm kar lena."
+    : data.isVeg
+      ? "Ye veg item hai. Preparation mein onion, garlic, sauce ya seasoning use ho sakta hai. Agar aap strict vegetarian hain to order se pehle restaurant se confirm kar lena."
+      : "Ingredients aur preparation restaurant se confirm kar lena, khaaskar agar allergy ya special dietary preference ho.";
 
   return (
     <div className="product-quick-view-overlay" onClick={() => setOpen(false)}>
       <article className="product-quick-view single-product-view" onClick={(e) => e.stopPropagation()}>
         <button className="product-quick-close" onClick={() => setOpen(false)} aria-label="Close">×</button>
         <div className="single-product-image-wrap">
-          <div
-            className="single-product-image"
-            style={data.image ? { backgroundImage: `url(${data.image})` } : undefined}
-            aria-label={`${data.name} product image`}
-          />
+          <div className="single-product-image" style={data.image ? { backgroundImage: `url(${data.image})` } : undefined} aria-label={`${data.name} product image`} />
         </div>
         <div className="product-quick-content">
           <small>SABKA DELIVERY · PREMIUM PICK</small>
-          <div className={`product-food-type product-food-type-${data.isNonVeg ? "nonveg" : data.isVeg ? "veg" : isDrink ? "drink" : "food"}`}>
-            {foodType}
-          </div>
+          <div className={`product-food-type product-food-type-${data.isNonVeg ? "nonveg" : data.isVeg ? "veg" : isDrink ? "drink" : "food"}`}>{foodType}</div>
           <h2 className="product-quick-title-animate">{data.name}</h2>
           <div className="product-quick-price product-quick-price-animate">{data.price}</div>
-          <div className="product-quick-store">
-            <span>{isGrocery ? "Grocery store" : "Restaurant"}</span>
-            <strong>{data.storeName || "Store name unavailable"}</strong>
-          </div>
+          <div className="product-quick-store"><span>{isGrocery ? "Grocery store" : "Restaurant"}</span><strong>{data.storeName || "Store name unavailable"}</strong></div>
           <p className="product-quick-description-animate">{text}</p>
-          {!isDrink && (
+          {!isGrocery && !isDrink && (
             <div className={`product-quick-warning product-quick-warning-${data.isNonVeg ? "nonveg" : data.isVeg ? "veg" : "general"}`}>
               <strong>⚠️ {data.isNonVeg ? "NON-VEG WARNING" : data.isVeg ? "VEG WARNING" : "WARNING"}</strong>
               <span>{warningText}</span>
