@@ -21,7 +21,7 @@ patch("app/super-admin/admin-console.tsx", [
 ]);
 
 patch("app/owner-panel/owner-console.tsx", [
-  ['"HQ" | "SECURITY" | "OPERATIONS"', '"HQ" | "SECURITY" | "OPERATIONS" | "COMMISSION_SLABS"'],
+  ['"HQ"|"SECURITY"|"OPERATIONS"', '"HQ"|"SECURITY"|"OPERATIONS"|"COMMISSION_SLABS"'],
   ['<button className={tab === "OPERATIONS" ? "active" : ""} onClick={() => setTab("OPERATIONS")}>⚡ Operations</button>', '<button className={tab === "OPERATIONS" ? "active" : ""} onClick={() => setTab("OPERATIONS")}>⚡ Operations</button>\n          <button className={tab === "COMMISSION_SLABS" ? "active" : ""} onClick={() => setTab("COMMISSION_SLABS")}>₹ Commission Slabs</button>'],
   ['{tab === "SECURITY" && (', '{tab === "COMMISSION_SLABS" && <iframe title="Commission Slab Editor" src="/owner-panel/commission-slabs" style={{width:"100%",minHeight:"760px",border:0,borderRadius:16,background:"#fff"}} />}\n\n        {tab === "SECURITY" && ('],
 ]);
