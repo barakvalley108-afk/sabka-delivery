@@ -26,6 +26,8 @@ echo "Reducing Super Admin payload and fixing Retry..."
 node "${script_dir}/patch-admin-load.mjs"
 echo "Adding monthly sales metric..."
 node "${script_dir}/patch-monthly-sales.mjs"
+echo "Fixing live Today Tip and Monthly Tip metrics..."
+node "${script_dir}/patch-live-tip-metrics.mjs"
 echo "Showing order item variants in panels..."
 node "${script_dir}/patch-order-variant-display.mjs"
 # Delivery-charge logic is already committed in the application source.
