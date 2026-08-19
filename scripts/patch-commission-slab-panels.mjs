@@ -7,19 +7,21 @@ function ensure(file, needles) {
   const target = path.join(root, file);
   const source = fs.readFileSync(target, "utf8");
   for (const needle of needles) {
-    if (!source.includes(needle)) throw new Error(`Commission Slabs UI missing in ${file}`);
+    if (!source.includes(needle)) throw new Error(`Commission Slabs UI missing in ${file}: ${needle}`);
   }
 }
 
-// The panel sections are already committed in the source files. This build step
-// must only verify them, not mutate source files or depend on formatting anchors.
-ensure("app/super-admin/admin-console.tsx", [
-  "Commission Slabs",
-  "/super-admin/commission-slabs",
-]);
-ensure("app/owner-panel/owner-console.tsx", [
-  "COMMISSION_SLABS",
-  "/owner-panel/commission-slabs",
+// Commission Slabs are implemented as dedicated routes. The build step must
+// verify those routes instead of requiring navigation text to be embedded in
+// the large dashboard console components.
+ensure("app/super-admin/commission-slabs/page.tsx", [
+  "CommissionSlabsPage",
+  "mode=\"super-admin\"",
 ]);
 
-console.log("Commission Slabs sections verified; no source patch required.");
+ensure("app/owner-panel/commission-slabs/page.tsx", [
+  "CommissionSlabsPage",
+  "../../super-admin/commission-slabs/page",
+]);
+
+console.log("Commission Slabs routes verified; no source patch required.");
