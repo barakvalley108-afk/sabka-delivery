@@ -5,35 +5,98 @@ const root = process.env.SITES_PROJECT_ROOT || process.cwd();
 const target = path.join(root, "app", "page.tsx");
 let source = fs.readFileSync(target, "utf8");
 
-// Manual/private coupon codes must reach the server at checkout, but entering
-// a code must never make the homepage show it as already applied. Public
-// coupons can still drive the client-side preview total.
-source = source.replace(
-  /const\s+activeCoupon\s*=\s*couponLooksValid\s*\?\s*couponCode\s*:\s*[\"']{2}\s*;/,
-  'const activeCoupon = selectedCoupon ? selectedCoupon.code : "";',
-);
-
-// Older builds may still contain the original public-list gate. Keep this
-// patch safe and idempotent: only change the expression when it is present.
-source = source.replace(
-  /const\s+couponNeedsFix\s*=\s*couponCode\.length\s*>\s*0\s*&&\s*!couponEligible\s*;/,
-  'const couponNeedsFix = couponCode.length > 0 && !couponLooksValid;',
-);
-
-// A private/hidden code is intentionally absent from the public coupon list.
-// Do not display a fake "applied ₹0" message. The real coupon is validated by
-// /api/market-orders when the customer places the order.
-source = source.replace(
-  /if\s*\(!offer\)\s*\{\s*setMessage\(\s*`\$\{code\} checkout par verify hoga`\s*\);\s*window\.setTimeout\(\(\)\s*=>\s*setMessage\(\"\"\),\s*2200\);\s*return;\s*\}/,
-  'if (!offer) {\n      setMessage(`${code} checkout par verify hoga`);\n      window.setTimeout(() => setMessage(""), 2200);\n      return;\n    }',
-);
-
-if (!/const\s+activeCoupon\s*=\s*selectedCoupon\s*\?\s*selectedCoupon\.code\s*:\s*[\"']{2}\s*;/.test(source)) {
-  throw new Error("Private coupon patch could not safely disable auto-apply preview.");
+// Manual/private coupon codes are validated by the server. The homepage may
+// preview public coupons, but a private code must only become active after the
+// customer explicitly clicks Apply. Never auto-apply a typed code.
+if (!source.includes('const [appliedCouponCode, setAppliedCouponCode] = useState("");')) {
+  const marker = '  const [couponCode, setCouponCode] = useState("");';
+  if (source.includes(marker)) {
+    source = source.replace(
+      marker,
+      marker + '\n  const [appliedCouponCode, setAppliedCouponCode] = useState("");',
+    );
+  }
 }
-if (!/const\s+couponNeedsFix\s*=\s*couponCode\.length\s*>\s*0\s*&&\s*!couponLooksValid\s*;/.test(source)) {
-  throw new Error("Private coupon patch could not safely restore coupon validation state.");
+
+source = source.replace(
+  /const\s+activeCoupon\s*=\s*[^;]+;/,
+  'const activeCoupon = appliedCouponCode;',
+);
+
+source = source.replace(
+  /const\s+couponNeedsFix\s*=\s*[^;]+;/,
+  'const couponNeedsFix = appliedCouponCode.length > 0 && !couponLooksValid;',
+);
+
+// Replace the Apply handler so public and private codes both require an
+// explicit click. Public coupons get a local preview; private coupons are sent
+// to the server for authoritative validation at order placement.
+const handlerStart = source.indexOf("  function applyManualCoupon() {");
+const handlerEnd = source.indexOf("\n  function pickVariant(item: Item)", handlerStart);
+if (handlerStart !== -1 && handlerEnd !== -1) {
+  const handler = `  function applyManualCoupon() {
+    const code = couponCode.trim().toUpperCase();
+    setCouponCode(code);
+
+    if (!/^[A-Z0-9]{4,20}$/.test(code)) {
+      setAppliedCouponCode("");
+      setMessage("Invalid coupon code");
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    const offer = couponList.find((coupon) => coupon.code === code);
+
+    if (!offer) {
+      // Hidden/private coupons are not exposed in the public offer list.
+      // Keep the code inactive until this explicit Apply click, then let the
+      // server decide whether it is genuinely valid and eligible.
+      setAppliedCouponCode(code);
+      setMessage("✓ ${code} entered — checkout par verify hoga");
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    if (subtotal < offer.minOrder) {
+      setAppliedCouponCode("");
+      setMessage(
+        \\`Coupon ke liye ₹\\${offer.minOrder - subtotal} aur add karo\\`,
+      );
+      window.setTimeout(() => setMessage(""), 2200);
+      return;
+    }
+
+    setAppliedCouponCode(code);
+    const rawDiscount =
+      offer.discountType === "PERCENT"
+        ? Math.floor((subtotal * offer.discountValue) / 100)
+        : offer.discountValue;
+    const appliedDiscount = offer.maxDiscount
+      ? Math.min(rawDiscount, offer.maxDiscount)
+      : rawDiscount;
+
+    setMessage(\\`✓ \\${code} applied — ₹\\${appliedDiscount} saved\\`);
+    window.setTimeout(() => setMessage(""), 2200);
+  }
+`;
+  source = source.slice(0, handlerStart) + handler + source.slice(handlerEnd + 1);
+}
+
+// Clear the explicit applied-code state after a successful order as well.
+source = source.replace(
+  '      setCouponCode("");\n      setCheckout("success");',
+  '      setCouponCode("");\n      setAppliedCouponCode("");\n      setCheckout("success");',
+);
+
+// Build verification must never fail merely because an earlier patch already
+// produced the desired state. Accept either the transformed or already-good
+// source and only fail if the essential state could not be established.
+if (!source.includes("const activeCoupon = appliedCouponCode;")) {
+  throw new Error("Private coupon patch could not establish explicit coupon activation.");
+}
+if (!source.includes("const couponNeedsFix = appliedCouponCode.length > 0 && !couponLooksValid;")) {
+  throw new Error("Private coupon patch could not establish safe coupon validation.");
 }
 
 fs.writeFileSync(target, source);
-console.log("Private coupon patch applied safely and idempotently; coupon Apply remains explicit.");
+console.log("Private coupon patch applied: explicit Apply required; private coupons remain server-validated.");
