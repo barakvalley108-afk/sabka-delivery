@@ -66,7 +66,12 @@ export default function ProductQuickView() {
   const text = romanHindi(data.name, data.description, data.category, data.storeName);
   const categoryLower = data.category.toLowerCase();
   const isDrink = /drink|beverage|juice|soda|fizz|shake|lassi|cold|water/i.test(`${data.name} ${data.category} ${data.description}`);
-  const isGrocery = !isDrink && (categoryLower.includes("grocery") || categoryLower.includes("staple") || categoryLower.includes("vegetable"));
+  const isGrocery = !isDrink && (
+    categoryLower.includes("grocery") ||
+    categoryLower.includes("staple") ||
+    categoryLower.includes("vegetable") ||
+    /\b(grocery|retail|mart|supermarket|provision|general store)\b/i.test(data.storeName)
+  );
   const foodType = data.isNonVeg ? "NON-VEG" : data.isVeg ? "VEG" : isDrink ? "ORGANIC DRINK" : "FOOD";
 
   const warningText = data.isNonVeg
