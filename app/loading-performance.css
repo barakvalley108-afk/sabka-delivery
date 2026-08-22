@@ -1,4 +1,4 @@
-/* Lightweight customer loading screen: no stale UI flash and minimal GPU work. */
+/* Lightweight customer loading screen: CSS-only, no catalog/data changes. */
 .catalog-loading-screen {
   position: fixed !important;
   inset: 0 !important;
@@ -15,7 +15,7 @@
 .catalog-loading-screen .catalog-loading-card {
   display: grid !important;
   justify-items: center !important;
-  gap: 10px !important;
+  gap: 12px !important;
   width: auto !important;
   min-width: 0 !important;
   padding: 0 !important;
@@ -25,34 +25,36 @@
 }
 
 .catalog-loading-screen .catalog-loading-card > img {
-  width: 38px !important;
-  height: 38px !important;
+  width: 42px !important;
+  height: 42px !important;
   object-fit: contain !important;
   transform: none !important;
   filter: none !important;
 }
 
 .catalog-loading-screen .catalog-loading-line {
-  width: 72px !important;
+  position: relative !important;
+  width: 92px !important;
   height: 3px !important;
   overflow: hidden !important;
   border-radius: 999px !important;
-  background: #e7ece9 !important;
+  background: #e8ecea !important;
 }
 
 .catalog-loading-screen .catalog-loading-line::after {
   content: "";
   display: block;
-  width: 40%;
+  width: 34%;
   height: 100%;
   border-radius: inherit;
   background: #087f5b;
-  animation: sabka-loading-slide .75s ease-in-out infinite alternate;
+  animation: sabka-loading-slide .65s cubic-bezier(.4,0,.2,1) infinite;
+  will-change: transform;
 }
 
 @keyframes sabka-loading-slide {
-  from { transform: translateX(0); }
-  to { transform: translateX(150%); }
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(390%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
